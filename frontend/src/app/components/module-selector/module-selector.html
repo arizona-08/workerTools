@@ -1,0 +1,23 @@
+<div class="relative select-none">
+  <!-- moduleSelector -->
+  <div class="flex items-center gap-2 px-2 py-1 bg-white rounded border border-gray-100 shadow-xs cursor-pointer" (click)="toggleModuleList()">
+    {{ selectedModule() }} <svg lucideChevronDown></svg>
+  </div>
+
+  @if(isModuleListOpen()) {
+    <div class="absolute right-0 mt-4 shadow-sm">
+      <ul class="bg-white w-48 rounded-md p-1">
+        
+        @for (moduleType of allModules; track $index) {
+          <li
+            class="p-1 hover:bg-gray-100 rounded cursor-pointer"
+            (click)="handleChangeModule(moduleType)"
+          >
+            {{ moduleType }}
+          </li>
+        }
+        
+      </ul>
+    </div>
+  }
+</div>

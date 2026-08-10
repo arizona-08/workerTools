@@ -1,0 +1,23 @@
+FROM php:8.4-fpm-alpine
+
+RUN apk add --no-cache \
+    bash \
+    git \
+    curl \
+    icu-dev \
+    libzip-dev \
+    postgresql-dev \
+    oniguruma-dev \
+    linux-headers \
+    zip \
+    unzip \
+    && docker-php-ext-install pdo_pgsql pdo_mysql zip
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+RUN addgroup -g 1000 laravel \
+    && adduser -D -u 1000 -G laravel laravel
+
+USER laravel
