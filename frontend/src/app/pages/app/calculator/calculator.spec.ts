@@ -19,4 +19,10 @@ describe('Calculator', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('selects one module at a time', () => {
+    component.handleModuleChange('Dalle');
+
+    expect(component.selectedModule()).toBe('Dalle');
+  });
 });
