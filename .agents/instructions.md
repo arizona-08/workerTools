@@ -261,6 +261,81 @@ Ne pas arrondir les valeurs intermédiaires uniquement pour reproduire l'afficha
 
 ---
 
+## Documentation des variables, constantes et concepts métier
+
+La documentation des variables et constantes métier fait partie intégrante de l’implémentation.
+
+Créer et maintenir le fichier :
+
+`docs/domain/variables-and-constants.md`
+
+Ce document doit servir de référentiel commun pour comprendre les données manipulées par WorkerTools, notamment les variables de calcul, constantes normatives, paramètres nationaux, enums métier et hypothèses du MVP.
+
+À chaque feature ajoutant, modifiant ou utilisant un concept métier important, mettre à jour cette documentation.
+
+Pour chaque élément pertinent, documenter au minimum :
+
+- nom utilisé dans le code ;
+- symbole métier ou mathématique s’il est différent ;
+- type ;
+- signification ;
+- unité interne ;
+- unité affichée si elle est différente ;
+- origine de la valeur ;
+- valeur ou valeurs possibles lorsqu’elles sont finies ;
+- contexte d’utilisation ;
+- dépendances éventuelles ;
+- référence normative lorsqu’elle existe ;
+- remarques ou limitations importantes.
+
+Utiliser les catégories d’origine suivantes lorsque pertinent :
+
+- `USER` : donnée saisie ou choisie par l’utilisateur ;
+- `DERIVED` : valeur calculée à partir d’autres données ;
+- `PROFILE` : valeur provenant du profil normatif / Annexe Nationale ;
+- `FIXED_MVP` : hypothèse volontairement figée dans le MVP ;
+- `CONFIG` : valeur provenant d’une configuration technique ou métier.
+
+Exemple :
+
+`fck`
+
+- Symbole : `fck`
+- Signification : résistance caractéristique du béton en compression à 28 jours
+- Type : nombre
+- Unité interne : MPa
+- Origine : `DERIVED`
+- Dépend de : classe de béton
+- Utilisé pour : résistance de calcul du béton, cisaillement, armatures minimales, vérifications ELS
+- Référence : Eurocode 2
+- Remarque : propriété intrinsèque du béton ; ne dépend pas du profil national
+
+Exemple :
+
+`γc`
+
+- Symbole : `γc`
+- Signification : coefficient partiel de sécurité du béton
+- Type : nombre
+- Origine : `PROFILE`
+- Utilisé pour : calcul de `fcd`
+- Référence : profil normatif français
+- Remarque : ne doit pas être stocké dans `ConcreteClass`
+
+Ne pas limiter cette documentation aux seules nouvelles variables de la tâche en cours.
+
+Lors de la première mise en place du document, inventorier également les variables, constantes, enums et paramètres métier déjà présents dans le projet lorsque leur rôle peut être établi avec certitude.
+
+Ne pas inventer une signification, une unité ou une origine pour compléter le document.
+
+Si le rôle d’un élément existant est ambigu, le signaler explicitement comme tel.
+
+Les constantes normatives importantes doivent avoir une source identifiable dans le code ou dans la documentation.
+
+La documentation doit rester synchronisée avec le code : une modification de sens, d’unité, de valeur, d’origine ou de domaine d’utilisation doit entraîner la mise à jour du document.
+
+---
+
 ## 10. Types de calcul
 
 Lorsque cela est prévu dans la feature, distinguer clairement :
