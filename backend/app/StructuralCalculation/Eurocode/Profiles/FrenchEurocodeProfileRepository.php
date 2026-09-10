@@ -2,6 +2,8 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
+use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
+
 /**
  * Profil MVP : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
  *
@@ -36,6 +38,7 @@ final class FrenchEurocodeProfileRepository
             identifier: DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR,
             materialSafetyFactors: new MaterialSafetyFactors(...self::MATERIAL_SAFETY_FACTORS),
             actionSafetyFactors: new ActionSafetyFactors(...self::ACTION_SAFETY_FACTORS),
+            coverRequirements: CoverRequirements::frenchMvp(),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),
                 self::COMBINATION_FACTORS_BY_ACTION_CATEGORY,

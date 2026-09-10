@@ -2,6 +2,8 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
+use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
+
 /**
  * Jeu de paramètres normatifs sélectionné par un calcul.
  *
@@ -16,6 +18,7 @@ final readonly class DesignCodeProfile
         public DesignCodeProfileIdentifier $identifier,
         public MaterialSafetyFactors $materialSafetyFactors,
         public ActionSafetyFactors $actionSafetyFactors,
+        public CoverRequirements $coverRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}
 
