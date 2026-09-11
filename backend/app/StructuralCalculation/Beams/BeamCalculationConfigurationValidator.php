@@ -11,6 +11,7 @@ final readonly class BeamCalculationConfigurationValidator
 
     public function validate(BeamCalculationConfiguration $configuration): void
     {
+        $this->ensure(in_array($configuration->calculationMode, [BeamCalculationMode::DESIGN, BeamCalculationMode::VERIFICATION], true), BeamConfigurationRejectionReason::UNSUPPORTED_CALCULATION_MODE);
         $this->ensure($configuration->elementType === BeamElementType::BEAM, BeamConfigurationRejectionReason::UNSUPPORTED_ELEMENT_TYPE);
         $this->ensure($configuration->materialType === BeamMaterialType::REINFORCED_CONCRETE, BeamConfigurationRejectionReason::UNSUPPORTED_MATERIAL_TYPE);
         $this->ensure($configuration->sectionType === BeamSectionType::RECTANGULAR, BeamConfigurationRejectionReason::UNSUPPORTED_SECTION_TYPE);
