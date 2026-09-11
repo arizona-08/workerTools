@@ -31,6 +31,24 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `gammaQ` | 1,50 | même domaine |
 | `psi0`, `psi1`, `psi2` catégorie A | 0,70 / 0,50 / 0,30 | EN 1990, catégorie A d'EN 1991-1-1 |
 
+## Expression ELU fondamentale retenue
+
+Le profil français MVP retient explicitement la procédure française `a` :
+l'expression fondamentale **EN 1990 6.10** pour les situations
+persistantes/transitoires de bâtiment.
+
+Dans le cas MVP — action permanente gravitaire défavorable et une seule action
+variable principale A — la formule est :
+
+```text
+wEd = γG,sup × Gk_total + γQ × Qk
+```
+
+avec `γG,sup = 1,35`, `γG,inf = 1,00` conservé pour un futur cas favorable,
+et `γQ = 1,50`. Aucun coefficient `ψ` ne s'applique à l'action variable
+principale. Les expressions 6.10a / 6.10b, le facteur `ξ` et les actions
+variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
+
 ## Références normatives
 
 - EN 1992-1-1:2004, 2.4.2.4 et 3.1.6 ;
@@ -45,6 +63,8 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 
 - Les facteurs d'actions ne couvrent que la combinaison ELU fondamentale en
   situation persistante ou transitoire pour bâtiment.
+- Cette combinaison est explicitement EN 1990 6.10 ; 6.10a / 6.10b et `ξ`
+  sont hors périmètre.
 - Seule la catégorie d'action variable A est disponible. Toute autre catégorie
   doit être ajoutée avec ses propres facteurs, sans valeur par défaut.
 - Les situations accidentelles, sismiques, les actions climatiques et les

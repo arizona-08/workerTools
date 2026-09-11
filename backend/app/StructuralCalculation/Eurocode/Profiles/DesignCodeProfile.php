@@ -18,6 +18,7 @@ final readonly class DesignCodeProfile
         public DesignCodeProfileIdentifier $identifier,
         public MaterialSafetyFactors $materialSafetyFactors,
         public ActionSafetyFactors $actionSafetyFactors,
+        public FundamentalUltimateCombinationExpression $fundamentalUltimateCombinationExpression,
         public CoverRequirements $coverRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}

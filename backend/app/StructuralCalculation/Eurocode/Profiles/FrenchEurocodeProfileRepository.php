@@ -7,9 +7,9 @@ use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 /**
  * Profil MVP : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
  *
- * Les facteurs d'actions s'appliquent uniquement au cas bâtiment, ELU
- * fondamental persistant/transitoire. Les autres situations et catégories
- * d'actions doivent être ajoutées explicitement dans ce profil.
+ * La procédure française MVP retient EN 1990 6.10 pour l'ELU fondamental
+ * persistant/transitoire bâtiment. Les variantes 6.10a/6.10b et ξ sont hors
+ * périmètre, ainsi que les autres situations et catégories d'actions.
  */
 final class FrenchEurocodeProfileRepository
 {
@@ -38,6 +38,7 @@ final class FrenchEurocodeProfileRepository
             identifier: DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR,
             materialSafetyFactors: new MaterialSafetyFactors(...self::MATERIAL_SAFETY_FACTORS),
             actionSafetyFactors: new ActionSafetyFactors(...self::ACTION_SAFETY_FACTORS),
+            fundamentalUltimateCombinationExpression: FundamentalUltimateCombinationExpression::EN1990_6_10,
             coverRequirements: CoverRequirements::frenchMvp(),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),
