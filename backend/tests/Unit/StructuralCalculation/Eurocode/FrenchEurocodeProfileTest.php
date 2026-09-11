@@ -3,6 +3,7 @@
 use App\StructuralCalculation\Eurocode\Concrete\ConcreteDesignStrengthCalculator;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 use App\StructuralCalculation\Eurocode\Profiles\FrenchEurocodeProfileRepository;
+use App\StructuralCalculation\Eurocode\Profiles\FundamentalUltimateCombinationExpression;
 use App\StructuralCalculation\Eurocode\Profiles\VariableActionCategory;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSteelDesignStrengthCalculator;
 use App\StructuralCalculation\Materials\Concrete\ConcreteClassRepository;
@@ -14,6 +15,7 @@ it('provides the versioned French profile and its material safety factors', func
     $profile = app(FrenchEurocodeProfileRepository::class)->get();
 
     expect($profile->identifier)->toBe(DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR)
+        ->and($profile->fundamentalUltimateCombinationExpression)->toBe(FundamentalUltimateCombinationExpression::EN1990_6_10)
         ->and($profile->materialSafetyFactors->gammaC)->toBe(1.5)
         ->and($profile->materialSafetyFactors->gammaS)->toBe(1.15)
         ->and($profile->materialSafetyFactors->alphaCc)->toBe(1.0);

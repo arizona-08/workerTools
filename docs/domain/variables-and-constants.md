@@ -58,7 +58,7 @@ documentées dans `docs/normative/ec2-03-french-profile.md`.
 | `alphaCc` / `αcc` | 1,00 | PROFILE | coefficient de `fcd`, EC2 3.1.6 ; statut A1:2026 encore à confirmer |
 | `gammaGUnfavourable`, `gammaGFavourable`, `gammaQ` | 1,35 / 1,00 / 1,50 | PROFILE | combinaison ELU fondamentale bâtiment |
 | `VariableActionCategory` | `A` supportée ; `B…E` connues | USER | catégorie normative de l'action variable. Le MVP Poutre n'accepte que A ; B à E sont explicitement hors périmètre |
-| `psi0`, `psi1`, `psi2` / `ψ0`, `ψ1`, `ψ2` | 0,70 / 0,50 / 0,30 pour A | PROFILE | facteurs dépendant de la catégorie d'action, résolus par le profil ; ils ne sont pas des constantes universelles. EN 1990 annexe A1 / EN 1991-1-1 |
+| `psi0`, `psi1`, `psi2` / `ψ0`, `ψ1`, `ψ2` | 0,70 / 0,50 / 0,30 pour A | PROFILE | facteurs dépendant de la catégorie d'action, résolus par le profil ; `ψ0` concerne notamment les variables accompagnatrices de la combinaison caractéristique, `ψ1` la valeur fréquente et `ψ2` la valeur quasi-permanente. Ils ne sont pas des constantes universelles. EN 1990 annexe A1 / EN 1991-1-1 |
 
 ## Expositions
 
@@ -242,3 +242,106 @@ doit être chargé et le payload centralisé doit pouvoir être construit. Cette
 validité d'entrée ne représente aucune conformité structurelle. Le contrat et
 les exemples complets DESIGN / VERIFICATION sont documentés dans
 `docs/domain/beam-calculation-input.md`.
+
+## Poids propre Poutre BEAM-CALC-01
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `sectionArea` | `Ac` | nombre dérivé / DERIVED | aire brute de la section rectangulaire pour le poids propre ; dépend de `b` et `h`, convertis de mm en m | m² |
+| `ReinforcedConcreteUnitWeight.value` | `γ_RC` | référence normative centralisée / CONFIG | poids volumique du béton armé de masse volumique normale ; valeur MVP `25`, issue du cadre EN 1991-1-1 ; distinct des classes de béton EC2 | kN/m³ |
+| `characteristicLineLoad` | `Gk_self` | nombre dérivé / DERIVED | charge permanente linéaire de poids propre : `Ac × γ_RC` lorsque `includeSelfWeight` est vrai, sinon `0` explicitement | kN/m |
+| `SelfWeightResult` | — | résultat traçable / DERIVED | conserve l'état d'inclusion, `b`, `h`, `Ac`, `γ_RC`, la formule et `Gk_self`, sans total permanent ni combinaison | unités explicites |
+
+`SelfWeightCalculator` convertit les longueurs internes de mm vers m via
+`LengthConverter`, sans arrondi intermédiaire. Ni `Gk_total`, ni `γG`, `γQ`,
+`ψ`, combinaison, moment ou effort tranchant ne font partie de BEAM-CALC-01.
+
+## Actions caractéristiques Poutre BEAM-CALC-02
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `SelfWeightResult.characteristicLineLoad` | `Gk_self` | valeur dérivée / DERIVED | poids propre produit exclusivement par BEAM-CALC-01 ; l'état `included` est conservé | kN/m |
+| `BeamPermanentLoads.additionalPermanentLoad` | `Gk_additional` | entrée validée / USER | charge permanente caractéristique additionnelle hors poids propre | kN/m |
+| `CharacteristicPermanentActions.totalPermanentLoad` | `Gk_total` | valeur dérivée / DERIVED | somme exacte `Gk_self + Gk_additional`, destinée aux combinaisons futures | kN/m |
+| `CharacteristicVariableAction.characteristicLoad` | `Qk` | entrée validée / USER | action variable caractéristique uniformément répartie, conservée sans transformation | kN/m |
+| `CharacteristicVariableAction.category` | — | catégorie validée / FIXED_MVP | catégorie A conservée pour l'obtention future de `ψ0`, `ψ1`, `ψ2` auprès du profil | — |
+| `BeamCharacteristicActionsResult` | — | résultat traçable / DERIVED | sépare actions permanentes (`Gk_self`, `Gk_additional`, `Gk_total`) et action variable (`Qk`, catégorie) | unités explicites |
+
+`CharacteristicActionsCalculator` ne recalcule pas le poids propre et
+n'applique aucun `γG`, `γQ` ou `ψ`. Il ne crée ni combinaison ELU/ELS, ni
+moment, ni effort tranchant ; les valeurs restent des actions caractéristiques.
+
+## Combinaison ELU fondamentale Poutre BEAM-CALC-03
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `gammaGUnfavourable` | `γG,sup` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes défavorables ; valeur MVP `1,35` | — |
+| `gammaGFavourable` | `γG,inf` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes favorables ; valeur MVP `1,00`, conservée mais non utilisée pour le cas gravitaire MVP | — |
+| `gammaQ` | `γQ` | coefficient du profil / PROFILE | coefficient partiel de l'action variable principale ; valeur MVP `1,50` | — |
+| `FundamentalUltimateCombinationExpression::EN1990_6_10` | EN 1990 6.10 | règle du profil / PROFILE | expression fondamentale retenue par la procédure française `a` ; 6.10a, 6.10b et `ξ` sont hors périmètre | — |
+| `designLineLoad` | `wEd` | valeur dérivée / DERIVED | charge linéaire ELU : `γG,sup × Gk_total + γQ × Qk`, sans `ψ` sur l'unique action variable principale | kN/m |
+| `BeamUltimateCombinationResult` | — | résultat traçable / DERIVED | conserve valeurs caractéristiques, facteurs, contributions, expression et `wEd` sans moment ni effort | kN/m |
+
+Le calculateur utilise explicitement l'action permanente défavorable. Les
+facteurs `ψ` restent dans le profil pour les actions accompagnatrices et les
+ELS futurs ; aucune combinaison ELS, aucun `MEd` ni `VEd` ne sont créés ici.
+
+## Combinaisons ELS Poutre BEAM-CALC-04
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `wSlsCharacteristic` | `w_ELS,car` | valeur dérivée / DERIVED | `Gk_total + Qk` pour l'unique action variable principale ; `ψ0` ne s'y applique pas. EN 1990 6.14 | kN/m |
+| `wSlsFrequent` | `w_ELS,freq` | valeur dérivée / DERIVED | `Gk_total + ψ1 × Qk`. Le facteur `ψ1` est obtenu par `DesignCodeProfile::combinationFactorsFor(category)`. EN 1990 6.15 | kN/m |
+| `wSlsQuasiPermanent` | `w_ELS,qp` | valeur dérivée / DERIVED | `Gk_total + ψ2 × Qk`. Le facteur `ψ2` est obtenu par `DesignCodeProfile::combinationFactorsFor(category)`. EN 1990 6.16 | kN/m |
+| `ServiceabilityCombinationExpression` | — | règle typée / PROFILE | références `EN1990_6_14`, `EN1990_6_15`, `EN1990_6_16`, sans chaînes libres dans le moteur | — |
+| `BeamServiceabilityCombination` | — | résultat traçable / DERIVED | conserve `Gk_total`, `Qk`, le facteur variable, les contributions, la formule, la référence et la charge résultante | kN/m |
+| `BeamServiceabilityCombinationsResult` | — | résultat agrégé / DERIVED | contient séparément les combinaisons caractéristique, fréquente et quasi-permanente | kN/m |
+
+Les actions ELS restent non majorées : le terme permanent a un facteur de 1,0
+dans les expressions EN 1990 et l'action variable principale vaut `Qk` dans
+6.14. Aucun coefficient `γG` ou `γQ` ELU, aucun moment, effort tranchant,
+contrôle de fissuration, de flèche ou de contraintes n'est produit. Le MVP ne
+couvre qu'une action variable principale : les variables accompagnatrices et
+l'emploi de `ψ0` restent hors périmètre.
+
+## Moments fléchissants Poutre BEAM-CALC-05
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamGeometry.effectiveSpan` | `l_eff` | entrée validée / USER | portée efficace interne convertie de `mm` vers `m` avant l'analyse ; aucune autre portée n'est utilisée | mm puis m |
+| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_MOMENT_COEFFICIENT` | `1/8` | modèle mécanique / FIXED_MVP | coefficient analytique du maximum en travée pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
+| `maximumMomentPosition` | `x = l_eff / 2` | valeur dérivée / DERIVED | position du moment maximal au milieu de travée dans le modèle MVP | m |
+| `MEd` / `ultimate.maximumMoment` | `MEd` | valeur dérivée / DERIVED | moment maximal ELU : `wEd × l_eff² / 8` | kN·m |
+| `MCharacteristic` / `characteristic.maximumMoment` | `M_ELS,car` | valeur dérivée / DERIVED | moment maximal ELS caractéristique : `wSlsCharacteristic × l_eff² / 8` | kN·m |
+| `MFrequent` / `frequent.maximumMoment` | `M_ELS,freq` | valeur dérivée / DERIVED | moment maximal ELS fréquent : `wSlsFrequent × l_eff² / 8` | kN·m |
+| `MQuasiPermanent` / `quasiPermanent.maximumMoment` | `M_ELS,qp` | valeur dérivée / DERIVED | moment maximal ELS quasi-permanent : `wSlsQuasiPermanent × l_eff² / 8` | kN·m |
+| `BeamBendingMoment` | — | résultat traçable / DERIVED | conserve charge, formule, référence de combinaison et moment maximal | kN/m, kN·m |
+| `BeamBendingMomentResult` | — | résultat agrégé / DERIVED | conserve le modèle statique, `l_eff`, coefficient, position et les quatre moments | unités explicites |
+
+`SimplySupportedBeamBendingMomentCalculator` ne s'applique qu'à
+`SIMPLY_SUPPORTED` et `UNIFORMLY_DISTRIBUTED`; toute autre configuration est
+refusée. La convention MVP retient un moment positif en travée pour les charges
+gravitaire actuelles : `MEd` est donc une valeur positive de dimensionnement.
+Il n'existe ici ni `VEd`, ni hauteur utile `d`, ni armature, ni résistance de
+section `MRd`, ni vérification ELU ou ELS.
+
+## Efforts tranchants Poutre BEAM-CALC-06
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_SHEAR_COEFFICIENT` | `1/2` | modèle mécanique / FIXED_MVP | coefficient analytique du cisaillement maximal aux appuis pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
+| `VEd` / `ultimate.maximumAbsoluteShear` | `VEd` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELU : `wEd × l_eff / 2` | kN |
+| `VCharacteristic` / `characteristic.maximumAbsoluteShear` | `V_ELS,car` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELS caractéristique : `wSlsCharacteristic × l_eff / 2` | kN |
+| `VFrequent` / `frequent.maximumAbsoluteShear` | `V_ELS,freq` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELS fréquent : `wSlsFrequent × l_eff / 2` | kN |
+| `VQuasiPermanent` / `quasiPermanent.maximumAbsoluteShear` | `V_ELS,qp` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELS quasi-permanent : `wSlsQuasiPermanent × l_eff / 2` | kN |
+| `leftSupportShear`, `rightSupportShear` | `+Vmax`, `-Vmax` | valeurs dérivées / DERIVED | valeurs signées aux appuis gauche et droit ; le résultat principal conserve leur valeur absolue maximale | kN |
+| `BeamShearForce` | — | résultat traçable / DERIVED | conserve charge, efforts aux appuis, formule et référence de combinaison | kN/m, kN |
+| `BeamShearForceResult` | — | résultat agrégé / DERIVED | conserve `l_eff` convertie en m, le modèle statique, le coefficient et les quatre résultats de cisaillement | unités explicites |
+
+`SimplySupportedBeamShearForceCalculator` applique le même domaine mécanique
+que le calcul du moment : `SIMPLY_SUPPORTED` et `UNIFORMLY_DISTRIBUTED` sont
+obligatoires. Pour les charges gravitaires MVP, l'effort est positif à l'appui
+gauche et négatif à l'appui droit ; `VEd` est la valeur maximale absolue,
+toujours positive. Aucun diagramme détaillé, aucune résistance `VRd,c`,
+`VRd,s` ou `VRd,max`, aucun étrier, hauteur utile ou contrôle de cisaillement
+EC2 n'est produit.
