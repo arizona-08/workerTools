@@ -8,6 +8,7 @@ use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 final readonly class BeamCalculationConfiguration
 {
     public function __construct(
+        public BeamCalculationMode $calculationMode,
         public BeamElementType $elementType,
         public BeamMaterialType $materialType,
         public BeamSectionType $sectionType,
@@ -20,6 +21,7 @@ final readonly class BeamCalculationConfiguration
     public static function mvp(): self
     {
         return new self(
+            calculationMode: BeamCalculationMode::DESIGN,
             elementType: BeamElementType::BEAM,
             materialType: BeamMaterialType::REINFORCED_CONCRETE,
             sectionType: BeamSectionType::RECTANGULAR,

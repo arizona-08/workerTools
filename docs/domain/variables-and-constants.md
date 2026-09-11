@@ -57,8 +57,8 @@ documentées dans `docs/normative/ec2-03-french-profile.md`.
 | `gammaS` / `γs` | 1,15 | PROFILE | coefficient partiel acier de `fyd`, EC2 2.4.2.4 |
 | `alphaCc` / `αcc` | 1,00 | PROFILE | coefficient de `fcd`, EC2 3.1.6 ; statut A1:2026 encore à confirmer |
 | `gammaGUnfavourable`, `gammaGFavourable`, `gammaQ` | 1,35 / 1,00 / 1,50 | PROFILE | combinaison ELU fondamentale bâtiment |
-| `VariableActionCategory` | `A` uniquement | USER | zones domestiques/résidentielles ; aucune valeur par défaut pour d'autres catégories |
-| `psi0`, `psi1`, `psi2` / `ψ0`, `ψ1`, `ψ2` | 0,70 / 0,50 / 0,30 | PROFILE | facteurs de combinaison de A ; EN 1990 annexe A1 / EN 1991-1-1 |
+| `VariableActionCategory` | `A` supportée ; `B…E` connues | USER | catégorie normative de l'action variable. Le MVP Poutre n'accepte que A ; B à E sont explicitement hors périmètre |
+| `psi0`, `psi1`, `psi2` / `ψ0`, `ψ1`, `ψ2` | 0,70 / 0,50 / 0,30 pour A | PROFILE | facteurs dépendant de la catégorie d'action, résolus par le profil ; ils ne sont pas des constantes universelles. EN 1990 annexe A1 / EN 1991-1-1 |
 
 ## Expositions
 
@@ -128,3 +128,117 @@ d'une valeur métier reconnue mais non supportée.
 Référence de contexte : EN 1990 pour la situation de projet et EN 1992-1-1
 pour le calcul des structures en béton. Ces normes ne sont pas encore évaluées
 par BEAM-01 ; elles sont seulement référencées par la configuration.
+
+## Mode de calcul Poutre BEAM-02
+
+| Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
+|---|---|---|---|---|
+| `BeamCalculationMode` | enum `DESIGN`, `VERIFICATION` | USER | mode stable sérialisable dans `BeamCalculationConfiguration.calculationMode` | — |
+| `calculationMode` | `DESIGN` par défaut, ou `VERIFICATION` | USER | `DESIGN` préparera le dimensionnement d'armatures ; `VERIFICATION` préparera la vérification d'un ferraillage fourni. Aucun champ ni calcul associé n'est disponible à ce stade | — |
+| `UNSUPPORTED_CALCULATION_MODE` | valeur de `BeamConfigurationRejectionReason` | DERIVED | réservé à un mode métier reconnu qui serait hors périmètre ; les deux modes actuels sont acceptés | — |
+| `INVALID_CONFIGURATION_VALUE` | valeur de `BeamConfigurationRejectionReason` | DERIVED | une chaîne externe inconnue n'est jamais remplacée silencieusement par `DESIGN` | — |
+
+Le formulaire Poutre conserve le mode dans le signal `calculationMode` et le
+présente avec deux boutons accessibles, mutuellement exclusifs. Les prochaines
+étapes pourront conditionner les champs par `mode === 'DESIGN'` ou
+`mode === 'VERIFICATION'`; BEAM-02 n'ajoute ni géométrie, ni charge, ni
+ferraillage, ni calcul de conformité.
+
+## Géométrie Poutre BEAM-03
+
+`BeamGeometry` isole les dimensions de la configuration de calcul. Son contrat
+backend et le futur payload utilisent exclusivement les millimètres ;
+`BeamGeometryFactory::fromInternalValues` distingue les champs absents des
+valeurs non numériques, infinies ou non positives.
+
+| Nom dans le code | Symbole | Type / origine | Signification, dépendances et limite | Unité interne / UI |
+|---|---|---|---|---|
+| `effectiveSpan` | `l_eff` | nombre fini `> 0` / USER | portée efficace de calcul d'une poutre simplement appuyée. Elle est saisie directement : aucune portée libre, largeur d'appui ou dérivation automatique n'est disponible | mm / m |
+| `width` | `b` | nombre fini `> 0` / USER | largeur de la section rectangulaire constante ; dépend de `sectionType = RECTANGULAR` | mm / cm |
+| `height` | `h` | nombre fini `> 0` / USER | hauteur totale de la section rectangulaire constante ; ce n'est pas la hauteur utile `d` | mm / cm |
+| `BeamGeometry` | — | objet `effectiveSpan`, `width`, `height` / DERIVED | géométrie validée stockée en mm, séparée de la configuration et des futurs matériaux/actions | mm |
+| `BeamGeometryPayload` | — | objet avec `unit: 'mm'` / DERIVED | forme frontend du futur payload : `{ configuration, geometry }` ; les nombres sans unité ne sont pas envoyés | mm |
+| `buildBeamGeometryPayload` | — | helper frontend / CONFIG | conversion unique UI vers payload : `m × 1000`, `cm × 10` | mm |
+| `BeamGeometryRejectionReason` | — | six identifiants / DERIVED | motifs `MISSING_*` ou `INVALID_*`, utilisés par la validation backend | — |
+
+Exemple : `l_eff = 6,50 m`, `b = 30 cm`, `h = 60 cm` deviennent
+`effectiveSpan = 6500 mm`, `width = 300 mm`, `height = 600 mm` dans le
+payload. Aucune limite maximale UX ou normative, aucun calcul de `Ac`, `d`,
+`MEd`, `VEd`, inertie ou poids propre n'est introduit par BEAM-03.
+
+## Matériaux Poutre BEAM-04
+
+| Nom | Type / valeurs | Origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `concreteClass` | identifiant `C20/25`, `C25/30`, `C30/37` | USER | référence `ConcreteStrengthClass`, permettant au backend de retrouver `fck`, `fcm`, `fctm`, `Ecm` ; aucune propriété n'est transmise par le client | — |
+| `steelGrade` | identifiant `B500B` | USER | référence `ReinforcementSteelGrade`, permettant au backend de retrouver `fyk`, `Es`, `ductilityClass` ; `fyd` reste dérivé du profil | — |
+| `exposureClasses` | liste non vide de `ExposureClassCode` | USER | environnements applicables, compatibles avec plusieurs classes ; futur usage : classe structurale, `c_min,dur`, `c_nom` | — |
+| `BeamMaterials` | objet de trois références | DERIVED | modèle backend validé via les repositories EC2-01, EC2-02 et EC2-04 ; aucune propriété mécanique | — |
+| `BeamMaterialCatalog` | classes béton, nuances acier, codes/libellés exposition | CONFIG | catalogue API `/api/beam/material-catalog`, alimenté directement par les repositories backend | — |
+| `BeamMaterialsPayload` | `concreteClass`, `steelGrade`, `exposureClasses` | DERIVED | partie `materials` du futur payload Poutre, sans résistance, module, coefficient ou valeur de calcul | — |
+
+Les valeurs initiales C30/37, B500B et XC1 sont des defaults applicatifs
+`CONFIG`, modifiables par l'utilisateur et non des prescriptions normatives.
+Le profil français demeure dans `configuration` : la combinaison matériau /
+profil ne sera résolue que par le moteur lors d'une future étape.
+
+## Charges permanentes Poutre BEAM-05
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité interne / UI |
+|---|---|---|---|---|
+| `includeSelfWeight` | — | booléen / USER | indique que le futur calcul devra inclure le poids propre. Défaut applicatif `CONFIG` : `true`, non normatif | — |
+| `additionalPermanentLoad` | `Gk,additional` | nombre fini `>= 0` / USER | charge permanente caractéristique uniformément répartie hors poids propre ; `0` signifie qu'aucune charge additionnelle n'est déclarée | kN/m |
+| `BeamPermanentLoads` | — | objet validé / DERIVED | isole les deux choix d'actions permanentes ; ne contient ni poids propre calculé ni total | kN/m pour la charge |
+| `BeamPermanentLoadsPayload` | — | `{ includeSelfWeight, additionalPermanentLoad, unit: 'kN/m' }` / DERIVED | partie `loads.permanent` du futur payload Poutre ; l'unité est explicite | kN/m |
+| `Gk_self` | `Gk,self` | DERIVED, futur | poids propre linéaire de la poutre ; sera introduit en `BEAM-CALC-01` | kN/m |
+| `Gk_total` | `Gk,total` | DERIVED, futur | action permanente totale pour les combinaisons futures : `Gk_self + Gk,additional` si le poids propre est inclus, sinon `Gk,additional` | kN/m |
+
+BEAM-05 n'introduit aucune masse volumique de béton. Sa source devra être
+définie explicitement dans `BEAM-CALC-01`, sans constante magique dans le
+formulaire. Aucun coefficient `γG`, aucune combinaison et aucun effort ne sont
+calculés à cette étape.
+
+## Charges d'exploitation Poutre BEAM-06
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité interne / UI |
+|---|---|---|---|---|
+| `variableActionCategory` / `category` | — | `VariableActionCategory` / FIXED_MVP | catégorie d'action variable. Le formulaire représente discrètement A (locaux résidentiels / domestiques) ; B, C, D et E sont connues mais refusées par le MVP Poutre | — |
+| `characteristicLoad` | `Qk` | nombre fini `>= 0` / USER | action variable caractéristique uniformément répartie, déjà ramenée sur la poutre ; défaut applicatif `CONFIG` : `0` | kN/m |
+| `BeamVariableLoad` | — | objet validé / DERIVED | contient seulement la catégorie et `Qk`, sans `γQ` ni facteur `ψ` | kN/m pour la charge |
+| `BeamVariableLoadPayload` | — | `{ category: 'A', characteristicLoad, unit: 'kN/m' }` / DERIVED | partie `loads.variable` du futur payload Poutre, sans coefficients de sécurité ou de combinaison | kN/m |
+
+Les futures combinaisons ELU et ELS demanderont `ψ0`, `ψ1` et `ψ2` au profil
+normatif via `DesignCodeProfile::combinationFactorsFor(category)`. BEAM-06 ne
+les applique pas et ne calcule ni `γQ × Qk`, ni effort, ni poids propre. Les
+actions neige, vent, climatiques, thermiques, accidentelles et plusieurs
+actions variables indépendantes sont hors périmètre MVP.
+
+## Ferraillage existant Poutre BEAM-07
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité interne / UI |
+|---|---|---|---|---|
+| `tensionBarCount` | `n` | entier fini `>= 1` / USER | nombre de barres longitudinales tendues de la section vérifiée | — |
+| `tensionBarDiameter` | `φ` | diamètre du catalogue / USER | diamètre nominal de toutes les barres tendues ; prépare `As_prov`, la hauteur utile future, la flexion et la fissuration | mm |
+| `tensionRebarLayers` | — | `1` / FIXED_MVP | un seul lit de barres tendues ; plusieurs lits, diamètres mixtes, armatures comprimées et paquets sont hors périmètre | — |
+| `providedSteelArea` | `As,prov` | nombre dérivé / DERIVED | aire totale d'acier tendu, recalculée côté backend à partir de `n` et `φ` avec `n × π × φ² / 4` ; elle n'est jamais une entrée fiable du client | mm² |
+| `BeamLongitudinalReinforcement` | — | objet validé / DERIVED | ferraillage longitudinal existant uniquement ; aucun étrier, acier comprimé, `As_min`, `As_req`, `d` ou résistance | mm / mm² |
+| `BeamLongitudinalReinforcementPayload` | — | `reinforcement.longitudinal.tension` / DERIVED | présent uniquement en mode `VERIFICATION`, avec `barCount`, `barDiameter`, `diameterUnit: 'mm'` ; `As_prov` est absent du payload | mm |
+| `ReinforcementBarDiameterCatalog` | 8, 10, 12, 14, 16, 20, 25, 32 | CONFIG | catalogue applicatif centralisé de diamètres nominaux passifs proposés par le MVP ; non exhaustif et non normatif | mm |
+
+Le ferraillage est requis en `VERIFICATION` et refusé dans le contrat backend
+`DESIGN`. Exemple géométrique : 4 HA16 donnent `4 × π × 16² / 4 =
+804,2477… mm²`, affiché comme `804 mm²` sans arrondir la valeur moteur.
+
+## Contrat d'entrée Poutre MVP BEAM-08
+
+`BeamCalculationInputFactory` assemble et valide les sections `configuration`,
+`geometry`, `materials` et `loads`, avec `reinforcement` obligatoire seulement
+en `VERIFICATION`. Il délègue la validation métier aux factories BEAM-01 à
+BEAM-07, contrôle explicitement `mm` et `kN/m`, et refuse les propriétés client
+non prévues — notamment les propriétés mécaniques et valeurs dérivées.
+
+`BeamForm::isInputValid()` est l'état global frontend : le catalogue matériaux
+doit être chargé et le payload centralisé doit pouvoir être construit. Cette
+validité d'entrée ne représente aucune conformité structurelle. Le contrat et
+les exemples complets DESIGN / VERIFICATION sont documentés dans
+`docs/domain/beam-calculation-input.md`.

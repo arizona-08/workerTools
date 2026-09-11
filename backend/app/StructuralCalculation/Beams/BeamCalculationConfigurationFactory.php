@@ -8,6 +8,7 @@ use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 final class BeamCalculationConfigurationFactory
 {
     public function fromValues(
+        string $calculationMode,
         string $elementType,
         string $materialType,
         string $sectionType,
@@ -16,6 +17,7 @@ final class BeamCalculationConfigurationFactory
         string $designCodeProfile,
         string $designSituation,
     ): BeamCalculationConfiguration {
+        $mode = BeamCalculationMode::tryFrom($calculationMode);
         $element = BeamElementType::tryFrom($elementType);
         $material = BeamMaterialType::tryFrom($materialType);
         $section = BeamSectionType::tryFrom($sectionType);
@@ -24,10 +26,10 @@ final class BeamCalculationConfigurationFactory
         $profile = DesignCodeProfileIdentifier::tryFrom($designCodeProfile);
         $situation = BeamDesignSituation::tryFrom($designSituation);
 
-        if ($element === null || $material === null || $section === null || $support === null || $load === null || $profile === null || $situation === null) {
+        if ($mode === null || $element === null || $material === null || $section === null || $support === null || $load === null || $profile === null || $situation === null) {
             throw new BeamConfigurationException(BeamConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE);
         }
 
-        return new BeamCalculationConfiguration($element, $material, $section, $support, $load, $profile, $situation);
+        return new BeamCalculationConfiguration($mode, $element, $material, $section, $support, $load, $profile, $situation);
     }
 }

@@ -3,6 +3,177 @@
   <h2 id="beam-form-title" class="mt-1 text-lg font-semibold text-zinc-950">Poutre en béton armé</h2>
   <p class="mt-2 text-sm leading-6 text-zinc-600">Section rectangulaire · Simplement appuyée</p>
 
+  <fieldset class="mt-5" aria-describedby="calculation-mode-help">
+    <legend class="text-sm font-medium text-zinc-900">Mode de calcul</legend>
+    <div class="mt-2 inline-flex rounded-xl border border-violet-100 bg-violet-50 p-1" role="group">
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700"
+        [class.bg-white]="calculationMode() === 'DESIGN'"
+        [class.text-violet-800]="calculationMode() === 'DESIGN'"
+        [class.shadow-sm]="calculationMode() === 'DESIGN'"
+        [class.text-zinc-600]="calculationMode() !== 'DESIGN'"
+        [attr.aria-pressed]="calculationMode() === 'DESIGN'"
+        (click)="selectCalculationMode('DESIGN')"
+      >
+        Dimensionnement
+      </button>
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700"
+        [class.bg-white]="calculationMode() === 'VERIFICATION'"
+        [class.text-violet-800]="calculationMode() === 'VERIFICATION'"
+        [class.shadow-sm]="calculationMode() === 'VERIFICATION'"
+        [class.text-zinc-600]="calculationMode() !== 'VERIFICATION'"
+        [attr.aria-pressed]="calculationMode() === 'VERIFICATION'"
+        (click)="selectCalculationMode('VERIFICATION')"
+      >
+        Vérification
+      </button>
+    </div>
+    <p id="calculation-mode-help" class="mt-2 text-sm text-zinc-600">
+      @if (calculationMode() === 'DESIGN') {
+        WorkerTools déterminera les armatures nécessaires.
+      } @else {
+        Vérifiez une poutre avec un ferraillage existant.
+      }
+    </p>
+  </fieldset>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="geometryForm">
+    <legend class="text-base font-semibold text-zinc-900">Géométrie</legend>
+    <p class="mt-1 text-sm text-zinc-600">Dimensions de la section rectangulaire et portée utilisée par le calcul.</p>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="effective-span" class="block text-sm font-medium text-zinc-900">Portée efficace (l_eff)</label>
+        <p class="mt-1 text-xs text-zinc-500">Portée utilisée par le calcul.</p>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="effective-span" type="number" inputmode="decimal" min="0" step="0.01" formControlName="effectiveSpan" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="effective-span-error effective-span-unit" />
+          <span id="effective-span-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">m</span>
+        </div>
+        @if (geometryForm.controls.effectiveSpan.touched && geometryForm.controls.effectiveSpan.invalid) {
+          <p id="effective-span-error" class="mt-1 text-sm text-red-700" role="alert">
+            @if (geometryForm.controls.effectiveSpan.hasError('required')) { La portée efficace est obligatoire. } @else { La portée doit être supérieure à 0. }
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="beam-width" class="block text-sm font-medium text-zinc-900">Largeur (b)</label>
+        <div class="mt-6 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="beam-width" type="number" inputmode="decimal" min="0" step="0.1" formControlName="width" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="beam-width-error beam-width-unit" />
+          <span id="beam-width-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">cm</span>
+        </div>
+        @if (geometryForm.controls.width.touched && geometryForm.controls.width.invalid) {
+          <p id="beam-width-error" class="mt-1 text-sm text-red-700" role="alert">
+            @if (geometryForm.controls.width.hasError('required')) { La largeur est obligatoire. } @else { La largeur doit être supérieure à 0. }
+          </p>
+        }
+      </div>
+
+      <div>
+        <label for="beam-height" class="block text-sm font-medium text-zinc-900">Hauteur (h)</label>
+        <div class="mt-6 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="beam-height" type="number" inputmode="decimal" min="0" step="0.1" formControlName="height" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="beam-height-error beam-height-unit" />
+          <span id="beam-height-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">cm</span>
+        </div>
+        @if (geometryForm.controls.height.touched && geometryForm.controls.height.invalid) {
+          <p id="beam-height-error" class="mt-1 text-sm text-red-700" role="alert">
+            @if (geometryForm.controls.height.hasError('required')) { La hauteur est obligatoire. } @else { La hauteur doit être supérieure à 0. }
+          </p>
+        }
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="materialsForm">
+    <legend class="text-base font-semibold text-zinc-900">Matériaux</legend>
+    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="concrete-class" class="block text-sm font-medium text-zinc-900">Classe de béton</label>
+        <select id="concrete-class" formControlName="concreteClass" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (concreteClass of materialCatalog.catalog()?.concreteClasses ?? []; track concreteClass) { <option [value]="concreteClass">{{ concreteClass }}</option> }
+        </select>
+      </div>
+      <div>
+        <label for="steel-grade" class="block text-sm font-medium text-zinc-900">Acier d’armature</label>
+        <select id="steel-grade" formControlName="steelGrade" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (steelGrade of materialCatalog.catalog()?.steelGrades ?? []; track steelGrade) { <option [value]="steelGrade">{{ steelGrade }}</option> }
+        </select>
+      </div>
+      <div>
+        <label for="exposure-classes" class="block text-sm font-medium text-zinc-900">Classes d’exposition</label>
+        <select id="exposure-classes" multiple formControlName="exposureClasses" class="mt-2 min-h-20 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (exposureClass of materialCatalog.catalog()?.exposureClasses ?? []; track exposureClass.code) { <option [value]="exposureClass.code">{{ exposureClass.code }} — {{ exposureClass.label }}</option> }
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="permanentLoadsForm">
+    <legend class="text-base font-semibold text-zinc-900">Actions &amp; charges</legend>
+    <label class="mt-4 flex items-start gap-3 text-sm text-zinc-900">
+      <input type="checkbox" formControlName="includeSelfWeight" class="mt-0.5 size-4 rounded border-zinc-300 text-violet-700 focus:ring-violet-700" />
+      <span>
+        <span class="font-medium">Inclure le poids propre</span>
+        <span class="mt-1 block text-zinc-600">Il sera calculé automatiquement à partir de la section et du béton lors d’une étape ultérieure.</span>
+      </span>
+    </label>
+    <div class="mt-4 max-w-xs">
+      <label for="additional-permanent-load" class="block text-sm font-medium text-zinc-900">Charge permanente additionnelle</label>
+      <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+        <input id="additional-permanent-load" type="number" inputmode="decimal" min="0" step="0.01" formControlName="additionalPermanentLoad" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="additional-permanent-load-error additional-permanent-load-unit" />
+        <span id="additional-permanent-load-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m</span>
+      </div>
+      @if (permanentLoadsForm.controls.additionalPermanentLoad.touched && permanentLoadsForm.controls.additionalPermanentLoad.invalid) {
+        <p id="additional-permanent-load-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p>
+      }
+    </div>
+    <div class="mt-5 max-w-xs" [formGroup]="variableLoadForm">
+      <p class="text-sm font-medium text-zinc-900">Catégorie A — locaux résidentiels / domestiques</p>
+      <p class="mt-1 text-sm text-zinc-600">La catégorie est définie par le cas MVP ; ses coefficients de combinaison proviendront du profil normatif.</p>
+      <label for="characteristic-variable-load" class="mt-4 block text-sm font-medium text-zinc-900">Charge d’exploitation (Qk)</label>
+      <p class="mt-1 text-xs text-zinc-500">Saisissez la charge caractéristique ramenée sur la poutre.</p>
+      <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+        <input id="characteristic-variable-load" type="number" inputmode="decimal" min="0" step="0.01" formControlName="characteristicLoad" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="characteristic-variable-load-error characteristic-variable-load-unit" />
+        <span id="characteristic-variable-load-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m</span>
+      </div>
+      @if (variableLoadForm.controls.characteristicLoad.touched && variableLoadForm.controls.characteristicLoad.invalid) {
+        <p id="characteristic-variable-load-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p>
+      }
+    </div>
+  </fieldset>
+
+  @if (calculationMode() === 'VERIFICATION') {
+    <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="longitudinalReinforcementForm">
+      <legend class="text-base font-semibold text-zinc-900">Ferraillage existant</legend>
+      <p class="mt-1 text-sm text-zinc-600">Armatures tendues : un seul lit de barres de même diamètre dans le MVP.</p>
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="tension-bar-count" class="block text-sm font-medium text-zinc-900">Nombre de barres</label>
+          <input id="tension-bar-count" type="number" inputmode="numeric" min="1" step="1" formControlName="tensionBarCount" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-violet-700 focus:ring-2 focus:ring-violet-100" aria-describedby="tension-bar-count-error" />
+          @if (longitudinalReinforcementForm.controls.tensionBarCount.touched && longitudinalReinforcementForm.controls.tensionBarCount.invalid) {
+            <p id="tension-bar-count-error" class="mt-1 text-sm text-red-700" role="alert">Le nombre doit être un entier supérieur ou égal à 1.</p>
+          }
+        </div>
+        <div>
+          <label for="tension-bar-diameter" class="block text-sm font-medium text-zinc-900">Diamètre</label>
+          <select id="tension-bar-diameter" formControlName="tensionBarDiameter" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-violet-700 focus:ring-2 focus:ring-violet-100" aria-describedby="tension-bar-diameter-error">
+            <option [ngValue]="null">Choisir un diamètre</option>
+            @for (diameter of materialCatalog.catalog()?.reinforcementBarDiameters ?? []; track diameter) { <option [ngValue]="diameter">Ø{{ diameter }} mm</option> }
+          </select>
+          @if (longitudinalReinforcementForm.controls.tensionBarDiameter.touched && longitudinalReinforcementForm.controls.tensionBarDiameter.invalid) {
+            <p id="tension-bar-diameter-error" class="mt-1 text-sm text-red-700" role="alert">Choisissez un diamètre autorisé.</p>
+          }
+        </div>
+      </div>
+      @if (providedSteelArea(); as area) {
+        <p class="mt-4 text-sm text-zinc-700">Aire d’acier fournie <span class="text-zinc-500">(As,prov)</span> : <span class="font-semibold text-zinc-900">{{ area.toFixed(0) }} mm²</span></p>
+      }
+    </fieldset>
+  }
+
   <dl class="mt-5 grid gap-3 border-t border-zinc-200 pt-5 text-sm sm:grid-cols-2">
     <div>
       <dt class="text-zinc-500">Chargement</dt>
@@ -19,6 +190,6 @@
   </dl>
 
   <p class="mt-5 text-sm leading-6 text-zinc-600">
-    La géométrie, les matériaux, les charges et le ferraillage seront renseignés dans les prochaines étapes du module.
+    Le ferraillage sera renseigné dans les prochaines étapes du module.
   </p>
 </section>

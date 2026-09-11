@@ -1,5 +1,8 @@
 /** Contrat UI du seul périmètre actuellement supporté par le module Poutre. */
+export type BeamCalculationMode = 'DESIGN' | 'VERIFICATION';
+
 export interface BeamCalculationConfigurationView {
+  calculationMode: BeamCalculationMode;
   elementType: 'BEAM';
   materialType: 'REINFORCED_CONCRETE';
   sectionType: 'RECTANGULAR';
@@ -10,6 +13,7 @@ export interface BeamCalculationConfigurationView {
 }
 
 export const MVP_BEAM_CALCULATION_CONFIGURATION: BeamCalculationConfigurationView = {
+  calculationMode: 'DESIGN',
   elementType: 'BEAM',
   materialType: 'REINFORCED_CONCRETE',
   sectionType: 'RECTANGULAR',
