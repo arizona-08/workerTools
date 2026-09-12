@@ -92,6 +92,7 @@ it('uses psi1 and psi2 supplied by the selected profile rather than calculator c
         actionSafetyFactors: $referenceProfile->actionSafetyFactors,
         fundamentalUltimateCombinationExpression: $referenceProfile->fundamentalUltimateCombinationExpression,
         coverRequirements: $referenceProfile->coverRequirements,
+        beamLongitudinalReinforcementRequirements: $referenceProfile->beamLongitudinalReinforcementRequirements,
         combinationFactorsByActionCategory: [
             'A' => new CombinationFactors(psi0: 0.6, psi1: 0.4, psi2: 0.2),
         ],

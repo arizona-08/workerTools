@@ -345,3 +345,160 @@ gauche et négatif à l'appui droit ; `VEd` est la valeur maximale absolue,
 toujours positive. Aucun diagramme détaillé, aucune résistance `VRd,c`,
 `VRd,s` ou `VRd,max`, aucun étrier, hauteur utile ou contrôle de cisaillement
 EC2 n'est produit.
+
+## Géométrie de flexion Poutre BEAM-FLEX-01
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `overallDepth` / `BeamGeometry.height` | `h` | entrée validée / USER | hauteur totale de section, positive, utilisée directement en mm | mm |
+| `CoverCalculationResult.cNom` / `nominalCover` | `c_nom` | résultat EC2-05 / DERIVED ou USER en manuel | enrobage nominal calculé ou imposé par le moteur EC2-05 ; la profondeur utile ne le recalcule jamais | mm |
+| `BeamFlexuralDetailingAssumptions.transverseReinforcementDiameter` | `φ_st` | hypothèse de detailing / CONFIG | diamètre de l'étrier externe présumé. Valeur MVP `8 mm`, configurable ; ce n'est pas une prescription Eurocode et il sera remplacé plus tard par le ferraillage transversal réel | mm |
+| `BeamFlexuralDetailingAssumptions.designTensionBarDiameter` | `φ_long,design` | hypothèse de detailing / CONFIG | diamètre longitudinal supposé pour le premier calcul en mode DESIGN. Valeur MVP `16 mm`, configurable ; ce n'est pas le ferraillage final | mm |
+| `BeamLongitudinalReinforcement.tensionBarDiameter` | `φ_long` | entrée validée / USER | diamètre réellement fourni en mode VERIFICATION ; un unique lit est requis | mm |
+| `LongitudinalBarDiameterSource` | — | DERIVED | `CONFIG` en DESIGN, `USER` en VERIFICATION ; trace la provenance du diamètre utilisé | — |
+| `tensionSteelCentroidOffset` | `a_s` | valeur dérivée / DERIVED | distance entre la face tendue et le centre du lit tendu : `c_nom + φ_st + φ_long / 2` | mm |
+| `effectiveDepth` | `d` | valeur dérivée / DERIVED | distance entre la fibre comprimée supérieure et le centre du lit tendu : `h - c_nom - φ_st - φ_long / 2` | mm |
+| `BeamEffectiveDepthResult` | — | résultat traçable / DERIVED | conserve mode, `h`, `c_nom`, diamètres, source, `a_s`, `d` et formule, sans calcul de résistance | mm |
+
+Sous le moment positif de travée MVP, la compression est en face supérieure et
+la traction en face inférieure : `d` est donc mesuré depuis la face supérieure.
+Le calculateur exige `h > 0`, `c_nom ≥ 0`, des diamètres positifs et `d > 0`.
+Il est limité à un seul lit de barres longitudinales tendues. DESIGN utilise
+l'hypothèse configurable `φ_long,design`; VERIFICATION utilise le diamètre
+réel validé par BEAM-07. Aucune itération après choix des barres, aucun `As`,
+`x`, `z`, `MRd` ni conformité en flexion n'est produit.
+
+## Résistances de calcul pour flexion Poutre BEAM-FLEX-02
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `ConcreteProperties.fck` | `fck` | propriété de référentiel / DERIVED | résistance caractéristique du béton de la classe choisie ; C30/37 vaut `30` | MPa (`N/mm²`) |
+| `MaterialSafetyFactors.alphaCc` | `αcc` | profil normatif / PROFILE | coefficient du profil français, valeur MVP `1,00`, utilisé exclusivement via `ConcreteDesignStrengthCalculator` | — |
+| `MaterialSafetyFactors.gammaC` | `γc` | profil normatif / PROFILE | coefficient partiel béton du profil français, valeur MVP `1,50` | — |
+| `BeamFlexuralConcreteDesignStrength.fcd` | `fcd` | valeur dérivée / DERIVED | résistance de calcul `αcc × fck / γc`, calculée par `ConcreteDesignStrengthCalculator` | MPa (`N/mm²`) |
+| `ReinforcementSteelProperties.fyk` | `fyk` | propriété de référentiel / DERIVED | limite caractéristique de la nuance choisie ; B500B vaut `500` | MPa (`N/mm²`) |
+| `MaterialSafetyFactors.gammaS` | `γs` | profil normatif / PROFILE | coefficient partiel acier du profil français, valeur MVP `1,15` | — |
+| `BeamFlexuralSteelDesignStrength.fyd` | `fyd` | valeur dérivée / DERIVED | résistance de calcul `fyk / γs`, calculée par `ReinforcementSteelDesignStrengthCalculator` | MPa (`N/mm²`) |
+| `BeamFlexuralDesignStrengthsResult` | — | résultat traçable / DERIVED | réunit matériaux résolus, facteurs du profil et résistances de calcul, sans donnée de géométrie, charge ou moment | MPa |
+
+`MPa` et `N/mm²` sont numériquement équivalents ; le moteur conserve `MPa`
+dans cette étape, compatible avec les futures équations utilisant des longueurs
+en `mm`. Les résistances ne dépendent pas du mode DESIGN ou VERIFICATION. Les
+coefficients ne sont ni copiés dans les matériaux ni redéfinis par le module
+Poutre : ils sont lus du `DesignCodeProfile` puis transmis aux calculateurs
+EC2-03 existants.
+
+## Moment réduit ELU Poutre BEAM-FLEX-03
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamBendingMoment.maximumMoment` | `MEd` | résultat BEAM-CALC-05 / DERIVED | moment ELU positif en travée, réutilisé sans recalcul | kN·m |
+| `MomentConverter::NEWTON_MILLIMETRES_PER_KILONEWTON_METRE` | `10⁶` | conversion d'unité / CONFIG | facteur nommé de conversion `1 kN·m = 1 000 000 N·mm` | N·mm / kN·m |
+| `designMomentInNewtonMillimetres` | `MEd_Nmm` | conversion d'unité / DERIVED | `MEd × 10⁶`, employé pour homogénéiser les unités de section | N·mm |
+| `sectionWidth` | `b` | entrée validée / USER | largeur `BeamGeometry.width`, sans substitution par une autre dimension | mm |
+| `effectiveDepth` | `d` | résultat BEAM-FLEX-01 / DERIVED | profondeur utile réellement calculée ; `h` ne la remplace jamais dans cette formule | mm |
+| `concreteDesignStrength` | `fcd` | résultat BEAM-FLEX-02 / DERIVED | résistance de calcul béton en MPa, numériquement `N/mm²` | MPa (`N/mm²`) |
+| `normalizationTerm` | `b × d² × fcd` | valeur dérivée / DERIVED | terme de normalisation homogène à un moment | N·mm |
+| `reducedDesignMoment` | `μEd` | valeur dérivée / DERIVED | moment réduit `MEd_Nmm / (b × d² × fcd)` | sans dimension |
+| `BeamReducedMomentResult` | — | résultat traçable / DERIVED | conserve toutes les entrées normalisées et `μEd`, sans limite ni statut de domaine | unités explicites |
+
+`BeamReducedMomentCalculator` accepte `MEd ≥ 0`, `b > 0`, `d > 0` et
+`fcd > 0`; un moment négatif n'est pas converti en valeur absolue. Cette étape
+n'emploie ni `λ`, ni `η`, ni axe neutre `x`, rapport `x/d`, bras de levier `z`,
+armature ou résistance de section. Toute limite de `μEd` reste future.
+
+## Axe neutre de flexion Poutre BEAM-FLEX-04
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `ConcreteRectangularStressBlockParameters.lambda` | `λ` | règle normative / DERIVED | profondeur relative du bloc rectangulaire simplifié : `0,8` si `fck ≤ 50 MPa`, sinon `0,8 - (fck - 50) / 400` jusqu'à `90 MPa` | sans dimension |
+| `ConcreteRectangularStressBlockParameters.eta` | `η` | règle normative / DERIVED | intensité relative du bloc rectangulaire simplifié : `1,0` si `fck ≤ 50 MPa`, sinon `1,0 - (fck - 50) / 200` jusqu'à `90 MPa` | sans dimension |
+| `characteristicConcreteStrength` | `fck` | résultat BEAM-FLEX-02 / DERIVED | résistance caractéristique qui sélectionne `λ` et `η`; les valeurs supérieures à `90 MPa` sont refusées | MPa |
+| `reducedDesignMoment` | `μEd` | résultat BEAM-FLEX-03 / DERIVED | moment réduit transmis sans limite de ductilité ni statut | sans dimension |
+| `radicand` | `1 - 2μEd / η` | valeur dérivée / DERIVED | terme sous racine ; doit être fini et supérieur ou égal à zéro | sans dimension |
+| `neutralAxisRatio` | `ξ = x/d` | valeur dérivée / DERIVED | petite racine physique `[1 - sqrt(1 - 2μEd / η)] / λ` | sans dimension |
+| `neutralAxisDepth` | `x` | valeur dérivée / DERIVED | profondeur de l'axe neutre depuis la fibre comprimée : `ξ × d` | mm |
+| `BeamNeutralAxisResult` | — | résultat traçable / DERIVED | conserve `μEd`, `fck`, `λ`, `η`, radicand, `ξ`, `d` et `x`, sans bras de levier ni armature | unités explicites |
+
+Les paramètres proviennent du bloc rectangulaire simplifié d'EN 1992-1-1
+§3.1.7 et sont centralisés dans
+`ConcreteRectangularStressBlockParametersCalculator`. La petite racine est
+retenue pour la branche physique faiblement sollicitée d'une section simplement
+armée. Un radicand négatif est refusé comme impossibilité mathématique du
+modèle; ce n'est pas une limite de ductilité. Aucun `ξlim`, `xlim`, `μlim`,
+`z`, `As` ou `MRd` n'est introduit à cette étape.
+
+## Bras de levier de flexion Poutre BEAM-FLEX-05
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `effectiveDepth` | `d` | résultat BEAM-FLEX-01 / DERIVED | profondeur utile reprise sans recalcul | mm |
+| `neutralAxisDepth` | `x` | résultat BEAM-FLEX-04 / DERIVED | axe neutre repris sans recalcul, avec `0 ≤ x ≤ d` | mm |
+| `lambda` | `λ` | résultat BEAM-FLEX-04 / DERIVED | paramètre du bloc rectangulaire EC2, strictement positif | sans dimension |
+| `compressionBlockDepth` | `λx` | valeur dérivée / DERIVED | profondeur du bloc rectangulaire équivalent de compression | mm |
+| `compressionResultantDepth` | `λx / 2` | valeur dérivée / DERIVED | position de la résultante de compression depuis la fibre comprimée | mm |
+| `leverArm` | `z` | valeur dérivée / DERIVED | bras de levier interne : `d - λx / 2`, équivalent à `d × (1 - λξ / 2)` | mm |
+| `BeamLeverArmResult` | — | résultat traçable / DERIVED | conserve `d`, `x`, `ξ`, `λ`, `λx`, `λx/2` et `z`, sans armature ni résistance | mm |
+
+Le calculateur ne plafonne pas `z` à une valeur pratique telle que `0,95d` :
+il applique directement la géométrie du bloc rectangulaire. Il exige un bras de
+levier strictement positif et des résultats d'axe neutre cohérents avec `d`.
+Aucun `As_req`, `As_min`, `MRd`, limite de ductilité ou statut de conformité
+n'est produit.
+
+## Armature longitudinale requise Poutre BEAM-FLEX-06
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamBendingMoment.maximumMoment` | `MEd` | résultat BEAM-CALC-05 / DERIVED | moment ELU repris sans recalcul ; doit être positif ou nul | kN·m |
+| `designMomentInNewtonMillimetres` | `MEd_Nmm` | conversion / DERIVED | `MEd × 10⁶`, obtenu uniquement via `MomentConverter` | N·mm |
+| `BeamFlexuralSteelDesignStrength.fyd` | `fyd` | résultat BEAM-FLEX-02 / DERIVED | résistance de calcul de l'acier, numériquement en `N/mm²`; strictement positive | MPa (`N/mm²`) |
+| `BeamLeverArmResult.leverArm` | `z` | résultat BEAM-FLEX-05 / DERIVED | bras de levier interne, strictement positif | mm |
+| `steelLeverArmProduct` | `fyd × z` | valeur dérivée / DERIVED | terme d'équilibre acier–bras de levier | N/mm |
+| `requiredReinforcementArea` | `As_req` | valeur dérivée / DERIVED | aire théorique d'armatures longitudinales tendues : `MEd_Nmm / (fyd × z)` | mm² |
+| `BeamRequiredTensionReinforcementResult` | — | résultat traçable / DERIVED | conserve `MEd`, `MEd_Nmm`, `fyd`, `z`, leur produit et `As_req` | unités explicites |
+
+`As_req` est l'aire requise par le seul équilibre ELU de flexion. Elle vaut
+`0 mm²` si `MEd = 0` et ne comprend ni armature minimale réglementaire
+(`As_min`, future BEAM-FLEX-07), ni choix de barres/diamètre, ni armature
+fournie, ni résistance `MRd` ou statut de conformité.
+
+## Armature longitudinale minimale Poutre BEAM-FLEX-07
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `ConcreteProperties.fctm` | `fctm` | référentiel matériau / DERIVED | résistance moyenne en traction de la classe béton ; C30/37 vaut `2,9` | MPa (`N/mm²`) |
+| `ReinforcementSteelProperties.fyk` | `fyk` | référentiel matériau / DERIVED | limite caractéristique de l'acier ; B500B vaut `500`. `fyd` n'est pas utilisé par cette règle | MPa (`N/mm²`) |
+| `tensionZoneMeanWidth` | `bt` | géométrie dérivée / DERIVED | largeur moyenne de la zone tendue ; pour la seule section rectangulaire MVP en moment positif, `bt = b`, sans généralisation aux sections T/L | mm |
+| `effectiveDepth` | `d` | résultat BEAM-FLEX-01 / DERIVED | profondeur utile reprise sans recalcul ; `h` ne la remplace jamais | mm |
+| `BeamLongitudinalReinforcementRequirements.minimumReinforcementStrengthCoefficient` | `0,26` | profil normatif / PROFILE | coefficient du terme `fctm/fyk`, défini par EN 1992-1-1 §9.2.1.1(1) et fourni par le profil français | sans dimension |
+| `BeamLongitudinalReinforcementRequirements.minimumReinforcementRatio` | `0,0013` | profil normatif / PROFILE | coefficient du minimum absolu, défini par EN 1992-1-1 §9.2.1.1(1) et fourni par le profil français | sans dimension |
+| `strengthBasedMinimum` | `As_min,strength` | valeur dérivée / DERIVED | `0,26 × (fctm / fyk) × bt × d` | mm² |
+| `absoluteMinimum` | `As_min,ratio` | valeur dérivée / DERIVED | `0,0013 × bt × d` | mm² |
+| `requiredMinimum` | `As_min` | valeur dérivée / DERIVED | maximum des deux termes, sans fusion avec `As_req` | mm² |
+| `MinimumTensionReinforcementGoverningCriterion` | — | résultat dérivé / DERIVED | `FCTM_FYK` si le premier terme gouverne, sinon `ABSOLUTE_RATIO` | — |
+| `BeamMinimumTensionReinforcementResult` | — | résultat traçable / DERIVED | conserve matériaux, `bt`, `d`, les deux termes, `As_min` et le critère gouvernant | unités explicites |
+
+Les paramètres sont centralisés dans le `DesignCodeProfile`, à travers
+`BeamLongitudinalReinforcementRequirements`, afin qu'un autre profil national
+puisse les remplacer. `As_min` est une exigence réglementaire indépendante de
+`As_req` : BEAM-FLEX-07 ne calcule aucun `max(As_req, As_min)`, aucun choix de
+barres, aucune comparaison avec `As_prov`, aucun `MRd` ni conformité.
+
+## Domaine de validité simplement armé Poutre BEAM-FLEX-08
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `ReinforcementSteelProperties.es` | `Es` | référentiel matériau / DERIVED | module d'élasticité de l'acier d'armature ; B500B vaut `200000` | MPa (`N/mm²`) |
+| `ConcreteUltimateStrainParameters.ultimateStrain` | `εcu3` | règle normative / DERIVED | déformation ultime béton du diagramme EC2 : `0,0035` si `fck ≤ 50 MPa`, sinon `[2,6 + 35 × ((90 - fck) / 100)^4] × 0,001` jusqu'à `90 MPa` | sans dimension |
+| `steelDesignYieldStrain` | `εyd` | valeur dérivée / DERIVED | déformation associée à `fyd` : `fyd / Es` | sans dimension |
+| `tensionSteelStrain` | `εs` | valeur dérivée / DERIVED | compatibilité des déformations : `εcu3 × (1 - ξ) / ξ`; vaut `null` si `x = 0` | sans dimension |
+| `yieldingNeutralAxisLimit` | `ξ_yield` | valeur dérivée / DERIVED | limite liée à l'atteinte de `fyd` : `εcu3 / (εcu3 + εyd)` | sans dimension |
+| `tensionSteelReachesDesignYield` | — | état dérivé / DERIVED | `true` si `εs ≥ εyd`, `false` hors domaine, `null` si charge nulle et `x = 0` | — |
+| `singlyReinforcedModelValid` | — | état dérivé / DERIVED | validité de l'hypothèse `σs = fyd` utilisée pour `As_req`; ne constitue pas une conformité globale | — |
+| `BeamFlexuralDomainCheckCalculator::STRAIN_COMPARISON_TOLERANCE` | — | constante numérique / CONFIG | tolérance `1e-12` appliquée seulement à l'égalité de déformations à la frontière | sans dimension |
+| `BeamFlexuralDomainCheckResult` | — | résultat traçable / DERIVED | conserve les déformations, `x`, `d`, `ξ`, les valeurs acier/béton et le statut de domaine | unités explicites |
+
+Cette étape n'applique pas de limite universelle `ξ ≤ 0,45` : elle contrôle
+uniquement `εs ≥ εyd`. Elle ne produit ni `MRd`, ni armature comprimée, ni
+`max(As_req, As_min)`, ni choix de barres ou conformité globale.

@@ -18,7 +18,9 @@ it('provides the versioned French profile and its material safety factors', func
         ->and($profile->fundamentalUltimateCombinationExpression)->toBe(FundamentalUltimateCombinationExpression::EN1990_6_10)
         ->and($profile->materialSafetyFactors->gammaC)->toBe(1.5)
         ->and($profile->materialSafetyFactors->gammaS)->toBe(1.15)
-        ->and($profile->materialSafetyFactors->alphaCc)->toBe(1.0);
+        ->and($profile->materialSafetyFactors->alphaCc)->toBe(1.0)
+        ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementStrengthCoefficient)->toBe(0.26)
+        ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementRatio)->toBe(0.0013);
 });
 
 it('provides action and category-specific combination factors', function () {
