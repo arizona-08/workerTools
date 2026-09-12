@@ -28,6 +28,8 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `alphaCc` | 1,00 | paramètre français utilisé pour `fcd` |
 | coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
+| `k1` espacement libre | 1,00 | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
+| `k2` espacement libre | 5 mm | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
 | `gammaGUnfavourable` | 1,35 | EN 1990/NF EN 1990/NA, ELU fondamental bâtiment |
 | `gammaGFavourable` | 1,00 | même domaine |
 | `gammaQ` | 1,50 | même domaine |
@@ -81,3 +83,5 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
   `fctm` et `fyk` issus des matériaux, jamais `fyd`; le texte accessible de
   l'amendement A1:2026-04-14 ne permet pas d'établir qu'il modifie ce choix de
   l'Annexe 2016.
+- Les paramètres d'espacement libre `k1`, `k2` et le minimum absolu de 20 mm
+  sont conservés dans `ReinforcementSpacingRequirements` du profil.

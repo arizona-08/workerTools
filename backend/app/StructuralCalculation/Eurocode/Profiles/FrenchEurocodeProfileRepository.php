@@ -4,6 +4,7 @@ namespace App\StructuralCalculation\Eurocode\Profiles;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
+use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
 
 /**
  * Profil MVP : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
@@ -39,6 +40,13 @@ final class FrenchEurocodeProfileRepository
         'minimumReinforcementRatio' => 0.0013,
     ];
 
+    /** @var array{barDiameterFactor: float, aggregateSizeAllowance: float, absoluteMinimumClearSpacing: float} */
+    private const REINFORCEMENT_SPACING_REQUIREMENTS = [
+        'barDiameterFactor' => 1.0,
+        'aggregateSizeAllowance' => 5.0,
+        'absoluteMinimumClearSpacing' => 20.0,
+    ];
+
     public function get(): DesignCodeProfile
     {
         return new DesignCodeProfile(
@@ -49,6 +57,9 @@ final class FrenchEurocodeProfileRepository
             coverRequirements: CoverRequirements::frenchMvp(),
             beamLongitudinalReinforcementRequirements: new BeamLongitudinalReinforcementRequirements(
                 ...self::BEAM_LONGITUDINAL_REINFORCEMENT_REQUIREMENTS,
+            ),
+            reinforcementSpacingRequirements: new ReinforcementSpacingRequirements(
+                ...self::REINFORCEMENT_SPACING_REQUIREMENTS,
             ),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),

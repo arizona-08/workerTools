@@ -7,4 +7,5 @@ enum LongitudinalBarDiameterSource: string
 {
     case USER = 'USER';
     case CONFIG = 'CONFIG';
+    case CANDIDATE = 'CANDIDATE';
 }

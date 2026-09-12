@@ -1046,6 +1046,8 @@ Une proposition de ferraillage n’est valide que si elle peut physiquement teni
 
 Il faudra donc vérifier les contraintes géométriques pertinentes avant de proposer une disposition.
 
+Inclut le filtrage géométrique des candidats et le recalcul de la chaîne de flexion avec le diamètre réel `(candidate → d → μEd → x → z → As_req → As_min → As_target)` avant validation du candidat.
+
 ---
 
 # EPIC 7 — Cisaillement ELU
