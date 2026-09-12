@@ -4,6 +4,7 @@ namespace App\StructuralCalculation\Eurocode\Profiles;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
+use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
 
 /**
  * Jeu de paramètres normatifs sélectionné par un calcul.
@@ -22,6 +23,7 @@ final readonly class DesignCodeProfile
         public FundamentalUltimateCombinationExpression $fundamentalUltimateCombinationExpression,
         public CoverRequirements $coverRequirements,
         public BeamLongitudinalReinforcementRequirements $beamLongitudinalReinforcementRequirements,
+        public ReinforcementSpacingRequirements $reinforcementSpacingRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}
 

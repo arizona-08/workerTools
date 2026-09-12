@@ -32,11 +32,13 @@ sont pas inscrites dans le calculateur. Elles sont injectables et devront être
 remplacées ou recalculées lorsque le ferraillage transversal et le choix réel
 des barres seront disponibles.
 
-En mode DESIGN, le diamètre longitudinal est l'hypothèse configurable et sa
-source est `CONFIG`. En mode VERIFICATION, le diamètre est celui du seul lit
-d'armatures saisi et validé par BEAM-07, avec la source `USER`. Cette séparation
-prépare une itération future `d → As_req → choix des barres → d`, sans la
-mettre en œuvre maintenant.
+En mode DESIGN, le premier passage utilise le diamètre longitudinal supposé et
+sa source est `CONFIG`. Après BEAM-REBAR-03, BEAM-REBAR-04 exécute une unique
+passe de recalcul pour chaque candidat géométriquement admissible : son
+diamètre devient la source `CANDIDATE`. En mode VERIFICATION, le diamètre est
+celui du seul lit d'armatures saisi et validé par BEAM-07, avec la source
+`USER`. Le recalcul DESIGN ne modifie jamais le candidat et ne relance pas une
+génération : il ne constitue donc pas une itération ouverte.
 
 ## Relation avec EC2-05 et limite actuelle
 

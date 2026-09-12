@@ -502,3 +502,80 @@ barres, aucune comparaison avec `As_prov`, aucun `MRd` ni conformité.
 Cette étape n'applique pas de limite universelle `ξ ≤ 0,45` : elle contrôle
 uniquement `εs ≥ εyd`. Elle ne produit ni `MRd`, ni armature comprimée, ni
 `max(As_req, As_min)`, ni choix de barres ou conformité globale.
+
+## Aire cible de ferraillage Poutre BEAM-REBAR-01
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamRequiredTensionReinforcementResult.requiredReinforcementArea` | `As_req` | résultat BEAM-FLEX-06 / DERIVED | besoin théorique d'équilibre ELU, réutilisé sans recalcul | mm² |
+| `BeamMinimumTensionReinforcementResult.requiredMinimum` | `As_min` | résultat BEAM-FLEX-07 / DERIVED | exigence minimale réglementaire, réutilisée sans recalcul | mm² |
+| `targetArea` | `As_target` | valeur dérivée / DERIVED | aire continue minimale à fournir par le futur ferraillage : `max(As_req, As_min)` | mm² |
+| `BeamReinforcementTargetGoverningRequirement` | — | état dérivé / DERIVED | `FLEXURAL_DEMAND`, `MINIMUM_REINFORCEMENT` ou `EQUAL_REQUIREMENTS`, pour expliquer le maximum retenu | — |
+| `BeamRequiredReinforcementAreaResult` | — | résultat traçable / DERIVED | conserve les deux exigences d'entrée, `As_target` et le critère gouvernant | unités explicites |
+
+`BeamReinforcementTargetCalculator` exige que le domaine BEAM-FLEX-08 soit
+valide ; sinon il refuse de retourner une aire cible. Il ne calcule aucune
+barre, aucun diamètre, aucune aire fournie `As_prov`, aucun logement
+géométrique, `MRd` ou conformité. Aucune marge ni aucun arrondi n'est appliqué.
+
+## Candidats de ferraillage Poutre BEAM-REBAR-02
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamReinforcementProposalConfiguration.minimumTensionBarCount` | `n_min` | configuration / CONFIG | nombre minimal de barres tendues proposé par le MVP : `2`; choix de detailing, non règle Eurocode générique | — |
+| `BeamReinforcementProposalConfiguration.maximumTensionBarCount` | `n_max` | configuration / CONFIG | nombre maximal de barres tendues proposé par le MVP : `8`; le générateur ne l'augmente jamais | — |
+| `barCount` | `n` | valeur énumérée / DERIVED | nombre de barres homogènes d'un candidat, entre `n_min` et `n_max` | — |
+| `barDiameter` | `φ` | catalogue / CONFIG | diamètre provenant exclusivement de `ReinforcementBarDiameterCatalog` | mm |
+| `barArea` | `Aφ` | valeur dérivée / DERIVED | aire d'une barre, réutilisant `BeamLongitudinalReinforcement` : `π × φ² / 4` | mm² |
+| `providedArea` | `As_prov` | valeur dérivée / DERIVED | aire fournie par un candidat : `n × π × φ² / 4` ; seuls les candidats avec `As_prov ≥ As_target` sont conservés | mm² |
+| `excessArea` | `As_excess` | valeur dérivée / DERIVED | surplus d'aire : `As_prov - As_target`, utilisé au classement | mm² |
+| `utilizationRatio` | — | valeur dérivée / DERIVED | `As_target / As_prov`; ratio de classement, pas une conformité structurelle. Il vaut `0` pour une cible nulle | sans dimension |
+| `BeamReinforcementCandidatesStatus` | — | état dérivé / DERIVED | `CANDIDATES_AVAILABLE` ou `NO_REINFORCEMENT_CANDIDATE` si le catalogue et les bornes configurées ne suffisent pas | — |
+| `BeamReinforcementProposalCandidate` | — | résultat traçable / DERIVED | conserve une combinaison `n × φ`, ses aires et son ratio, sans géométrie | unités explicites |
+| `BeamReinforcementCandidatesResult` | — | résultat traçable / DERIVED | conserve cible, catalogue, bornes, statut, candidats triés et `candidateCount` | unités explicites |
+
+Le classement est déterministe : excès croissant, puis nombre de barres
+croissant, puis diamètre croissant. Aucune vérification de logement, espacement,
+enrobage, collision ou plusieurs lits n'est appliquée avant BEAM-REBAR-03.
+
+## Géométrie d'un lit de ferraillage Poutre BEAM-REBAR-03
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamReinforcementDetailingAssumptions.maximumAggregateSize` | `d_g` | hypothèse de detailing / CONFIG | dimension nominale maximale des granulats du MVP : `20`; ce n'est pas une propriété de résistance du béton | mm |
+| `ReinforcementSpacingRequirements.barDiameterFactor` | `k1` | profil normatif / PROFILE | facteur du terme lié au diamètre, valeur française recommandée `1,0` | sans dimension |
+| `ReinforcementSpacingRequirements.aggregateSizeAllowance` | `k2` | profil normatif / PROFILE | majoration liée aux granulats, valeur française recommandée `5` | mm |
+| `ReinforcementSpacingRequirements.absoluteMinimumClearSpacing` | — | profil normatif / PROFILE | minimum absolu de l'expression EC2 §8.2(2), valeur `20` | mm |
+| `availableWidth` | `b_available` | valeur dérivée / DERIVED | largeur libre entre faces intérieures des branches d'étrier : `b - 2(c_nom + φ_st)` | mm |
+| `minimumClearSpacing` | `a_min` | règle normative / DERIVED | espacement **libre** : `max(k1φ, d_g + k2, 20 mm)` ; ne pas confondre avec le pas axe-à-axe | mm |
+| `requiredWidth` | `b_required` | valeur dérivée / DERIVED | largeur d'un lit régulier : `nφ + (n - 1)a_min` | mm |
+| `remainingWidth` | — | valeur dérivée / DERIVED | marge géométrique `b_available - b_required`; négative en cas de déficit | mm |
+| `BeamReinforcementSpacingGoverningCriterion` | — | état dérivé / DERIVED | `BAR_DIAMETER`, `AGGREGATE_SIZE`, `ABSOLUTE_MINIMUM` ou `TIE` | — |
+| `BeamReinforcementGeometryRejectionReason` | — | état dérivé / DERIVED | `INSUFFICIENT_HORIZONTAL_SPACE` pour un candidat trop large | — |
+| `BeamReinforcementGeometryCheckResult` | — | résultat traçable / DERIVED | conserve candidat, largeurs, espacement, critère et statut d'admissibilité | unités explicites |
+
+Le modèle d'étrier est volontairement simplifié : il représente seulement ses
+branches verticales par `c_nom + φ_st` depuis chaque parement. Aucun rayon de
+cintrage, angle d'étrier, collision locale, second lit ou coordonnées de barres
+n'est vérifié. Les listes acceptée et rejetée gardent l'ordre de BEAM-REBAR-02.
+
+## Recalcul des candidats de ferraillage Poutre BEAM-REBAR-04
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `LongitudinalBarDiameterSource::CANDIDATE` | `φ_long` | diamètre de candidat / DERIVED | identifie le diamètre fixe porté par `originalCandidate`, en remplacement de l'hypothèse initiale `CONFIG` dans le seul recalcul DESIGN | mm |
+| `candidateEffectiveDepth` (`BeamEffectiveDepthResult.effectiveDepth`) | `d_candidate` | valeur dérivée / DERIVED | profondeur utile recalculée par BEAM-FLEX-01 avec `φ_long = candidate.barDiameter`, en réutilisant le `c_nom` EC2-05 existant | mm |
+| `candidateReducedMoment` | `μEd_candidate` | valeur dérivée / DERIVED | BEAM-FLEX-03 réévalué avec le même `MEd`, `b`, `fcd` et `d_candidate` | sans dimension |
+| `candidateNeutralAxis` | `ξ_candidate`, `x_candidate` | valeur dérivée / DERIVED | résultat BEAM-FLEX-04 associé au nouveau moment réduit | sans dimension, mm |
+| `candidateLeverArm` | `z_candidate` | valeur dérivée / DERIVED | résultat BEAM-FLEX-05 associé au nouveau `d` et axe neutre | mm |
+| `candidateAsReq` (`BeamRequiredTensionReinforcementResult.requiredReinforcementArea`) | `As_req,candidate` | valeur dérivée / DERIVED | besoin d'équilibre BEAM-FLEX-06 réévalué avec `z_candidate` | mm² |
+| `candidateAsMin` (`BeamMinimumTensionReinforcementResult.requiredMinimum`) | `As_min,candidate` | valeur dérivée / DERIVED | minimum BEAM-FLEX-07 réévalué, car il dépend de `d_candidate` | mm² |
+| `candidateAsTarget` (`BeamRequiredReinforcementAreaResult.targetArea`) | `As_target,candidate` | valeur dérivée / DERIVED | `max(As_req,candidate, As_min,candidate)` obtenu par BEAM-REBAR-01 seulement lorsque le domaine simplement armé est valide | mm² |
+| `candidateSufficient` (`sufficientAfterRecalculation`) | — | état dérivé / DERIVED | vrai seulement si le domaine BEAM-FLEX-08 est valide et `As_prov ≥ As_target,candidate` | — |
+| `BeamReinforcementCandidateRecalculationStatus` | — | enum / DERIVED | `VALID_AFTER_RECALCULATION`, `INSUFFICIENT_AFTER_RECALCULATION` ou `INVALID_SINGLY_REINFORCED_DOMAIN` | — |
+| `BeamReinforcementCandidateRecalculationResult` | — | résultat traçable / DERIVED | conserve le candidat fixe, `d` et `As_req` initiaux, toute la chaîne recalculée, `As_prov` issu du candidat et le statut | unités explicites |
+
+`As_prov` est créé par BEAM-REBAR-02 et n'est jamais recalculé ni modifié dans
+cette étape. BEAM-REBAR-04 traite chaque candidat admissible de BEAM-REBAR-03
+une seule fois et conserve l'ordre d'entrée dans les groupes valides et rejetés.
+Il ne calcule ni `MRd`, ni conformité structurelle globale, ni candidat final.

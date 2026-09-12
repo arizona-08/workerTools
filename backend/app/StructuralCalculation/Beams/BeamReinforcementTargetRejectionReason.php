@@ -1,0 +1,10 @@
+<?php
+
+namespace App\StructuralCalculation\Beams;
+
+enum BeamReinforcementTargetRejectionReason: string
+{
+    case INVALID_FLEXURAL_REQUIRED_AREA = 'INVALID_FLEXURAL_REQUIRED_AREA';
+    case INVALID_MINIMUM_REQUIRED_AREA = 'INVALID_MINIMUM_REQUIRED_AREA';
+    case INVALID_SINGLY_REINFORCED_DOMAIN = 'INVALID_SINGLY_REINFORCED_DOMAIN';
+}

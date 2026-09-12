@@ -20,7 +20,9 @@ it('provides the versioned French profile and its material safety factors', func
         ->and($profile->materialSafetyFactors->gammaS)->toBe(1.15)
         ->and($profile->materialSafetyFactors->alphaCc)->toBe(1.0)
         ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementStrengthCoefficient)->toBe(0.26)
-        ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementRatio)->toBe(0.0013);
+        ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementRatio)->toBe(0.0013)
+        ->and($profile->reinforcementSpacingRequirements->barDiameterFactor)->toBe(1.0)
+        ->and($profile->reinforcementSpacingRequirements->aggregateSizeAllowance)->toBe(5.0);
 });
 
 it('provides action and category-specific combination factors', function () {

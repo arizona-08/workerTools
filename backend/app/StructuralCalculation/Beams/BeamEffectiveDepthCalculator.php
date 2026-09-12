@@ -38,6 +38,36 @@ final class BeamEffectiveDepthCalculator
         );
     }
 
+    /** Recalcule d pour un candidat DESIGN sans le confondre avec l'hypothèse Ø16 initiale. */
+    public function calculateForCandidate(
+        BeamGeometry $geometry,
+        CoverCalculationResult $cover,
+        BeamFlexuralDetailingAssumptions $detailing,
+        float $candidateDiameter,
+    ): BeamEffectiveDepthResult {
+        $this->ensurePositiveFinite($geometry->height, BeamEffectiveDepthRejectionReason::INVALID_OVERALL_DEPTH);
+        $this->ensureCover($cover);
+        $this->ensurePositiveFinite($detailing->transverseReinforcementDiameter, BeamEffectiveDepthRejectionReason::INVALID_TRANSVERSE_REINFORCEMENT_DIAMETER);
+        $this->ensurePositiveFinite($candidateDiameter, BeamEffectiveDepthRejectionReason::INVALID_DESIGN_TENSION_BAR_DIAMETER);
+
+        $centroidOffset = $cover->cNom + $detailing->transverseReinforcementDiameter + $candidateDiameter / 2;
+        $effectiveDepth = $geometry->height - $centroidOffset;
+        if (! is_finite($effectiveDepth) || $effectiveDepth <= 0) {
+            throw new BeamEffectiveDepthException(BeamEffectiveDepthRejectionReason::NON_POSITIVE_EFFECTIVE_DEPTH);
+        }
+
+        return new BeamEffectiveDepthResult(
+            mode: BeamCalculationMode::DESIGN,
+            overallDepth: $geometry->height,
+            nominalCover: $cover->cNom,
+            transverseBarDiameter: $detailing->transverseReinforcementDiameter,
+            longitudinalBarDiameter: $candidateDiameter,
+            longitudinalBarDiameterSource: LongitudinalBarDiameterSource::CANDIDATE,
+            tensionSteelCentroidOffset: $centroidOffset,
+            effectiveDepth: $effectiveDepth,
+        );
+    }
+
     /** @return array{float, LongitudinalBarDiameterSource} */
     private function longitudinalDiameter(
         BeamCalculationMode $mode,
