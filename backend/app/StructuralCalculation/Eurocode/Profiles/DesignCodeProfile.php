@@ -2,6 +2,7 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
+use App\StructuralCalculation\Eurocode\Beams\BeamConcreteShearResistanceRequirements;
 use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
@@ -23,6 +24,7 @@ final readonly class DesignCodeProfile
         public FundamentalUltimateCombinationExpression $fundamentalUltimateCombinationExpression,
         public CoverRequirements $coverRequirements,
         public BeamLongitudinalReinforcementRequirements $beamLongitudinalReinforcementRequirements,
+        public BeamConcreteShearResistanceRequirements $beamConcreteShearResistanceRequirements,
         public ReinforcementSpacingRequirements $reinforcementSpacingRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}
