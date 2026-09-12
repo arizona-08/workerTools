@@ -2,6 +2,7 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
+use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 
 /**
@@ -32,6 +33,12 @@ final class FrenchEurocodeProfileRepository
         'A' => ['psi0' => 0.7, 'psi1' => 0.5, 'psi2' => 0.3],
     ];
 
+    /** @var array{minimumReinforcementStrengthCoefficient: float, minimumReinforcementRatio: float} */
+    private const BEAM_LONGITUDINAL_REINFORCEMENT_REQUIREMENTS = [
+        'minimumReinforcementStrengthCoefficient' => 0.26,
+        'minimumReinforcementRatio' => 0.0013,
+    ];
+
     public function get(): DesignCodeProfile
     {
         return new DesignCodeProfile(
@@ -40,6 +47,9 @@ final class FrenchEurocodeProfileRepository
             actionSafetyFactors: new ActionSafetyFactors(...self::ACTION_SAFETY_FACTORS),
             fundamentalUltimateCombinationExpression: FundamentalUltimateCombinationExpression::EN1990_6_10,
             coverRequirements: CoverRequirements::frenchMvp(),
+            beamLongitudinalReinforcementRequirements: new BeamLongitudinalReinforcementRequirements(
+                ...self::BEAM_LONGITUDINAL_REINFORCEMENT_REQUIREMENTS,
+            ),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),
                 self::COMBINATION_FACTORS_BY_ACTION_CATEGORY,

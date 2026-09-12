@@ -26,6 +26,8 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `gammaC` | 1,50 | coefficient partiel béton, profil français |
 | `gammaS` | 1,15 | coefficient partiel acier, profil français |
 | `alphaCc` | 1,00 | paramètre français utilisé pour `fcd` |
+| coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
+| ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | `gammaGUnfavourable` | 1,35 | EN 1990/NF EN 1990/NA, ELU fondamental bâtiment |
 | `gammaGFavourable` | 1,00 | même domaine |
 | `gammaQ` | 1,50 | même domaine |
@@ -70,4 +72,12 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
 - Les situations accidentelles, sismiques, les actions climatiques et les
   autres catégories d'EN 1991 restent hors périmètre.
 - `fcd` et `fyd` sont calculés à la demande depuis le matériau et ce profil ;
-  ils ne sont pas des propriétés intrinsèques et ne sont jamais stockés.
+  ils ne sont pas des propriétés intrinsèques et ne sont jamais stockés. Le
+  module Poutre les réutilise pour BEAM-FLEX-02 via
+  `ConcreteDesignStrengthCalculator` et
+  `ReinforcementSteelDesignStrengthCalculator`, sans redéfinir leurs formules.
+- Les paramètres d'armature minimale de poutre sont conservés dans
+  `BeamLongitudinalReinforcementRequirements` du profil. BEAM-FLEX-07 emploie
+  `fctm` et `fyk` issus des matériaux, jamais `fyd`; le texte accessible de
+  l'amendement A1:2026-04-14 ne permet pas d'établir qu'il modifie ce choix de
+  l'Annexe 2016.

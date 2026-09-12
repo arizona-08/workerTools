@@ -2,6 +2,7 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
+use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 
 /**
@@ -20,6 +21,7 @@ final readonly class DesignCodeProfile
         public ActionSafetyFactors $actionSafetyFactors,
         public FundamentalUltimateCombinationExpression $fundamentalUltimateCombinationExpression,
         public CoverRequirements $coverRequirements,
+        public BeamLongitudinalReinforcementRequirements $beamLongitudinalReinforcementRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}
 
