@@ -3,7 +3,10 @@
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamConcreteShearResistanceRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamCrackWidthRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamDeflectionRequirements;
 use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamServiceStressRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
 
@@ -60,6 +63,35 @@ final class FrenchEurocodeProfileRepository
         'absoluteMaximumTransverseLegSpacing' => 600.0,
     ];
 
+    /** @var array{concreteCharacteristicStressLimitFactor: float, concreteQuasiPermanentStressLimitFactor: float, reinforcementCharacteristicStressLimitFactor: float} */
+    private const BEAM_SERVICE_STRESS_REQUIREMENTS = [
+        'concreteCharacteristicStressLimitFactor' => 0.60,
+        'concreteQuasiPermanentStressLimitFactor' => 0.45,
+        'reinforcementCharacteristicStressLimitFactor' => 0.80,
+    ];
+
+    /** @var array{crackBondCoefficient: float, crackStrainDistributionCoefficient: float, crackSpacingCoefficient3: float, crackSpacingCoefficient4: float, shortTermKt: float, longTermKt: float, crackWidthLimitsByExposureClass: array<string, float>} */
+    private const BEAM_CRACK_WIDTH_REQUIREMENTS = [
+        'crackBondCoefficient' => 0.8,
+        'crackStrainDistributionCoefficient' => 0.5,
+        'crackSpacingCoefficient3' => 3.4,
+        'crackSpacingCoefficient4' => 0.425,
+        'shortTermKt' => 0.6,
+        'longTermKt' => 0.4,
+        'crackWidthLimitsByExposureClass' => ['XC1' => 0.4],
+    ];
+
+    /** @var array{baseRatioConstant: float, lowReinforcementCoefficient: float, lowReinforcementAdditionalCoefficient: float, highReinforcementCompressionCoefficient: float, referenceReinforcementRatioFactor: float, referenceSteelStrength: float, structuralFactorsBySupportSystem: array<string, float>} */
+    private const BEAM_DEFLECTION_REQUIREMENTS = [
+        'baseRatioConstant' => 11.0,
+        'lowReinforcementCoefficient' => 1.5,
+        'lowReinforcementAdditionalCoefficient' => 3.2,
+        'highReinforcementCompressionCoefficient' => 1 / 12,
+        'referenceReinforcementRatioFactor' => 0.001,
+        'referenceSteelStrength' => 500.0,
+        'structuralFactorsBySupportSystem' => ['SIMPLY_SUPPORTED' => 1.0],
+    ];
+
     /** @var array{barDiameterFactor: float, aggregateSizeAllowance: float, absoluteMinimumClearSpacing: float} */
     private const REINFORCEMENT_SPACING_REQUIREMENTS = [
         'barDiameterFactor' => 1.0,
@@ -81,6 +113,9 @@ final class FrenchEurocodeProfileRepository
             beamConcreteShearResistanceRequirements: new BeamConcreteShearResistanceRequirements(
                 ...self::BEAM_CONCRETE_SHEAR_RESISTANCE_REQUIREMENTS,
             ),
+            beamCrackWidthRequirements: new BeamCrackWidthRequirements(...self::BEAM_CRACK_WIDTH_REQUIREMENTS),
+            beamDeflectionRequirements: new BeamDeflectionRequirements(...self::BEAM_DEFLECTION_REQUIREMENTS),
+            beamServiceStressRequirements: new BeamServiceStressRequirements(...self::BEAM_SERVICE_STRESS_REQUIREMENTS),
             reinforcementSpacingRequirements: new ReinforcementSpacingRequirements(
                 ...self::REINFORCEMENT_SPACING_REQUIREMENTS,
             ),

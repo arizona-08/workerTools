@@ -58,6 +58,9 @@ it('uses alphaCc gammaC and gammaS from the supplied profile', function () {
         coverRequirements: $reference->coverRequirements,
         beamLongitudinalReinforcementRequirements: $reference->beamLongitudinalReinforcementRequirements,
         beamConcreteShearResistanceRequirements: $reference->beamConcreteShearResistanceRequirements,
+        beamCrackWidthRequirements: $reference->beamCrackWidthRequirements,
+        beamDeflectionRequirements: $reference->beamDeflectionRequirements,
+        beamServiceStressRequirements: $reference->beamServiceStressRequirements,
         reinforcementSpacingRequirements: $reference->reinforcementSpacingRequirements,
         combinationFactorsByActionCategory: [],
     );

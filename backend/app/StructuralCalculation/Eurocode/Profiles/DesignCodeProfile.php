@@ -3,7 +3,10 @@
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamConcreteShearResistanceRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamCrackWidthRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamDeflectionRequirements;
 use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequirements;
+use App\StructuralCalculation\Eurocode\Beams\BeamServiceStressRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
 
@@ -25,6 +28,9 @@ final readonly class DesignCodeProfile
         public CoverRequirements $coverRequirements,
         public BeamLongitudinalReinforcementRequirements $beamLongitudinalReinforcementRequirements,
         public BeamConcreteShearResistanceRequirements $beamConcreteShearResistanceRequirements,
+        public BeamCrackWidthRequirements $beamCrackWidthRequirements,
+        public BeamDeflectionRequirements $beamDeflectionRequirements,
+        public BeamServiceStressRequirements $beamServiceStressRequirements,
         public ReinforcementSpacingRequirements $reinforcementSpacingRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}

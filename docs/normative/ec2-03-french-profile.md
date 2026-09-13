@@ -32,6 +32,21 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `gammaC` | 1,50 | coefficient partiel béton, profil français |
 | `gammaS` | 1,15 | coefficient partiel acier, profil français |
 | `alphaCc` | 1,00 | paramètre français utilisé pour `fcd` |
+| `k1` contrainte béton caractéristique | 0,60 | valeur recommandée EC2 §7.2 retenue dans le profil, limite `σc,char ≤ 0,60 fck` |
+| `k2` contrainte béton quasi-permanente | 0,45 | valeur recommandée EC2 §7.2 retenue dans le profil, limite `σc,qp ≤ 0,45 fck` |
+| `k3` contrainte acier caractéristique | 0,80 | valeur recommandée EC2 §7.2 retenue dans le profil, limite `σs,char ≤ 0,80 fyk` |
+| `k1` fissuration (barres HA) | 0,80 | valeur recommandée EC2 §7.3.4, coefficient d'adhérence ; distinct des `k1` de §6.2.2 et §8.2 |
+| `k2` fissuration (flexion) | 0,50 | valeur recommandée EC2 §7.3.4, distribution des déformations ; distinct du `k2` d'espacement §8.2 |
+| `k3` fissuration | 3,40 | valeur recommandée EC2 §7.3.4 pour `sr,max` |
+| `k4` fissuration | 0,425 | valeur recommandée EC2 §7.3.4 pour `sr,max` |
+| `kt` court / long terme | 0,60 / 0,40 | valeurs recommandées EC2 §7.3.4 ; la combinaison quasi-permanente MVP est associée à `kt = 0,40` |
+| `wmax` XC1 | 0,40 mm | seule limite de fissuration explicitement validée dans le profil MVP pour BEAM-SLS-02 ; aucune valeur par défaut pour les autres expositions |
+| constante base `l/d` | 11,0 | EC2 §7.4.2, équations 7.16a/b |
+| coefficients 7.16a | 1,5 / 3,2 | EC2 §7.4.2, équation 7.16a |
+| coefficient compression 7.16b | 1/12 | EC2 §7.4.2, conservé dans le profil ; `ρ' = 0` dans le MVP simplement armé |
+| facteur de référence `ρ0` | 0,001 | `ρ0 = sqrt(fck) × 10^-3`, EC2 §7.4.2 |
+| référence correction acier | 500 MPa | coefficient de l'expression simplifiée `500/fyk × As_prov/As_req` |
+| `K` simplement appuyé | 1,00 | seul facteur structural supporté pour BEAM-SLS-03 |
 | coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | `CRd,c` cisaillement | 0,12 | `0,18 / γc` avec `γc = 1,50`, valeur recommandée §6.2.2 retenue pour le MVP faute de divergence française accessible |
@@ -76,6 +91,9 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
 ## Références normatives
 
 - EN 1992-1-1:2004, 2.4.2.4 et 3.1.6 ;
+- EN 1992-1-1:2004, §7.2 (limitation des contraintes en service) ;
+- EN 1992-1-1:2004, §7.3.2 et §7.3.4 (aire efficace tendue et calcul direct de `wk`) ;
+- EN 1992-1-1:2004, §7.4.2, équations 7.16a et 7.16b (dispense de calcul explicite de flèche) ;
 - NF EN 1992-1-1:2005 et NF EN 1992-1-1/NA:2016-03-24, qui retient la
   valeur recommandée pour `alphaCc` ;
 - NF EN 1992-1-1/NA/A1:2026-04-14, dont le contenu doit être consulté avant
@@ -116,3 +134,21 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
 - Le profil ne prétend pas couvrir la NF EN 1992-1-1/NA publiée en août 2026;
   sa prise en compte demandera une analyse normative dédiée avant toute mise à
   jour des paramètres.
+- Les facteurs ELS `0,60`, `0,45` et `0,80` sont les valeurs recommandées de
+  l'EN 1992-1-1 §7.2, reprises dans les documents JRC. Aucune divergence de
+  l'Annexe Nationale française 2016/A1:2026 n'a été établie par une source
+  normative exploitable ; ils restent donc centralisés dans le profil et non
+  dans le calculateur. Cette réserve devra être levée lors de l'analyse du
+  texte intégral de l'Annexe Nationale concernée.
+- Les paramètres de fissuration BEAM-SLS-02 sont limités à des barres HA en
+  flexion simple et à la classe d'exposition XC1. Ils reprennent les valeurs
+  recommandées première génération présentées par le JRC ; aucune limite
+  `wmax` pour une autre exposition n'est interpolée. La confirmation d'une
+  éventuelle divergence de NF EN 1992-1-1/NA:2016 ou A1:2026 nécessite le
+  texte normatif français exploitable.
+- Les paramètres BEAM-SLS-03 de la méthode `SIMPLIFIED_SPAN_DEPTH` sont
+  centralisés dans `BeamDeflectionRequirements`. Le modèle est limité à la
+  poutre rectangulaire simplement appuyée et aux sections simplement armées;
+  aucun facteur pour systèmes continus, consoles, dalles, cloisons fragiles ou
+  acier comprimé n'est interpolé. La même réserve nationale 2016/A1:2026 reste
+  applicable faute de texte français exploitable établissant une divergence.
