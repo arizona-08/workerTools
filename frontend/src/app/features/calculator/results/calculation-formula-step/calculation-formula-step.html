@@ -1,0 +1,20 @@
+<article class="calculation-formula-step">
+  <header>
+    <h5>{{ step().name }}</h5>
+    @if (step().reference; as reference) { <span>{{ reference }}</span> }
+  </header>
+  @if (step().formula; as formula) {
+    <p class="calculation-formula-step__label">Formule</p>
+    <p class="calculation-formula-step__expression">{{ formula }}</p>
+  }
+  @if (step().substitution; as substitution) {
+    <p class="calculation-formula-step__label">Substitution</p>
+    <p class="calculation-formula-step__expression">{{ substitution }}</p>
+  }
+  <p class="calculation-formula-step__label">Résultat</p>
+  <p class="calculation-formula-step__result">
+    @if (step().symbol; as symbol) { {{ symbol }} = }
+    {{ resultText() }}@if (step().unit) { <span>{{ step().unit }}</span> }
+  </p>
+  @if (step().warning; as warning) { <p class="calculation-formula-step__warning">{{ warning }}</p> }
+</article>

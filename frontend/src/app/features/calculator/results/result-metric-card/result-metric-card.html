@@ -1,0 +1,14 @@
+<article class="result-metric-card">
+  <p class="result-metric-card__label">{{ label() }}</p>
+  <p class="result-metric-card__value">
+    {{ value() }}
+    @if (unit(); as cardUnit) {
+      <span class="result-metric-card__unit">{{ cardUnit }}</span>
+    }
+  </p>
+  @if (secondaryValue(); as detail) {
+    <p class="result-metric-card__secondary">{{ detail }}</p>
+  } @else if (symbol(); as cardSymbol) {
+    <p class="result-metric-card__symbol">{{ cardSymbol }}</p>
+  }
+</article>

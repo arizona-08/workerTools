@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.result-metric-card {
+  min-height: 8.75rem;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgb(24 24 27 / 0.04);
+}
+
+.result-metric-card__label,
+.result-metric-card__secondary,
+.result-metric-card__symbol {
+  margin: 0;
+  color: #71717a;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.result-metric-card__value {
+  margin: 0.75rem 0 0;
+  color: #18181b;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.result-metric-card__unit {
+  color: #52525b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.result-metric-card__secondary,
+.result-metric-card__symbol {
+  margin-top: 0.75rem;
+}
+
+.result-metric-card__symbol {
+  color: #6c12f3;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}

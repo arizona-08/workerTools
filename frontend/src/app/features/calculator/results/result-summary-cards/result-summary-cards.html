@@ -1,0 +1,11 @@
+<section class="result-summary-cards" aria-label="Valeurs principales du calcul">
+  @for (card of cards(); track card.label) {
+    <app-result-metric-card
+      [label]="card.label"
+      [value]="card.value"
+      [unit]="card.unit"
+      [symbol]="card.symbol"
+      [secondaryValue]="card.secondaryValue"
+    />
+  }
+</section>

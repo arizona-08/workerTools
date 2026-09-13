@@ -753,3 +753,97 @@ L'ordre de priorité est centralisé : `NOT_COMPLIANT`, puis `NOT_CHECKED` ou
 `CALCULATION_METHOD_NOT_SUPPORTED`, puis `COMPLIANT`. BEAM-RESULT-01 lit
 uniquement les résultats en amont : il ne calcule aucune formule Eurocode et
 ne désigne aucune vérification gouvernante.
+
+## Résumé et indicateur de conformité Poutre BEAM-RESULT-03 / UI-RESULT-01
+
+| Nom | Type / origine | Rôle | Unité / remarque |
+|---|---|---|---|
+| `summary.utilization` | `number \| null`, DERIVED | taux brut de la vérification gouvernante, sélectionné par BEAM-RESULT-02 et transmis par BEAM-RESULT-03 | sans dimension ; l'interface le convertit uniquement pour l'afficher en pourcentage, sans l'arrondir dans le domaine métier. |
+| `summary.status` | `BeamVerificationStatus`, DERIVED | statut global de BEAM-RESULT-01, source de vérité de la conformité affichée | — ; le frontend ne déduit jamais ce statut du taux. |
+| `summary.governingVerificationType` | `string \| null`, DERIVED | identifiant de la vérification gouvernante déterminée par BEAM-RESULT-02 | — ; `null` lorsque aucune vérification gouvernante ne peut être établie. |
+| `ResultComplianceIndicator` | composant Angular, DERIVED | présente ces trois valeurs sous forme de donut, nombre, texte et symbole d'état | aucun calcul structurel, aucune agrégation ou décision de conformité. |
+| `visualProgress` | `number`, DERIVED (UI) | progression graphique du donut, bornée entre `0` et `1` | sans dimension ; ne modifie jamais `summary.utilization`, notamment lorsque le taux dépasse 1. |
+
+L'indicateur conserve le ratio brut provenant du backend. Son pourcentage et
+son arc SVG sont exclusivement des choix de présentation ; une couleur ne
+constitue jamais le seul signal de conformité.
+
+Les identifiants gouvernants `FLEXURE`, `SHEAR`, `STRESS`, `CRACK` et
+`DEFLECTION` sont rendus respectivement par `Flexion`, `Cisaillement`,
+`Contraintes ELS`, `Fissuration` et `Déformation`. Ces libellés ne sont ni une
+nouvelle classification ni une sélection de vérification côté frontend.
+
+## Cartes de résultats Poutre UI-RESULT-02
+
+| Nom | Type / origine | Rôle | Unité / remarque |
+|---|---|---|---|
+| `summary.designBendingMoment` | `number \| null`, DERIVED | moment de calcul transmis par BEAM-RESULT-03 | kN·m ; affiché avec deux décimales françaises. |
+| `summary.effectiveDepth` | `number \| null`, DERIVED | hauteur utile transmise par BEAM-RESULT-03 | mm ; affichée sans conversion en cm. |
+| `summary.requiredLongitudinalReinforcementArea` | `number \| null`, DERIVED | aire d'armature longitudinale requise du candidat évalué | mm² ; affichée avec deux décimales françaises. |
+| `summary.longitudinalReinforcement` | objet ou `null`, DERIVED | ferraillage longitudinal retenu ou fourni : `source`, `barCount`, `barDiameter`, `providedArea` | `source` vaut `PROPOSED` ou `PROVIDED`; `providedArea` est en mm². |
+| `ResultSummaryCards` | composant Angular, DERIVED | organise ces quatre données en cartes de synthèse | lit exclusivement BEAM-RESULT-03, sans lire `BeamCalculationDetails`. |
+
+Le format `4 HA12` et les séparateurs français sont des présentations UI de
+`barCount` et `barDiameter`; ils ne sont jamais réinterprétés pour reconstruire
+le ferraillage. Une donnée absente est affichée `—`, jamais comme une valeur
+zéro.
+
+## Message synthétique Poutre UI-RESULT-03
+
+| Nom | Type / origine | Rôle | Remarque |
+|---|---|---|---|
+| `ResultSummaryMessage.status` | `BeamVerificationStatus`, DERIVED | sélectionne exclusivement le message principal | vient de BEAM-RESULT-01 via BEAM-RESULT-03 ; aucun statut n'est déduit du taux. |
+| `ResultSummaryMessage.utilization` | `number \| null`, DERIVED | taux gouvernant affiché seulement dans la phrase secondaire | sans dimension ; conversion en pourcentage et arrondi exclusivement UI. |
+| `ResultSummaryMessage.governingVerificationType` | identifiant ou `null`, DERIVED | vérification la plus sollicitée, affichée seulement si elle existe | vient de BEAM-RESULT-02 ; le frontend ne la sélectionne pas. |
+| `ResultSummaryMessage.presentation.message` | texte UI, DERIVED | synthèse courte affichée à l'utilisateur | ne contient ni formule, ni recommandation de redimensionnement, ni promesse de certification. |
+
+Pour `COMPLIANT`, le message reste limité aux vérifications réalisées « dans
+le périmètre actuel »; pour `NOT_CHECKED` et
+`CALCULATION_METHOD_NOT_SUPPORTED`, il ne conclut jamais à une conformité.
+
+## Accordéons du détail Poutre UI-RESULT-04
+
+| Section affichée | Source `BeamCalculationDetails` | Rôle UI |
+|---|---|---|
+| Hypothèses et paramètres | `assumptions` | présente la configuration et les données structurantes disponibles. |
+| Calcul des sollicitations | `combinations`, `internalForces` | présente séparément les combinaisons déjà constituées et les efforts déjà calculés. |
+| Flexion | `flexure` | présente les résultats de la chaîne de flexion. |
+| Armatures | `reinforcement` | présente le ferraillage `PROPOSED` ou `PROVIDED` et les aires associées. |
+| Cisaillement | `shear` | présente les résistances et étriers déjà déterminés. |
+| ELS | `serviceability` | présente les sous-sections Contraintes, Fissuration et Déformation. |
+
+`CalculationDetailsAccordion` ne transforme les nombres qu’en texte de
+présentation (locale française, unités et statuts lisibles). Il ne recompose ni
+combinaison, ni effort, ni résistance, ni statut. Avec la méthode
+`SIMPLIFIED_SPAN_DEPTH`, il explique explicitement qu’aucune flèche physique en
+millimètres n’est affichée; la clé éventuelle `deflectionMm` est exclue de la
+présentation.
+
+## Étapes de formule UI-RESULT-05
+
+| Nom | Type / origine | Rôle | Remarque |
+|---|---|---|---|
+| `CalculationFormulaStep` | contrat de présentation / DERIVED | étape textuelle : `name`, `formula`, `substitution`, `result`, unité, référence, warning et statut facultatifs | le frontend l'affiche sans l'évaluer ni la reconstruire. |
+| `calculationSteps` | liste optionnelle / DERIVED | étapes éventuellement regroupées par `actions`, `flexure`, `reinforcement`, `shear` ou `serviceability` | prévue dans le contrat frontend pour une future exposition structurée de BEAM-RESULT-04. |
+
+Le `BeamCalculationDetails` backend actuel ne contient pas encore de propriété
+`calculationSteps`, ni de triplet explicite `formula` / `substitution` /
+`result`. Bien que certains DTO internes portent une formule, ils ne sont pas
+exposés par BEAM-RESULT-04. UI-RESULT-05 masque donc toute sous-section de
+formules en l'absence de ces données, plutôt que de dupliquer les expressions
+normatives dans Angular.
+
+## Orchestration complète Poutre BEAM-INTEGRATION-01
+
+| Nom | Type / origine | Rôle | Remarque |
+|---|---|---|---|
+| `BeamCalculationOrchestrator` | service applicatif | enchaîne la validation du payload, les actions, efforts, vérifications ULS/SLS puis BEAM-RESULT-01 à 04 | ne porte aucune formule ni coefficient propre : ceux-ci restent dans les calculateurs et profils existants. |
+| `POST /api/beam/calculations` | API | reçoit le `BeamCalculationPayload` déjà employé par le formulaire Poutre | répond avec `summary`, `verifications` et `details`; les erreurs de domaine sont renvoyées en `422`. |
+| `summary` | DERIVED | projection BEAM-RESULT-03 pour l'indicateur, les cartes et le message | `utilization`, `status` et `governingVerificationType` restent la source de vérité backend. |
+| `verifications` | DERIVED | agrégation BEAM-RESULT-01 de Flexion, Cisaillement, Contraintes, Fissuration et Déformation | aucune agrégation n'est faite par Angular. |
+| `details` | DERIVED | détail BEAM-RESULT-04 structuré pour les accordéons | reprend les DTO calculés sans recomposer de résultats côté contrôleur ou frontend. |
+
+Le formulaire convertit ses unités de saisie vers le payload interne en mm
+avant l'appel HTTP. Pendant la requête, l'interface empêche un deuxième envoi;
+une réponse reçue remplace le résultat affiché, et une erreur backend est
+présentée explicitement sans produire de résultat local.

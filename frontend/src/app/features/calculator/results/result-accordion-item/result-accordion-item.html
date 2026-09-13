@@ -1,0 +1,19 @@
+<section class="result-accordion-item">
+  <h3 class="result-accordion-item__heading">
+    <button
+      type="button"
+      class="result-accordion-item__trigger"
+      [attr.aria-expanded]="expanded()"
+      [attr.aria-controls]="contentId()"
+      (click)="toggle()"
+    >
+      <span>{{ title() }}</span>
+      <svg lucideChevronDown class="result-accordion-item__chevron" [class.result-accordion-item__chevron--expanded]="expanded()" aria-hidden="true"></svg>
+    </button>
+  </h3>
+  @if (expanded()) {
+    <div [id]="contentId()" class="result-accordion-item__content">
+      <ng-content />
+    </div>
+  }
+</section>

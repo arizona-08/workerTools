@@ -136,6 +136,19 @@ export class BeamForm {
     return this.materialCatalog.catalog() !== null && this.payload() !== null;
   }
 
+  /** Valide toutes les sections avant qu'un parent déclenche l'appel au moteur. */
+  requestPayload(): BeamCalculationPayload | null {
+    this.geometryForm.markAllAsTouched();
+    this.materialsForm.markAllAsTouched();
+    this.permanentLoadsForm.markAllAsTouched();
+    this.variableLoadForm.markAllAsTouched();
+    if (this.calculationMode() === 'VERIFICATION') {
+      this.longitudinalReinforcementForm.markAllAsTouched();
+    }
+
+    return this.payload();
+  }
+
   private catalogValueValidator(control: AbstractControl, values: Array<string | number>): ValidationErrors | null {
     return values.length === 0 || values.includes(control.value) ? null : { unavailableCatalogValue: true };
   }

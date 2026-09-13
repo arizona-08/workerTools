@@ -1,0 +1,8 @@
+<dl class="detail-value-list">
+  @for (row of rows(); track row.label) {
+    <div class="detail-value-list__row">
+      <dt>{{ row.label }}</dt>
+      <dd>{{ row.value }}@if (row.unit) { <span>{{ row.unit }}</span> }</dd>
+    </div>
+  }
+</dl>
