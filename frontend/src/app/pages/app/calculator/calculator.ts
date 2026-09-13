@@ -56,4 +56,8 @@ export class Calculator {
       },
     });
   }
+
+  clearCalculationResult(): void {
+    this.calculationResult.set(null);
+  }
 }

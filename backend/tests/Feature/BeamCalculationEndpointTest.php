@@ -32,6 +32,10 @@ it('orchestrates the complete design calculation and exposes its existing result
         ->assertJsonPath('summary.longitudinalReinforcement.barCount', 2)
         ->assertJsonPath('summary.longitudinalReinforcement.barDiameter', 16)
         ->assertJsonPath('details.assumptions.geometry.width', 300)
+        ->assertJsonPath('details.assumptions.concreteClass', 'C30/37')
+        ->assertJsonPath('details.assumptions.steelGrade', 'B500B')
+        ->assertJsonPath('details.assumptions.exposureClass', 'XC1')
+        ->assertJsonPath('details.serviceability.crack.status', 'NOT_COMPLIANT')
         ->assertJsonPath('details.combinations.characteristicActions.permanent.totalPermanentLoad', 9.5);
 
     expect(abs($response->json('details.assumptions.cover.cNom') - 20.0))->toBeLessThan(1e-12)
@@ -61,4 +65,24 @@ it('returns a validation response for unsupported beam configuration', function 
     $this->postJson('/api/beam/calculations', $payload)
         ->assertUnprocessable()
         ->assertJsonPath('reason', 'UNSUPPORTED_SUPPORT_SYSTEM');
+});
+
+it('rejects an exposure class known by the domain but unsupported by the complete beam calculation', function () {
+    $payload = beamCalculationPayload();
+    $payload['materials']['exposureClasses'] = ['XC4'];
+
+    $this->postJson('/api/beam/calculations', $payload)
+        ->assertUnprocessable()
+        ->assertJsonPath('reason', 'UNSUPPORTED_EXPOSURE_CLASS');
+});
+
+it('uses the selected concrete class throughout the calculation details', function () {
+    $payload = beamCalculationPayload();
+    $payload['materials']['concreteClass'] = 'C25/30';
+
+    $response = $this->postJson('/api/beam/calculations', $payload);
+
+    $response->assertOk()
+        ->assertJsonPath('details.assumptions.concreteClass', 'C25/30')
+        ->assertJsonPath('details.flexure.designStrengths.concrete.concreteClass', 'C25/30');
 });

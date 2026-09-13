@@ -88,7 +88,7 @@
   </fieldset>
 
   <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="materialsForm">
-    <legend class="text-base font-semibold text-zinc-900">Matériaux</legend>
+    <legend class="text-base font-semibold text-zinc-900">Matériaux et durabilité</legend>
     <div class="mt-4 grid gap-4 sm:grid-cols-3">
       <div>
         <label for="concrete-class" class="block text-sm font-medium text-zinc-900">Classe de béton</label>
@@ -103,13 +103,14 @@
         </select>
       </div>
       <div>
-        <label for="exposure-classes" class="block text-sm font-medium text-zinc-900">Classes d’exposition</label>
-        <select id="exposure-classes" multiple formControlName="exposureClasses" class="mt-2 min-h-20 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+        <label for="exposure-class" class="block text-sm font-medium text-zinc-900">Classe d’exposition</label>
+        <select id="exposure-class" formControlName="exposureClass" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
           @for (exposureClass of materialCatalog.catalog()?.exposureClasses ?? []; track exposureClass.code) { <option [value]="exposureClass.code">{{ exposureClass.code }} — {{ exposureClass.label }}</option> }
         </select>
       </div>
     </div>
   </fieldset>
+  <p class="mt-2 text-sm text-zinc-600">Les choix proposés correspondent aux classes actuellement prises en charge par le calcul Poutre complet.</p>
 
   <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="permanentLoadsForm">
     <legend class="text-base font-semibold text-zinc-900">Actions &amp; charges</legend>

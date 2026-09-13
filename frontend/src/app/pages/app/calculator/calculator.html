@@ -22,7 +22,7 @@
   <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
     <section class="rounded-xl border border-zinc-200 bg-white p-6" aria-label="Formulaire de calcul">
       @switch (selectedModule()) {
-        @case ('Poutre') { <app-beam-form /> }
+        @case ('Poutre') { <app-beam-form (formChanged)="clearCalculationResult()" /> }
         @case ('Dalle') { <app-slab-form /> }
       }
     </section>

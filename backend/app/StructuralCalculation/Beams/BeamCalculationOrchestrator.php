@@ -20,6 +20,7 @@ use LogicException;
 final readonly class BeamCalculationOrchestrator
 {
     public function __construct(
+        private BeamCalculationCapabilities $capabilities,
         private FrenchEurocodeProfileRepository $profiles,
         private ReinforcedConcreteUnitWeightRepository $unitWeights,
         private ConcreteClassRepository $concreteClasses,
@@ -61,6 +62,7 @@ final readonly class BeamCalculationOrchestrator
         if ($setup->materials === null || $setup->permanentLoads === null || $setup->variableLoad === null) {
             throw new LogicException('INCOMPLETE_BEAM_CALCULATION_SETUP');
         }
+        $this->capabilities->validate($setup->materials);
 
         $profile = $this->profiles->get();
         $concrete = $this->concreteClasses->get($setup->materials->concreteClass);
@@ -134,7 +136,15 @@ final readonly class BeamCalculationOrchestrator
             $aggregation,
             $governing,
             $summary,
-            ['configuration' => $setup->configuration, 'geometry' => $setup->geometry, 'materials' => $setup->materials, 'cover' => $cover],
+            [
+                'configuration' => $setup->configuration,
+                'geometry' => $setup->geometry,
+                'materials' => $setup->materials,
+                'concreteClass' => $setup->materials->concreteClass->value,
+                'steelGrade' => $setup->materials->steelGrade->value,
+                'exposureClass' => $setup->materials->exposureClasses[0]->value,
+                'cover' => $cover,
+            ],
             ['characteristicActions' => $actions, 'ultimate' => $ultimate, 'serviceability' => $serviceability],
             ['bendingMoments' => $moments, 'shearForces' => $shears],
             ['designStrengths' => $strengths, 'initialEffectiveDepth' => $initialDepth, 'reducedMoment' => $reduced, 'neutralAxis' => $neutral, 'leverArm' => $lever, 'domain' => $domain],

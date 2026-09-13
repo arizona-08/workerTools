@@ -847,3 +847,25 @@ Le formulaire convertit ses unités de saisie vers le payload interne en mm
 avant l'appel HTTP. Pendant la requête, l'interface empêche un deuxième envoi;
 une réponse reçue remplace le résultat affiché, et une erreur backend est
 présentée explicitement sans produire de résultat local.
+
+## Matériaux et durabilité du calcul Poutre
+
+| Entrée | Origine | Valeurs actuellement proposées | Rôle |
+|---|---|---|---|
+| `concreteClass` | USER | `C20/25`, `C25/30`, `C30/37` | la classe est envoyée au backend ; `fck`, `fcm`, `fctm`, `Ecm` et `fcd` restent dérivés du référentiel et du profil. |
+| `steelGrade` | USER | `B500B` | la nuance reste explicite dans le payload ; `fyk`, `Es` et `fyd` sont dérivés côté backend. |
+| `exposureClass` | USER (sélecteur unique) | `XC1` | le formulaire le transforme seulement en la liste domaine `exposureClasses: ['XC1']`; `c_min,dur`, `c_min` et `c_nom` restent calculés par EC2-05. |
+
+`BeamCalculationCapabilities` est la source backend des options exposées par
+`GET /api/beam/material-catalog` et de leur validation lors du calcul. Les
+classes béton du référentiel passent la chaîne Poutre actuelle ; `B500B` est la
+seule nuance du référentiel MVP. Bien que le référentiel d'exposition contienne
+de nombreuses classes, `XC1` est la seule exposition proposée : le profil
+français actuel ne fournit une limite de fissuration BEAM-SLS-02 que pour elle.
+Une exposition connue telle que `XC4` est donc refusée avec
+`UNSUPPORTED_EXPOSURE_CLASS`, sans repli silencieux ni règle normative ajoutée.
+
+Angular ne contient aucune table de propriétés mécaniques, d'enrobage ou de
+fissuration. Une modification de matériau efface le résultat précédemment
+affiché : le prochain résultat ne peut ainsi pas être confondu avec l'entrée
+modifiée.

@@ -22,7 +22,7 @@ describe('Calculator', () => {
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
     });
     fixture.detectChanges();
   });
@@ -72,5 +72,25 @@ describe('Calculator', () => {
 
     expect(component.isCalculating()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('Configuration non prise en charge.');
+  });
+
+  it('sends a changed concrete selection and clears an obsolete result before the next calculation', () => {
+    const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
+    form.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
+    component.calculationResult.set({
+      summary: { utilization: 0.9, status: 'COMPLIANT', governingVerificationType: 'FLEXURE', designBendingMoment: 1, effectiveDepth: 1, requiredLongitudinalReinforcementArea: 1, longitudinalReinforcement: null },
+      verifications: {}, details: { overallStatus: 'COMPLIANT', ulsStatus: 'COMPLIANT', slsStatus: 'COMPLIANT', governingVerification: null, assumptions: {}, combinations: {}, internalForces: {}, flexure: {}, reinforcement: {}, shear: {}, serviceability: {}, warnings: [] },
+    });
+    form.materialsForm.controls.concreteClass.setValue('C25/30');
+    fixture.detectChanges();
+
+    expect(component.calculationResult()).toBeNull();
+    component.calculateBeam();
+    const request = http.expectOne('/api/beam/calculations');
+    expect(request.request.body.materials).toEqual({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClasses: ['XC1'] });
+    request.flush({
+      summary: { utilization: null, status: 'NOT_CHECKED', governingVerificationType: null, designBendingMoment: null, effectiveDepth: null, requiredLongitudinalReinforcementArea: null, longitudinalReinforcement: null },
+      verifications: {}, details: { overallStatus: 'NOT_CHECKED', ulsStatus: 'NOT_CHECKED', slsStatus: 'NOT_CHECKED', governingVerification: null, assumptions: {}, combinations: {}, internalForces: {}, flexure: {}, reinforcement: {}, shear: {}, serviceability: {}, warnings: [] },
+    });
   });
 });
