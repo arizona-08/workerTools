@@ -738,3 +738,18 @@ BEAM-SLS-03 ne retourne volontairement aucune flèche en millimètres. Ses
 warnings indiquent que la méthode est simplifiée, que le fluage/retrait ne sont
 pas modélisés explicitement et que le contrôle lié aux cloisons fragiles reste
 à renseigner dans un futur périmètre.
+
+## Agrégation des vérifications Poutre BEAM-RESULT-01
+
+| Nom | Type / origine | Rôle |
+|---|---|---|
+| `ulsStatus` | DERIVED | agrégation de la flexion ELU et du cisaillement ELU. |
+| `slsStatus` | DERIVED | agrégation des contraintes, de la fissuration et de la déformation. |
+| `overallStatus` | DERIVED | `COMPLIANT` seulement si toutes les vérifications obligatoires applicables sont conformes. |
+| `NOT_CHECKED` | état | absence de conclusion suffisante ; ne signifie jamais `COMPLIANT`. |
+| `NOT_APPLICABLE` | état | contrôle explicitement non applicable, ignoré pour la décision sans être converti en contrôle fait. |
+
+L'ordre de priorité est centralisé : `NOT_COMPLIANT`, puis `NOT_CHECKED` ou
+`CALCULATION_METHOD_NOT_SUPPORTED`, puis `COMPLIANT`. BEAM-RESULT-01 lit
+uniquement les résultats en amont : il ne calcule aucune formule Eurocode et
+ne désigne aucune vérification gouvernante.
