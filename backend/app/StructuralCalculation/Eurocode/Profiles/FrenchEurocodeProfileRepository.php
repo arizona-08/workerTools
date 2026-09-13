@@ -41,7 +41,7 @@ final class FrenchEurocodeProfileRepository
         'minimumReinforcementRatio' => 0.0013,
     ];
 
-    /** @var array{concreteShearResistanceCoefficient: float, compressionStressCoefficient: float, minimumShearStressCoefficient: float, sizeEffectReferenceDepth: float, maximumSizeEffectFactor: float, maximumLongitudinalReinforcementRatio: float, minimumCotTheta: float, maximumCotTheta: float, minimumShearReinforcementCoefficient: float, concreteShearStrengthReductionCoefficient: float, concreteShearStrengthReductionReferenceStrength: float, nonPrestressedAlphaCw: float} */
+    /** @var array{concreteShearResistanceCoefficient: float, compressionStressCoefficient: float, minimumShearStressCoefficient: float, sizeEffectReferenceDepth: float, maximumSizeEffectFactor: float, maximumLongitudinalReinforcementRatio: float, minimumCotTheta: float, maximumCotTheta: float, minimumShearReinforcementCoefficient: float, concreteShearStrengthReductionCoefficient: float, concreteShearStrengthReductionReferenceStrength: float, nonPrestressedAlphaCw: float, maximumLongitudinalStirrupSpacingFactor: float, maximumTransverseLegSpacingFactor: float, absoluteMaximumTransverseLegSpacing: float} */
     private const BEAM_CONCRETE_SHEAR_RESISTANCE_REQUIREMENTS = [
         'concreteShearResistanceCoefficient' => 0.12,
         'compressionStressCoefficient' => 0.15,
@@ -55,6 +55,9 @@ final class FrenchEurocodeProfileRepository
         'concreteShearStrengthReductionCoefficient' => 0.6,
         'concreteShearStrengthReductionReferenceStrength' => 250.0,
         'nonPrestressedAlphaCw' => 1.0,
+        'maximumLongitudinalStirrupSpacingFactor' => 0.75,
+        'maximumTransverseLegSpacingFactor' => 0.75,
+        'absoluteMaximumTransverseLegSpacing' => 600.0,
     ];
 
     /** @var array{barDiameterFactor: float, aggregateSizeAllowance: float, absoluteMinimumClearSpacing: float} */

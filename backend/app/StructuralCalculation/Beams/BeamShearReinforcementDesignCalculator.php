@@ -15,6 +15,7 @@ final readonly class BeamShearReinforcementDesignCalculator
     public function __construct(
         private ReinforcementSteelDesignStrengthCalculator $steelDesignStrengthCalculator,
         private ForceConverter $forceConverter,
+        private BeamShearReinforcementResistanceCalculator $reinforcementResistanceCalculator,
     ) {}
 
     public function calculate(
@@ -49,7 +50,7 @@ final readonly class BeamShearReinforcementDesignCalculator
             $minimum > $required => BeamShearReinforcementGoverningRequirement::MINIMUM_TRANSVERSE_REINFORCEMENT,
             default => BeamShearReinforcementGoverningRequirement::EQUAL_REQUIREMENTS,
         };
-        $targetResistance = $this->forceConverter->newtonsToKilonewtons($target * $leverArm->leverArm * $fywd * $assumptions->designCotTheta);
+        $targetResistance = $this->reinforcementResistanceCalculator->calculate($target, $leverArm->leverArm, $fywd, $assumptions->designCotTheta);
 
         return new BeamShearReinforcementDesignResult(
             $concreteShear->designShearForce, $concreteShear->concreteShearResistance, $requiredByDemand,

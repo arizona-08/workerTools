@@ -118,3 +118,22 @@ distinctes et ne sont ni additionnées entre elles ni avec `VRd,c`.
 La même réserve de validation exhaustive du profil français 2016 + A1:2026,
 ainsi que de la nouvelle Annexe Nationale publiée en août 2026, s'applique aux
 paramètres de ce contrôle.
+
+## Proposition d'étriers — BEAM-SHEAR-04
+
+BEAM-SHEAR-04 transforme seulement `Asw/s_target` en dispositions discrètes.
+Le MVP utilise des étriers verticaux homogènes à deux branches, diamètres
+applicatifs Ø6/8/10/12 et pas constants du catalogue 100 à 400 mm. Ces choix
+sont des configurations WorkerTools, non des prescriptions EC2.
+
+Pour chaque disposition, `Asw = n_legs πφ²/4`, `Asw/s = Asw/s`, et les règles
+§9.2.2 contrôlées sont `s_l,max = 0,75d` et
+`s_t,max = min(0,75d, 600 mm)`. La distance transversale MVP entre axes vaut
+`bw - 2(c_nom + φ/2)`. `VRd,s` est recalculé à partir de la densité réellement
+proposée avec la formule déjà utilisée par BEAM-SHEAR-02.
+
+Aucune proposition n'est admise si BEAM-SHEAR-03 retourne un dépassement de
+`VRd,max`. Le MVP exclut étriers inclinés, plus de deux branches, cadres
+complexes, pas variables, zones d'appui, torsion et sections T/L. Une
+proposition recommandée reste une disposition locale, non une conformité
+globale de poutre.

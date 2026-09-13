@@ -45,6 +45,9 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | coefficient de `ν1` | 0,60 | règle §6.2.3 : `ν1 = 0,6 × (1 - fck / 250)` |
 | référence de `ν1` | 250 MPa | même règle §6.2.3 |
 | `αcw` non précontraint, `NEd = 0` | 1,00 | règle de profil MVP pour §6.2.3 |
+| coefficient `s_l,max` | 0,75 | §9.2.2, étriers verticaux : `s_l,max = 0,75d` |
+| coefficient `s_t,max` | 0,75 | §9.2.2 : `s_t,max = min(0,75d, 600 mm)` |
+| plafond absolu `s_t,max` | 600 mm | §9.2.2 |
 | `k1` espacement libre | 1,00 | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
 | `k2` espacement libre | 5 mm | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
 | `gammaGUnfavourable` | 1,35 | EN 1990/NF EN 1990/NA, ELU fondamental bâtiment |

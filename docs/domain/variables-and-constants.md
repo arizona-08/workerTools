@@ -650,3 +650,24 @@ valeur `VEd > VRd,max` ne déclenche aucune augmentation automatique de
 `Asw/s`, car davantage d'étriers ne supprime pas la limitation des bielles
 comprimées. Le moteur ne calcule pas `VRd,c + VRd,s`, `VRd,c + VRd,max`, ni une
 résistance globale minimale.
+
+## Proposition discrète d'étriers Poutre BEAM-SHEAR-04
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamStirrupProposalConfiguration.diameters` | `φ_st` | catalogue / CONFIG | diamètres applicatifs MVP `[6, 8, 10, 12]`; ce n'est pas une liste normative exhaustive | mm |
+| `stirrupLegs` | `n_legs` | configuration / CONFIG | nombre fixe de branches efficaces MVP : `2`; aucune disposition 3/4 branches ou cadres multiples | — |
+| `spacings` | `s` | catalogue / CONFIG | pas discrets supportés `[100, 125, 150, 175, 200, 225, 250, 300, 350, 400]`, sans préférence normative | mm |
+| `providedArea` | `Asw` | valeur dérivée / DERIVED | aire de l'étrier : `n_legs × π × φ_st² / 4` | mm² |
+| `providedAreaPerLength` | `Asw/s_prov` | valeur dérivée / DERIVED | `Asw / s`, comparé sans arrondi à la cible BEAM-SHEAR-02 | mm²/mm |
+| `maximumLongitudinalSpacing` | `s_l,max` | règle de profil / DERIVED | `0,75 × d` pour étriers verticaux | mm |
+| `transverseLegSpacing` | `s_t` | géométrie dérivée / DERIVED | distance représentative entre axes : `bw - 2(c_nom + φ_st/2)` | mm |
+| `maximumTransverseLegSpacing` | `s_t,max` | règle de profil / DERIVED | `min(0,75 × d, 600 mm)` | mm |
+| `reinforcementExcess` | — | valeur dérivée / DERIVED | `Asw/s_prov - Asw/s_target`, premier critère de classement | mm²/mm |
+| `providedShearResistance` | `VRd,s_prov` | valeur dérivée / DERIVED | formule VRd,s réutilisée de BEAM-SHEAR-02 pour la disposition réelle | kN |
+
+Une proposition est rejetée si le catalogue, la quantité, `s_l,max`, `s_t,max`,
+`VRd,s` lorsque la demande gouverne, ou `VRd,max` échoue. Les candidats admis
+sont classés par excès croissant, puis pas croissant, puis diamètre croissant;
+la recommandation est une préférence applicative déterministe, pas une
+conformité globale de poutre.

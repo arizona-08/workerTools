@@ -18,5 +18,8 @@ final readonly class BeamConcreteShearResistanceRequirements
         public float $concreteShearStrengthReductionCoefficient,
         public float $concreteShearStrengthReductionReferenceStrength,
         public float $nonPrestressedAlphaCw,
+        public float $maximumLongitudinalStirrupSpacingFactor,
+        public float $maximumTransverseLegSpacingFactor,
+        public float $absoluteMaximumTransverseLegSpacing,
     ) {}
 }
