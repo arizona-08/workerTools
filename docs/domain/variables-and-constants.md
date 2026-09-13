@@ -671,3 +671,70 @@ Une proposition est rejetée si le catalogue, la quantité, `s_l,max`, `s_t,max`
 sont classés par excès croissant, puis pas croissant, puis diamètre croissant;
 la recommandation est une préférence applicative déterministe, pas une
 conformité globale de poutre.
+
+## Limitation locale des contraintes ELS Poutre BEAM-SLS-01
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `modularRatio` | `αe` | valeur dérivée / DERIVED | rapport modulaire instantané de la section fissurée : `Es / Ecm`. Il ne remplace pas `Ecm` par un module effectif de long terme. | sans dimension |
+| `crackedNeutralAxisDepth` | `x_sls` | valeur dérivée / DERIVED | profondeur de l'axe neutre de la section fissurée, racine physique de `(b / 2)x² + αe As x - αe As d = 0`. Distincte de l'axe neutre ELU. | mm |
+| `crackedSecondMomentOfArea` | `I_cr` | valeur dérivée / DERIVED | inertie transformée de la section fissurée : `b x_sls³ / 3 + αe As(d - x_sls)²`. Le béton tendu est négligé. | mm⁴ |
+| `concreteCharacteristic.stress` | `σc,char` | valeur dérivée / DERIVED | contrainte maximale de compression béton de la section fissurée sous `MCharacteristic` : `M x_sls / I_cr`. | MPa |
+| `steelCharacteristic.stress` | `σs,char` | valeur dérivée / DERIVED | contrainte de traction de l'acier sous `MCharacteristic` : `αe M(d - x_sls) / I_cr`. | MPa |
+| `concreteQuasiPermanent.stress` | `σc,qp` | valeur dérivée / DERIVED | contrainte maximale de compression béton sous `MQuasiPermanent`, calculée avec le même modèle instantané. | MPa |
+| `BeamServiceStressRequirements.concreteCharacteristicStressLimitFactor` | `k1` | paramètre national / PROFILE | facteur de limite béton caractéristique : `0,60`; limite `k1 × fck`. | sans dimension |
+| `BeamServiceStressRequirements.concreteQuasiPermanentStressLimitFactor` | `k2` | paramètre national / PROFILE | facteur de limite béton quasi-permanente : `0,45`; limite `k2 × fck`. Un dépassement signale localement la sortie du domaine associé au fluage linéaire. | sans dimension |
+| `BeamServiceStressRequirements.reinforcementCharacteristicStressLimitFactor` | `k3` | paramètre national / PROFILE | facteur de limite acier caractéristique : `0,80`; limite `k3 × fyk`, jamais `fyd`. | sans dimension |
+| `BeamServiceStressCheck.utilization` | — | valeur dérivée / DERIVED | taux local `stress / limit`; il est conservé non arrondi et n'est pas une conformité globale de la poutre. | sans dimension |
+| `BeamServiceStressCheckStatus` | — | état dérivé / DERIVED | `COMPLIANT`, `NOT_COMPLIANT`, `NOT_APPLICABLE` ou `NOT_CHECKED`. La vérification fréquente est `NOT_APPLICABLE` dans cette étape : aucune limite n'est inventée. | — |
+
+BEAM-SLS-01 impose `sectionModel = CRACKED_ELASTIC`, en flexion simple avec
+`NEd = 0`, adhérence parfaite et acier tendu seul. Une aire d'armature comprimée
+non nulle est explicitement refusée. Aucun modèle de fluage (`φ`, `Eceff`), de
+fissuration ou de flèche n'est produit par cette étape.
+
+## Fissuration directe Poutre BEAM-SLS-02
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `coverToLongitudinalBar` | `c` | valeur dérivée / DERIVED | enrobage jusqu'à la **surface** de la barre longitudinale : `c_nom + φ_st`. `φ/2` n'est pas ajouté ici ; il intervient seulement pour l'axe de barre. | mm |
+| `barSpacing` | `s_bar` | disposition réelle / DERIVED_FROM_REINFORCEMENT_LAYOUT | espacement axe-à-axe du lit régulier : `[b - 2(c_nom + φ_st + φ/2)] / (n - 1)`. Il est distinct de l'espacement libre minimal EC2 §8.2. | mm |
+| `clearBarSpacing` | — | valeur dérivée / DERIVED | espacement libre du lit : `s_bar - φ`. | mm |
+| `effectiveTensionHeight` | `hc,eff` | valeur dérivée / DERIVED | `min(2,5(h-d), (h-x_sls)/3, h/2)`, avec `x_sls` réutilisé de BEAM-SLS-01. | mm |
+| `effectiveTensionArea` | `Ac,eff` | valeur dérivée / DERIVED | aire efficace tendue de la section rectangulaire : `b × hc,eff`, jamais `b × h`. | mm² |
+| `effectiveReinforcementRatio` | `ρp,eff` | valeur dérivée / DERIVED | `As_prov / Ac,eff`, utilisant l'armature réellement fournie, non `As_req` ni `As_target`. | sans dimension |
+| `effectiveConcreteTensileStrength` | `fct,eff` | hypothèse MVP / DERIVED | `fctm` du référentiel béton. Cette équivalence ne couvre pas les fissures précoces. | MPa |
+| `kt` | `kt` | paramètre national / PROFILE | `0,6` court terme ; `0,4` long terme. La combinaison quasi-permanente MVP dérive explicitement `LONG_TERM`, donc `0,4`. | sans dimension |
+| `maximumCrackSpacing` | `sr,max` | valeur dérivée / DERIVED | si `s_bar ≤ 5(c + φ/2)` : `k3c + k1k2k4φ/ρp,eff`; sinon `1,3(h-x_sls)`. | mm |
+| `strainDifference` | `εsm - εcm` | valeur dérivée / DERIVED | maximum de l'expression EC2 §7.3.4 et de `0,6σs/Es`, avec critère gouvernant conservé. | sans dimension |
+| `crackWidth` | `wk` | valeur dérivée / DERIVED | largeur caractéristique : `sr,max × (εsm - εcm)`, sans arrondi intermédiaire. | mm |
+| `crackWidthLimit` | `wmax` | paramètre national / PROFILE | limite de fissuration par classe d'exposition. Seule `XC1 → 0,4 mm` est validée et supportée par BEAM-SLS-02 ; les autres classes sont refusées explicitement. | mm |
+| `BeamCrackVerificationStatus` | — | état dérivé / DERIVED | statut local `COMPLIANT`, `NOT_COMPLIANT` ou `NOT_CHECKED`. Il ne constitue pas le statut ELS global. | — |
+
+Les coefficients de fissuration ont des noms non ambigus dans
+`BeamCrackWidthRequirements` : `crackBondCoefficient` (`k1 = 0,8`, HA),
+`crackStrainDistributionCoefficient` (`k2 = 0,5`, flexion),
+`crackSpacingCoefficient3` (`k3 = 3,4`) et
+`crackSpacingCoefficient4` (`k4 = 0,425`). Ils sont indépendants des autres
+coefficients homonymes du cisaillement et de l'espacement.
+
+## Vérification simplifiée de déformation Poutre BEAM-SLS-03
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `actualSpanDepthRatio` | `l_eff / d` | valeur dérivée / DERIVED | rapport réel de portée efficace sur hauteur utile réelle du candidat. Ce n'est pas une flèche. | sans dimension |
+| `reinforcementRatio` | `ρ` | valeur dérivée / DERIVED | `As_req / (b × d)`, avec `As_req` recalculé pour le candidat réel. `As_prov` ne doit jamais le remplacer. | sans dimension |
+| `referenceReinforcementRatio` | `ρ0` | valeur dérivée / DERIVED | `sqrt(fck) × 10^-3`, avec `fck` en MPa. | sans dimension |
+| `compressionReinforcementRatio` | `ρ'` | hypothèse MVP / FIXED_MVP | vaut explicitement `0` : seules les sections simplement armées sont supportées. | sans dimension |
+| `structuralFactor` | `K` | paramètre national / PROFILE | facteur lié au système statique ; seul `SIMPLY_SUPPORTED → 1,0` est supporté. | sans dimension |
+| `baseAllowableSpanDepthRatio` | `(l/d)_0` | valeur dérivée / DERIVED | rapport limite EC2 §7.4.2, obtenu par 7.16a si `ρ ≤ ρ0` ou 7.16b si `ρ > ρ0`. `K` est inclus. | sans dimension |
+| `steelStressCorrectionFactor` | — | valeur dérivée / DERIVED | correction simplifiée : `(500 / fyk) × (As_prov / As_req)`. Le `500 MPa` est centralisé dans le profil. | sans dimension |
+| `allowableSpanDepthRatio` | `l/d_adm` | valeur dérivée / DERIVED | `baseAllowableSpanDepthRatio × steelStressCorrectionFactor`; aucun facteur supplémentaire n'est inventé. | sans dimension |
+| `utilization` | — | valeur dérivée / DERIVED | `actualSpanDepthRatio / allowableSpanDepthRatio`. | sans dimension |
+| `BeamDeflectionMethod` | — | méthode / PROFILE | `SIMPLIFIED_SPAN_DEPTH`, méthode de dispense du calcul explicite de déformation. | — |
+| `BeamDeflectionVerificationStatus` | — | état dérivé / DERIVED | `COMPLIANT`, `NOT_COMPLIANT`, `CALCULATION_METHOD_NOT_SUPPORTED` ou `NOT_CHECKED`. Ce n'est pas un statut ELS global. | — |
+
+BEAM-SLS-03 ne retourne volontairement aucune flèche en millimètres. Ses
+warnings indiquent que la méthode est simplifiée, que le fluage/retrait ne sont
+pas modélisés explicitement et que le contrôle lié aux cloisons fragiles reste
+à renseigner dans un futur périmètre.

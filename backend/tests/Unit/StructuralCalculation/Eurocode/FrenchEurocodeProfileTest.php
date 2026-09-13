@@ -30,6 +30,17 @@ it('provides the versioned French profile and its material safety factors', func
         ->and($profile->beamConcreteShearResistanceRequirements->concreteShearStrengthReductionCoefficient)->toBe(0.6)
         ->and($profile->beamConcreteShearResistanceRequirements->concreteShearStrengthReductionReferenceStrength)->toBe(250.0)
         ->and($profile->beamConcreteShearResistanceRequirements->nonPrestressedAlphaCw)->toBe(1.0)
+        ->and($profile->beamCrackWidthRequirements->crackBondCoefficient)->toBe(0.8)
+        ->and($profile->beamCrackWidthRequirements->crackStrainDistributionCoefficient)->toBe(0.5)
+        ->and($profile->beamCrackWidthRequirements->crackSpacingCoefficient3)->toBe(3.4)
+        ->and($profile->beamCrackWidthRequirements->crackSpacingCoefficient4)->toBe(0.425)
+        ->and($profile->beamCrackWidthRequirements->longTermKt)->toBe(0.4)
+        ->and($profile->beamDeflectionRequirements->baseRatioConstant)->toBe(11.0)
+        ->and($profile->beamDeflectionRequirements->referenceReinforcementRatioFactor)->toBe(0.001)
+        ->and($profile->beamDeflectionRequirements->referenceSteelStrength)->toBe(500.0)
+        ->and($profile->beamServiceStressRequirements->concreteCharacteristicStressLimitFactor)->toBe(0.60)
+        ->and($profile->beamServiceStressRequirements->concreteQuasiPermanentStressLimitFactor)->toBe(0.45)
+        ->and($profile->beamServiceStressRequirements->reinforcementCharacteristicStressLimitFactor)->toBe(0.80)
         ->and($profile->reinforcementSpacingRequirements->barDiameterFactor)->toBe(1.0)
         ->and($profile->reinforcementSpacingRequirements->aggregateSizeAllowance)->toBe(5.0);
 });
