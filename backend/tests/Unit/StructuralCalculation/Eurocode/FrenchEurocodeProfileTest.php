@@ -21,6 +21,15 @@ it('provides the versioned French profile and its material safety factors', func
         ->and($profile->materialSafetyFactors->alphaCc)->toBe(1.0)
         ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementStrengthCoefficient)->toBe(0.26)
         ->and($profile->beamLongitudinalReinforcementRequirements->minimumReinforcementRatio)->toBe(0.0013)
+        ->and($profile->beamConcreteShearResistanceRequirements->concreteShearResistanceCoefficient)->toBe(0.12)
+        ->and($profile->beamConcreteShearResistanceRequirements->compressionStressCoefficient)->toBe(0.15)
+        ->and($profile->beamConcreteShearResistanceRequirements->minimumShearStressCoefficient)->toBe(0.035)
+        ->and($profile->beamConcreteShearResistanceRequirements->minimumCotTheta)->toBe(1.0)
+        ->and($profile->beamConcreteShearResistanceRequirements->maximumCotTheta)->toBe(2.5)
+        ->and($profile->beamConcreteShearResistanceRequirements->minimumShearReinforcementCoefficient)->toBe(0.08)
+        ->and($profile->beamConcreteShearResistanceRequirements->concreteShearStrengthReductionCoefficient)->toBe(0.6)
+        ->and($profile->beamConcreteShearResistanceRequirements->concreteShearStrengthReductionReferenceStrength)->toBe(250.0)
+        ->and($profile->beamConcreteShearResistanceRequirements->nonPrestressedAlphaCw)->toBe(1.0)
         ->and($profile->reinforcementSpacingRequirements->barDiameterFactor)->toBe(1.0)
         ->and($profile->reinforcementSpacingRequirements->aggregateSizeAllowance)->toBe(5.0);
 });

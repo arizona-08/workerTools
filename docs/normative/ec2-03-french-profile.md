@@ -6,7 +6,13 @@ Le profil `NF_EN_1992_1_1_2005_FR` vise EN 1992-1-1:2004,
 NF EN 1992-1-1:2005 et les documents français suivants :
 
 - NF EN 1992-1-1/NA:2016-03-24 ;
-- NF EN 1992-1-1/NA/A1:2026-04-14 (amendement d'avril 2026 en vigueur).
+- NF EN 1992-1-1/NA/A1:2026-04-14 (amendement d'avril 2026 ciblé par ce
+  profil).
+
+Le catalogue AFNOR consulté en septembre 2026 liste également une nouvelle
+NF EN 1992-1-1/NA, publiée le 19 août 2026. Cette nouvelle Annexe Nationale
+postérieure ne fait pas partie du profil actuellement implémenté : aucune de
+ses règles ne doit être déduite sans son texte normatif exploitable.
 
 ## Statut de `alphaCc`
 
@@ -28,6 +34,20 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `alphaCc` | 1,00 | paramètre français utilisé pour `fcd` |
 | coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
+| `CRd,c` cisaillement | 0,12 | `0,18 / γc` avec `γc = 1,50`, valeur recommandée §6.2.2 retenue pour le MVP faute de divergence française accessible |
+| `k1` cisaillement | 0,15 | valeur recommandée de §6.2.2, distincte du `k1` d'espacement §8.2 |
+| coefficient de `vmin` | 0,035 | règle §6.2.2 : `vmin = 0,035 × k^(3/2) × sqrt(fck)` |
+| profondeur de référence `k` | 200 mm | règle §6.2.2 : `k = min(1 + sqrt(200/d), 2,0)` |
+| plafond `ρl` cisaillement | 0,02 | règle §6.2.2 : `ρl = min(Asl/(bw d), 0,02)` |
+| borne basse `cot θ` | 1,00 | domaine de modèle retenu pour §6.2.3 |
+| borne haute `cot θ` | 2,50 | domaine de modèle retenu pour §6.2.3 |
+| coefficient `ρw,min` | 0,08 | règle §9.2.2 : `ρw,min = 0,08 sqrt(fck) / fyk` |
+| coefficient de `ν1` | 0,60 | règle §6.2.3 : `ν1 = 0,6 × (1 - fck / 250)` |
+| référence de `ν1` | 250 MPa | même règle §6.2.3 |
+| `αcw` non précontraint, `NEd = 0` | 1,00 | règle de profil MVP pour §6.2.3 |
+| coefficient `s_l,max` | 0,75 | §9.2.2, étriers verticaux : `s_l,max = 0,75d` |
+| coefficient `s_t,max` | 0,75 | §9.2.2 : `s_t,max = min(0,75d, 600 mm)` |
+| plafond absolu `s_t,max` | 600 mm | §9.2.2 |
 | `k1` espacement libre | 1,00 | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
 | `k2` espacement libre | 5 mm | valeur recommandée de §8.2(2), retenue par l'Annexe Nationale française 2016 |
 | `gammaGUnfavourable` | 1,35 | EN 1990/NF EN 1990/NA, ELU fondamental bâtiment |
@@ -58,8 +78,10 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
 - EN 1992-1-1:2004, 2.4.2.4 et 3.1.6 ;
 - NF EN 1992-1-1:2005 et NF EN 1992-1-1/NA:2016-03-24, qui retient la
   valeur recommandée pour `alphaCc` ;
-- NF EN 1992-1-1/NA/A1:2026-04-14, document en vigueur dont le contenu
-  doit être consulté avant d'affirmer qu'il ne modifie pas `alphaCc` ;
+- NF EN 1992-1-1/NA/A1:2026-04-14, dont le contenu doit être consulté avant
+  d'affirmer qu'il ne modifie pas `alphaCc` ;
+- NF EN 1992-1-1/NA, publiée le 19 août 2026, hors périmètre du profil actuel
+  tant que son contenu n'est pas analysé ;
 - EN 1990, 6.4.3.3 et annexe A1, avec NF EN 1990/NA ;
 - EN 1991-1-1, catégorie A d'actions variables.
 
@@ -85,3 +107,12 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
   l'Annexe 2016.
 - Les paramètres d'espacement libre `k1`, `k2` et le minimum absolu de 20 mm
   sont conservés dans `ReinforcementSpacingRequirements` du profil.
+- Les paramètres de résistance béton au cisaillement sont conservés séparément
+  dans `BeamConcreteShearResistanceRequirements`. Ils concernent uniquement
+  EN 1992-1-1 §6.2.2 : ils ne doivent pas être confondus avec les paramètres
+  d'espacement. L'amendement A1:2026-04-14 est en vigueur, mais son texte
+  complet n'étant pas publiquement accessible, une validation exhaustive de
+  son impact sur ces paramètres reste à confirmer.
+- Le profil ne prétend pas couvrir la NF EN 1992-1-1/NA publiée en août 2026;
+  sa prise en compte demandera une analyse normative dédiée avant toute mise à
+  jour des paramètres.

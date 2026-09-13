@@ -579,3 +579,95 @@ n'est vérifié. Les listes acceptée et rejetée gardent l'ordre de BEAM-REBAR-
 cette étape. BEAM-REBAR-04 traite chaque candidat admissible de BEAM-REBAR-03
 une seule fois et conserve l'ordre d'entrée dans les groupes valides et rejetés.
 Il ne calcule ni `MRd`, ni conformité structurelle globale, ni candidat final.
+
+## Résistance béton au cisaillement Poutre BEAM-SHEAR-01
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `webWidth` | `bw` | géométrie / USER | largeur d'âme. Pour la seule section rectangulaire MVP, `bw = BeamGeometry.width = b`; ne pas généraliser aux sections T ou L | mm |
+| `longitudinalReinforcementArea` | `Asl` | candidat ou ferraillage fourni / DERIVED | aire des armatures longitudinales tendues réellement évaluées et considérées ancrées au droit de la section; n'est jamais remplacée automatiquement par `As_req` ou `As_target` | mm² |
+| `longitudinalReinforcementRatioRaw` | `ρl,raw` | valeur dérivée / DERIVED | `Asl / (bw × d)` avant application de la limite §6.2.2 | sans dimension |
+| `longitudinalReinforcementRatioUsed` | `ρl` | valeur dérivée / DERIVED | `min(ρl,raw, 0,02)` utilisé dans l'expression principale ; le résultat conserve l'indicateur de plafond | sans dimension |
+| `sizeEffectFactorRaw` | `k_raw` | valeur dérivée / DERIVED | `1 + sqrt(200 / d)` avec `d` en mm | sans dimension |
+| `sizeEffectFactor` | `k` | valeur dérivée / DERIVED | `min(k_raw, 2,0)` ; le résultat conserve l'indicateur de plafond | sans dimension |
+| `normalForce` | `NEd` | hypothèse MVP / FIXED_MVP | effort normal de calcul. Le MVP impose `0 kN` et refuse tout autre cas, sans supprimer la donnée du résultat | kN |
+| `concreteArea` | `Ac` | valeur dérivée / DERIVED | aire de béton rectangulaire `b × h`, employée conceptuellement pour `σcp`; ce n'est pas `bw × d` | mm² |
+| `meanCompressiveStress` | `σcp` | valeur dérivée / DERIVED | `NEd / Ac`, avec conversion N/mm². Vaut explicitement `0 MPa` dans le MVP | MPa |
+| `BeamConcreteShearResistanceRequirements.concreteShearResistanceCoefficient` | `CRd,c` | paramètre national / PROFILE | coefficient français retenu pour §6.2.2 : `0,12` (`0,18 / γc` avec `γc = 1,50`) | sans dimension |
+| `BeamConcreteShearResistanceRequirements.compressionStressCoefficient` | `k1` cisaillement | paramètre national / PROFILE | coefficient de `σcp`, valeur recommandée `0,15`; distinct de `k1` d'espacement EC2 §8.2 | sans dimension |
+| `minimumShearStress` | `vmin` | règle de profil / PROFILE | `0,035 × k^(3/2) × sqrt(fck)`, avec `fck` en MPa | MPa |
+| `mainShearResistanceStress` | `vRd,c,main` | valeur dérivée / DERIVED | `CRd,c × k × (100 × ρl × fck)^(1/3) + k1 × σcp` | MPa |
+| `minimumShearResistanceStress` | `vRd,c,min` | valeur dérivée / DERIVED | `vmin + k1 × σcp` | MPa |
+| `governingResistanceStress` | `vRd,c` | valeur dérivée / DERIVED | maximum de l'expression principale et de la borne minimale, avec critère gouvernant explicite | MPa |
+| `concreteShearResistance` | `VRd,c` | valeur dérivée / DERIVED | `vRd,c × bw × d`, converti de N en kN via `ForceConverter` | kN |
+| `utilizationConcreteShear` | `VEd / VRd,c` | valeur dérivée / DERIVED | taux sans dimension ; aucune multiplication par 100 dans le domaine | sans dimension |
+| `BeamConcreteShearResistanceStatus` | — | état dérivé / DERIVED | indique seulement si le premier contrôle nécessite de poursuivre vers le dimensionnement d'armatures transversales ; n'est jamais une conformité globale | — |
+
+BEAM-SHEAR-01 utilise le `VEd` déjà calculé par BEAM-CALC-06 et le `d` du
+ferraillage réellement évalué. En DESIGN, `Asl` est donc l'`As_prov` du
+candidat transmis; en VERIFICATION, c'est l'aire réellement saisie. L'ancrage
+des armatures au droit de la section n'est pas encore modélisé : le MVP le
+suppose satisfait. Aucun `Asw/s`, `VRd,s`, `VRd,max`, étrier ou conclusion de
+conformité globale n'est produit.
+
+## Dimensionnement théorique des étriers Poutre BEAM-SHEAR-02
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamShearDesignAssumptions.designCotTheta` | `cot θ_design` | stratégie de dimensionnement / CONFIG | valeur MVP `2,5`, injectée et distincte des bornes normatives du profil; ne constitue pas une constante EC2 universelle | sans dimension |
+| `minimumCotTheta`, `maximumCotTheta` | `cot θ` | paramètres normatifs / PROFILE | domaine autorisé par le profil MVP : `[1,0 ; 2,5]` | sans dimension |
+| `θ` | `θ` | paramètre du modèle / DERIVED | angle de la bielle comprimée par rapport à l'axe longitudinal; le moteur conserve `cot θ` et ne convertit pas cet angle en degrés | — |
+| `stirrupSteelCharacteristicStrength` | `fyk` | matériau / DERIVED | limite caractéristique B500B, également utilisée par le minimum transversal | MPa |
+| `stirrupSteelDesignStrength` | `fywd` | matériau et profil / DERIVED | résistance de calcul dérivée par `ReinforcementSteelDesignStrengthCalculator`, soit `fyk / γs`; le MVP utilise le même B500B pour barres longitudinales et étriers | MPa |
+| `minimumShearReinforcementRatio` | `ρw,min` | règle normative / DERIVED | `0,08 × sqrt(fck) / fyk` pour étriers verticaux; `fyk`, non `fywd`, est imposé ici | sans dimension |
+| `requiredShearReinforcementPerLength` | `Asw/s_req` | valeur dérivée / DERIVED | `VEd / (z × fywd × cot θ)` seulement si BEAM-SHEAR-01 requiert une armature de calcul; vaut explicitement `0` sinon | mm²/mm |
+| `minimumShearReinforcementPerLength` | `Asw/s_min` | règle normative / DERIVED | `ρw,min × bw`, minimum applicable au MVP de poutre standard sans exemption modélisée | mm²/mm |
+| `targetShearReinforcementPerLength` | `Asw/s_target` | valeur dérivée / DERIVED | maximum de `Asw/s_req` et `Asw/s_min`, avec critère gouvernant explicite | mm²/mm |
+| `targetShearResistance` | `VRd,s_target` | valeur dérivée / DERIVED | résistance théorique liée à la quantité cible : `(Asw/s_target) × z × fywd × cot θ`, convertie en kN | kN |
+| `BeamShearReinforcementGoverningRequirement` | — | enum / DERIVED | `SHEAR_DEMAND`, `MINIMUM_TRANSVERSE_REINFORCEMENT` ou `EQUAL_REQUIREMENTS` | — |
+
+`z` est exclusivement le bras de levier réel BEAM-FLEX-05 / BEAM-REBAR-04,
+sans remplacement par `0,9d`. La formule de demande utilise `VEd` entier : le
+moteur ne calcule jamais `VEd - VRd,c` et n'additionne jamais `VRd,c + VRd,s`.
+Le résultat est une densité théorique, sans diamètre, nombre de branches ou
+espacement réel d'étrier. `VRd,max` et toute conformité globale restent hors
+périmètre jusqu'à BEAM-SHEAR-03.
+
+## Résistance maximale au cisaillement Poutre BEAM-SHEAR-03
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `concreteShearStrengthReductionFactor` | `ν1` | règle de profil / PROFILE | réduction de résistance du béton fissuré : `0,6 × (1 - fck / 250)` | sans dimension |
+| `alphaCw` | `αcw` | règle de profil / PROFILE | coefficient d'état de contrainte de la membrure comprimée; le MVP non précontraint avec `NEd = 0` utilise explicitement `1,0` | sans dimension |
+| `tanTheta` | `tan θ` | valeur dérivée / DERIVED | `1 / cot θ`, calculé sans conversion en degrés | sans dimension |
+| `maximumShearResistance` | `VRd,max` | règle normative / DERIVED | résistance limitée par l'écrasement des bielles : `αcw × bw × z × ν1 × fcd / (cot θ + tan θ)` puis conversion N → kN | kN |
+| `utilizationMaximumShear` | `VEd / VRd,max` | valeur dérivée / DERIVED | taux sans dimension du seul contrôle de bielles comprimées | sans dimension |
+| `BeamMaximumShearResistanceStatus` | — | enum / DERIVED | `MAXIMUM_SHEAR_RESISTANCE_OK` ou `MAXIMUM_SHEAR_RESISTANCE_EXCEEDED`; ne constitue jamais une conformité globale | — |
+
+BEAM-SHEAR-03 reçoit `VEd`, `bw`, `z` et `cot θ` déjà portés par le résultat
+BEAM-SHEAR-02. Il n'emploie ni `0,9d` ni une nouvelle stratégie d'angle. Une
+valeur `VEd > VRd,max` ne déclenche aucune augmentation automatique de
+`Asw/s`, car davantage d'étriers ne supprime pas la limitation des bielles
+comprimées. Le moteur ne calcule pas `VRd,c + VRd,s`, `VRd,c + VRd,max`, ni une
+résistance globale minimale.
+
+## Proposition discrète d'étriers Poutre BEAM-SHEAR-04
+
+| Nom | Symbole | Type / origine | Rôle et limite | Unité |
+|---|---|---|---|---|
+| `BeamStirrupProposalConfiguration.diameters` | `φ_st` | catalogue / CONFIG | diamètres applicatifs MVP `[6, 8, 10, 12]`; ce n'est pas une liste normative exhaustive | mm |
+| `stirrupLegs` | `n_legs` | configuration / CONFIG | nombre fixe de branches efficaces MVP : `2`; aucune disposition 3/4 branches ou cadres multiples | — |
+| `spacings` | `s` | catalogue / CONFIG | pas discrets supportés `[100, 125, 150, 175, 200, 225, 250, 300, 350, 400]`, sans préférence normative | mm |
+| `providedArea` | `Asw` | valeur dérivée / DERIVED | aire de l'étrier : `n_legs × π × φ_st² / 4` | mm² |
+| `providedAreaPerLength` | `Asw/s_prov` | valeur dérivée / DERIVED | `Asw / s`, comparé sans arrondi à la cible BEAM-SHEAR-02 | mm²/mm |
+| `maximumLongitudinalSpacing` | `s_l,max` | règle de profil / DERIVED | `0,75 × d` pour étriers verticaux | mm |
+| `transverseLegSpacing` | `s_t` | géométrie dérivée / DERIVED | distance représentative entre axes : `bw - 2(c_nom + φ_st/2)` | mm |
+| `maximumTransverseLegSpacing` | `s_t,max` | règle de profil / DERIVED | `min(0,75 × d, 600 mm)` | mm |
+| `reinforcementExcess` | — | valeur dérivée / DERIVED | `Asw/s_prov - Asw/s_target`, premier critère de classement | mm²/mm |
+| `providedShearResistance` | `VRd,s_prov` | valeur dérivée / DERIVED | formule VRd,s réutilisée de BEAM-SHEAR-02 pour la disposition réelle | kN |
+
+Une proposition est rejetée si le catalogue, la quantité, `s_l,max`, `s_t,max`,
+`VRd,s` lorsque la demande gouverne, ou `VRd,max` échoue. Les candidats admis
+sont classés par excès croissant, puis pas croissant, puis diamètre croissant;
+la recommandation est une préférence applicative déterministe, pas une
+conformité globale de poutre.
