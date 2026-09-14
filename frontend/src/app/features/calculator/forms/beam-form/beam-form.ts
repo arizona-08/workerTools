@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { BeamCalculationConfigurationView, BeamCalculationMode, MVP_BEAM_CALCULATION_CONFIGURATION } from './beam-calculation-configuration';
 import { BeamCalculationPayload, BeamGeometryPayload, BeamMaterialsPayload, BeamPermanentLoadsPayload, BeamVariableLoadPayload, buildBeamGeometryPayload } from './beam-geometry';
@@ -14,6 +14,7 @@ import { positiveFiniteNumberValidator } from './positive-finite-number.validato
   templateUrl: './beam-form.html',
 })
 export class BeamForm {
+  @Output() readonly formChanged = new EventEmitter<void>();
   readonly materialCatalog = inject(BeamMaterialCatalogService);
   readonly configuration: BeamCalculationConfigurationView = { ...MVP_BEAM_CALCULATION_CONFIGURATION };
   readonly calculationMode = signal<BeamCalculationMode>(this.configuration.calculationMode);
@@ -25,7 +26,7 @@ export class BeamForm {
   readonly materialsForm = new FormGroup({
     concreteClass: new FormControl('C30/37', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
     steelGrade: new FormControl('B500B', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
-    exposureClasses: new FormControl<string[]>(['XC1'], { nonNullable: true, validators: [Validators.required, (control) => this.exposureCatalogValidator(control)] }),
+    exposureClass: new FormControl('XC1', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
   });
   readonly permanentLoadsForm = new FormGroup({
     includeSelfWeight: new FormControl(true, { nonNullable: true }),
@@ -46,11 +47,17 @@ export class BeamForm {
       this.materialCatalog.catalog();
       this.materialsForm.updateValueAndValidity();
     });
+    this.geometryForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.materialsForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.permanentLoadsForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.variableLoadForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.longitudinalReinforcementForm.valueChanges.subscribe(() => this.formChanged.emit());
   }
 
   selectCalculationMode(mode: BeamCalculationMode): void {
     this.calculationMode.set(mode);
     this.configuration.calculationMode = mode;
+    this.formChanged.emit();
   }
 
   geometryPayload(): BeamGeometryPayload | null {
@@ -66,7 +73,9 @@ export class BeamForm {
       return null;
     }
 
-    return this.materialsForm.getRawValue();
+    const { concreteClass, steelGrade, exposureClass } = this.materialsForm.getRawValue();
+
+    return { concreteClass, steelGrade, exposureClasses: [exposureClass] };
   }
 
   permanentLoadsPayload(): BeamPermanentLoadsPayload | null {
@@ -136,14 +145,21 @@ export class BeamForm {
     return this.materialCatalog.catalog() !== null && this.payload() !== null;
   }
 
+  /** Valide toutes les sections avant qu'un parent déclenche l'appel au moteur. */
+  requestPayload(): BeamCalculationPayload | null {
+    this.geometryForm.markAllAsTouched();
+    this.materialsForm.markAllAsTouched();
+    this.permanentLoadsForm.markAllAsTouched();
+    this.variableLoadForm.markAllAsTouched();
+    if (this.calculationMode() === 'VERIFICATION') {
+      this.longitudinalReinforcementForm.markAllAsTouched();
+    }
+
+    return this.payload();
+  }
+
   private catalogValueValidator(control: AbstractControl, values: Array<string | number>): ValidationErrors | null {
     return values.length === 0 || values.includes(control.value) ? null : { unavailableCatalogValue: true };
   }
 
-  private exposureCatalogValidator(control: AbstractControl): ValidationErrors | null {
-    const values = this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [];
-    const selection = control.value as string[];
-
-    return values.length === 0 || selection.every((code) => values.includes(code)) ? null : { unavailableCatalogValue: true };
-  }
 }

@@ -7,6 +7,6 @@ test('the beam material catalog exposes identifiers without mechanical propertie
         ->assertJsonPath('concreteClasses', ['C20/25', 'C25/30', 'C30/37'])
         ->assertJsonPath('steelGrades', ['B500B'])
         ->assertJsonPath('reinforcementBarDiameters', [8, 10, 12, 14, 16, 20, 25, 32])
-        ->assertJsonPath('exposureClasses.1.code', 'XC1')
+        ->assertJsonPath('exposureClasses', [['code' => 'XC1', 'label' => 'Sec ou humide en permanence']])
         ->assertJsonMissing(['fck', 'fcm', 'fctm', 'ecm', 'fyk', 'es', 'fcd', 'fyd']);
 });

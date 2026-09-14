@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.result-accordion-item {
+  overflow: hidden;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.result-accordion-item__heading {
+  margin: 0;
+}
+
+.result-accordion-item__trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+  padding: 1rem 1.125rem;
+  color: #18181b;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result-accordion-item__trigger:hover {
+  background: #fafafa;
+}
+
+.result-accordion-item__trigger:focus-visible {
+  outline: 2px solid #6c12f3;
+  outline-offset: -2px;
+}
+
+.result-accordion-item__chevron {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: 0 0 auto;
+  color: #6c12f3;
+  transition: transform 150ms ease-out;
+}
+
+.result-accordion-item__chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.result-accordion-item__content {
+  border-top: 1px solid #e4e4e7;
+  padding: 1rem 1.125rem 1.25rem;
+}

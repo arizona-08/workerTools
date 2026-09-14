@@ -1,0 +1,5 @@
+<div class="calculation-formula-list">
+  @for (step of steps(); track step.id ?? step.name) {
+    <app-calculation-formula-step [step]="step" />
+  }
+</div>

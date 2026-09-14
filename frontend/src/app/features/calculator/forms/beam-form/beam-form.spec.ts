@@ -15,7 +15,7 @@ describe('BeamForm', () => {
       concreteClasses: ['C20/25', 'C25/30', 'C30/37'],
       steelGrades: ['B500B'],
       reinforcementBarDiameters: [8, 10, 12, 14, 16, 20, 25, 32],
-      exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }, { code: 'XC4', label: 'Alternance humidité/séchage' }],
+      exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
     });
 
     fixture = TestBed.createComponent(BeamForm);
@@ -40,11 +40,21 @@ describe('BeamForm', () => {
   it('displays catalog-backed material selectors and keeps valid selections', () => {
     expect(fixture.nativeElement.querySelector('#concrete-class')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('#steel-grade')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('#exposure-classes')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('#exposure-class')).toBeTruthy();
 
-    component.materialsForm.setValue({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClasses: ['XC4'] });
+    component.materialsForm.setValue({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClass: 'XC1' });
 
-    expect(component.materialsPayload()).toEqual({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClasses: ['XC4'] });
+    expect(component.materialsPayload()).toEqual({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClasses: ['XC1'] });
+  });
+
+  it('only presents the backend capabilities and keeps the selected exposure explicit in the payload', () => {
+    const exposureOptions = [...fixture.nativeElement.querySelectorAll('#exposure-class option')].map((option: HTMLOptionElement) => option.value);
+    const steelOptions = [...fixture.nativeElement.querySelectorAll('#steel-grade option')].map((option: HTMLOptionElement) => option.value);
+
+    expect(exposureOptions).toEqual(['XC1']);
+    expect(exposureOptions).not.toContain('XC4');
+    expect(steelOptions).toEqual(['B500B']);
+    expect(component.materialsPayload()).toEqual({ concreteClass: 'C30/37', steelGrade: 'B500B', exposureClasses: ['XC1'] });
   });
 
   it('defaults permanent actions to self weight included and no additional load', () => {

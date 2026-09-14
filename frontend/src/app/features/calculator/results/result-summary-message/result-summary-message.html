@@ -1,0 +1,22 @@
+<section
+  class="result-summary-message"
+  [class]="'result-summary-message result-summary-message--' + presentation().tone.toLowerCase()"
+  role="status"
+  aria-live="polite"
+>
+  <span class="result-summary-message__icon" aria-hidden="true">
+    @switch (presentation().tone) {
+      @case ('COMPLIANT') { <svg lucideCircleCheck></svg> }
+      @case ('NOT_COMPLIANT') { <svg lucideCircleX></svg> }
+      @case ('NOT_CHECKED') { <svg lucideTriangleAlert></svg> }
+      @case ('NOT_APPLICABLE') { <svg lucideCircleMinus></svg> }
+      @case ('CALCULATION_METHOD_NOT_SUPPORTED') { <svg lucideCircleHelp></svg> }
+    }
+  </span>
+  <div>
+    <p class="result-summary-message__main">{{ presentation().message }}</p>
+    @if (secondaryMessage(); as secondaryMessage) {
+      <p class="result-summary-message__secondary">{{ secondaryMessage }}</p>
+    }
+  </div>
+</section>

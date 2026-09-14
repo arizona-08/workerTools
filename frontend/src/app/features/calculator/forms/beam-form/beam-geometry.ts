@@ -25,6 +25,7 @@ export type BeamCalculationPayload = {
 export type BeamMaterialsPayload = {
   concreteClass: string;
   steelGrade: string;
+  /** Le domaine conserve une liste pour une future extension multi-exposition. */
   exposureClasses: string[];
 };
 
