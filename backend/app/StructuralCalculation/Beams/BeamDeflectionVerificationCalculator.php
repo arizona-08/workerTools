@@ -6,6 +6,7 @@ use App\StructuralCalculation\Eurocode\Beams\BeamDeflectionRequirements;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 use App\StructuralCalculation\Materials\Concrete\ConcreteProperties;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelProperties;
+use App\StructuralCalculation\MaterialType;
 
 /** Applique EC2 §7.4.2 à un candidat longitudinal recalculé, sans flèche en mm. */
 final class BeamDeflectionVerificationCalculator
@@ -93,7 +94,7 @@ final class BeamDeflectionVerificationCalculator
 
     private function ensureSupportedConfiguration(BeamCalculationConfiguration $configuration, BeamReinforcementCandidateRecalculationResult $candidate): void
     {
-        if ($configuration->materialType !== BeamMaterialType::REINFORCED_CONCRETE
+        if ($configuration->materialType !== MaterialType::REINFORCED_CONCRETE
             || $configuration->sectionType !== BeamSectionType::RECTANGULAR
             || $configuration->supportSystem !== BeamSupportSystem::SIMPLY_SUPPORTED
             || $candidate->status === BeamReinforcementCandidateRecalculationStatus::INVALID_SINGLY_REINFORCED_DOMAIN) {

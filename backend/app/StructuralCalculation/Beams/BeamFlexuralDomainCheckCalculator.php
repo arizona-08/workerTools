@@ -31,7 +31,7 @@ final readonly class BeamFlexuralDomainCheckCalculator
         if ($neutralAxis->neutralAxisRatio > 1) {
             throw new BeamFlexuralDomainCheckException(BeamFlexuralDomainCheckRejectionReason::INVALID_NEUTRAL_AXIS_RATIO);
         }
-        if ($neutralAxis->neutralAxisRatio !== $neutralAxis->neutralAxisDepth / $effectiveDepth->effectiveDepth) {
+        if (abs($neutralAxis->neutralAxisRatio - $neutralAxis->neutralAxisDepth / $effectiveDepth->effectiveDepth) > self::STRAIN_COMPARISON_TOLERANCE) {
             throw new BeamFlexuralDomainCheckException(BeamFlexuralDomainCheckRejectionReason::INCONSISTENT_NEUTRAL_AXIS);
         }
         $this->ensurePositiveFinite($steelDesignStrength->fyd, BeamFlexuralDomainCheckRejectionReason::INVALID_STEEL_DESIGN_STRENGTH);

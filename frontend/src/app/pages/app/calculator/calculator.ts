@@ -30,6 +30,8 @@ export class Calculator {
 
   handleModuleChange(moduleType: ModuleSelectorFieldType): void {
     this.selectedModule.set(moduleType);
+    this.clearCalculationResult();
+    this.calculationError.set(null);
   }
 
   selectedModuleDescription(): string {

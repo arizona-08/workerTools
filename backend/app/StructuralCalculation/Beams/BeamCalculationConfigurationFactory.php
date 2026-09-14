@@ -2,7 +2,10 @@
 
 namespace App\StructuralCalculation\Beams;
 
+use App\StructuralCalculation\DesignSituation;
+use App\StructuralCalculation\ElementType;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
+use App\StructuralCalculation\MaterialType;
 
 /** Traduit les identifiants externes sans remplacer une valeur demandée par un défaut. */
 final class BeamCalculationConfigurationFactory
@@ -18,13 +21,13 @@ final class BeamCalculationConfigurationFactory
         string $designSituation,
     ): BeamCalculationConfiguration {
         $mode = BeamCalculationMode::tryFrom($calculationMode);
-        $element = BeamElementType::tryFrom($elementType);
-        $material = BeamMaterialType::tryFrom($materialType);
+        $element = ElementType::tryFrom($elementType);
+        $material = MaterialType::tryFrom($materialType);
         $section = BeamSectionType::tryFrom($sectionType);
         $support = BeamSupportSystem::tryFrom($supportSystem);
         $load = BeamLoadModel::tryFrom($loadModel);
         $profile = DesignCodeProfileIdentifier::tryFrom($designCodeProfile);
-        $situation = BeamDesignSituation::tryFrom($designSituation);
+        $situation = DesignSituation::tryFrom($designSituation);
 
         if ($mode === null || $element === null || $material === null || $section === null || $support === null || $load === null || $profile === null || $situation === null) {
             throw new BeamConfigurationException(BeamConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE);

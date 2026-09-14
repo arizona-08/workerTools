@@ -4,6 +4,7 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Eurocode\Profiles\FundamentalUltimateCombinationExpression;
 use App\StructuralCalculation\Eurocode\Profiles\ServiceabilityCombinationExpression;
+use App\StructuralCalculation\Statics\SimplySupportedUniformlyDistributedLoadCalculator;
 use App\StructuralCalculation\Units\LengthConverter;
 
 /** Analyse V = wL/2, strictement limitée à la poutre simplement appuyée sous charge uniforme. */
@@ -14,7 +15,10 @@ final readonly class SimplySupportedBeamShearForceCalculator
 
     public const FORMULA = 'Vmax = w × l_eff / 2';
 
-    public function __construct(private LengthConverter $lengthConverter) {}
+    public function __construct(
+        private LengthConverter $lengthConverter,
+        private SimplySupportedUniformlyDistributedLoadCalculator $staticCalculator,
+    ) {}
 
     public function calculate(
         BeamCalculationConfiguration $configuration,
@@ -60,7 +64,7 @@ final readonly class SimplySupportedBeamShearForceCalculator
         float $effectiveSpan,
         FundamentalUltimateCombinationExpression|ServiceabilityCombinationExpression $combinationReference,
     ): BeamShearForce {
-        $maximumAbsoluteShear = $lineLoad * $effectiveSpan * self::SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_SHEAR_COEFFICIENT;
+        $maximumAbsoluteShear = $this->staticCalculator->maximumShear($lineLoad, $effectiveSpan);
 
         return new BeamShearForce(
             lineLoad: $lineLoad,
