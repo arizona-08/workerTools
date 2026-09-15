@@ -5,7 +5,7 @@
       <h1 class="mt-1 text-2xl font-semibold tracking-tight text-zinc-950">Calcul de structure</h1>
       <p class="mt-2 text-sm text-zinc-600">Sélectionnez un module pour préparer votre calcul.</p>
     </div>
-    <button type="button" [disabled]="selectedModule() !== 'Poutre' || isCalculating()" (click)="calculateBeam()" class="rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55">
+    <button type="button" [disabled]="isCalculating()" (click)="selectedModule() === 'Poutre' ? calculateBeam() : calculateSlab()" class="rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55">
       @if (isCalculating()) { Calcul en cours… } @else { Calculer la structure }
     </button>
   </header>
@@ -23,7 +23,7 @@
     <section class="rounded-xl border border-zinc-200 bg-white p-6" aria-label="Formulaire de calcul">
       @switch (selectedModule()) {
         @case ('Poutre') { <app-beam-form (formChanged)="clearCalculationResult()" /> }
-        @case ('Dalle') { <app-slab-form /> }
+        @case ('Dalle') { <app-slab-form (formChanged)="clearCalculationResult()" /> }
       }
     </section>
 
@@ -34,6 +34,17 @@
         <app-result-compliance-indicator [utilization]="result.summary.utilization" [status]="result.summary.status" [governingVerificationType]="result.summary.governingVerificationType" />
         <app-result-summary-message [utilization]="result.summary.utilization" [status]="result.summary.status" [governingVerificationType]="result.summary.governingVerificationType" />
         <div class="mt-5"><app-result-summary-cards [summary]="result.summary" /></div>
+      } @else if (slabCalculationResult(); as result) {
+        <h2 id="result-title" class="mt-1 text-lg font-semibold text-zinc-950">Conformité de la dalle</h2>
+        <app-result-compliance-indicator [utilization]="result.summary.utilization" [status]="result.status" [governingVerificationType]="result.summary.governingVerificationType" />
+        <app-result-summary-message [utilization]="result.summary.utilization" [status]="result.status" [governingVerificationType]="result.summary.governingVerificationType" />
+        <dl class="mt-5 grid gap-3 text-sm text-zinc-700">
+          @if (result.summary.designBendingMoment !== null) { <div><dt>MEd — bande de 1 m</dt><dd class="font-semibold">{{ result.summary.designBendingMoment }} kN·m</dd></div> }
+          @if (result.summary.effectiveDepth !== null) { <div><dt>Hauteur utile d</dt><dd class="font-semibold">{{ result.summary.effectiveDepth }} mm</dd></div> }
+          @if (result.summary.requiredMainReinforcementArea !== null) { <div><dt>As requise</dt><dd class="font-semibold">{{ result.summary.requiredMainReinforcementArea }} mm²/m</dd></div> }
+          @if (result.summary.mainReinforcement; as main) { <div><dt>Armatures principales</dt><dd class="font-semibold">HA{{ main.diameter }} / {{ main.spacing }} mm</dd></div> }
+          @if (result.summary.secondaryReinforcement; as secondary) { <div><dt>Armatures secondaires</dt><dd class="font-semibold">HA{{ secondary.diameter }} / {{ secondary.spacing }} mm</dd></div> }
+        </dl>
       } @else {
         <h2 id="result-title" class="mt-1 text-lg font-semibold text-zinc-950">En attente du calcul</h2>
         <p class="mt-3 text-sm leading-6 text-zinc-600">Les indicateurs de conformité et les vérifications apparaîtront ici après le calcul côté serveur.</p>
@@ -48,6 +59,17 @@
     <h2 id="details-title" class="text-lg font-semibold text-zinc-950">Détails du calcul</h2>
     @if (calculationResult(); as result) {
       <app-calculation-details-accordion [details]="result.details" />
+    } @else if (slabCalculationResult(); as result) {
+      <div class="mt-3 space-y-3">
+        @for (verification of result.verifications; track verification.identifier) {
+          <article class="rounded-lg border border-zinc-200 p-3">
+            <p class="font-medium text-zinc-900">{{ verification.identifier }}</p>
+            <p class="text-sm text-zinc-600">{{ verification.status }}</p>
+            @if (verification.utilization !== null) { <p class="text-sm text-zinc-600">Utilisation : {{ verification.utilization }}</p> }
+            @for (warning of verification.warnings; track warning) { <p class="text-sm text-amber-800">{{ warning }}</p> }
+          </article>
+        }
+      </div>
     } @else {
       <p class="mt-2 text-sm text-zinc-600">Aucun détail à afficher avant l’exécution d’un calcul.</p>
     }

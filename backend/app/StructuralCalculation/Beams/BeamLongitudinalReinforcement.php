@@ -2,6 +2,8 @@
 
 namespace App\StructuralCalculation\Beams;
 
+use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementBarAreaCalculator;
+
 /** Armatures longitudinales tendues existantes ; un seul lit dans le MVP. */
 final readonly class BeamLongitudinalReinforcement
 {
@@ -12,6 +14,6 @@ final readonly class BeamLongitudinalReinforcement
         public float $tensionBarDiameter,
         public int $tensionRebarLayers = 1,
     ) {
-        $this->providedSteelArea = $tensionBarCount * M_PI * $tensionBarDiameter ** 2 / 4;
+        $this->providedSteelArea = $tensionBarCount * (new ReinforcementBarAreaCalculator)->calculate($tensionBarDiameter);
     }
 }

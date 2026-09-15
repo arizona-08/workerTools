@@ -4,12 +4,16 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamDeflectionRequirements;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
+use App\StructuralCalculation\Eurocode\Serviceability\SimplifiedSpanDepthCalculator;
 use App\StructuralCalculation\Materials\Concrete\ConcreteProperties;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelProperties;
+use App\StructuralCalculation\MaterialType;
 
 /** Applique EC2 §7.4.2 à un candidat longitudinal recalculé, sans flèche en mm. */
 final class BeamDeflectionVerificationCalculator
 {
+    public function __construct(private SimplifiedSpanDepthCalculator $simplifiedSpanDepth) {}
+
     public function calculate(
         BeamCalculationConfiguration $configuration,
         BeamGeometry $geometry,
@@ -44,56 +48,41 @@ final class BeamDeflectionVerificationCalculator
         $this->ensurePositiveFinite($structuralFactor, BeamDeflectionVerificationRejectionReason::INVALID_DEFLECTION_REQUIREMENTS);
 
         $effectiveDepth = $candidate->effectiveDepth->effectiveDepth;
-        $actualRatio = $geometry->effectiveSpan / $effectiveDepth;
-        $reinforcementRatio = $requiredArea / ($geometry->width * $effectiveDepth);
-        $referenceRatio = sqrt($concrete->fck) * $requirements->referenceReinforcementRatioFactor;
         $compressionRatio = 0.0;
-        $branch = $reinforcementRatio <= $referenceRatio
-            ? BeamDeflectionFormulaBranch::LOW_REINFORCEMENT_RATIO
-            : BeamDeflectionFormulaBranch::HIGH_REINFORCEMENT_RATIO;
-        $strengthRoot = sqrt($concrete->fck);
-        $baseRatio = $branch === BeamDeflectionFormulaBranch::LOW_REINFORCEMENT_RATIO
-            ? $structuralFactor * (
-                $requirements->baseRatioConstant
-                + $requirements->lowReinforcementCoefficient * $strengthRoot * ($referenceRatio / $reinforcementRatio)
-                + $requirements->lowReinforcementAdditionalCoefficient * $strengthRoot * ($referenceRatio / $reinforcementRatio - 1) ** 1.5
-            )
-            : $structuralFactor * (
-                $requirements->baseRatioConstant
-                + $requirements->lowReinforcementCoefficient * $strengthRoot * $referenceRatio / $reinforcementRatio
-            );
-        $steelStressCorrection = ($requirements->referenceSteelStrength / $steel->fyk) * ($providedArea / $requiredArea);
-        $allowableRatio = $baseRatio * $steelStressCorrection;
-        $this->ensurePositiveFinite($allowableRatio, BeamDeflectionVerificationRejectionReason::INVALID_DEFLECTION_REQUIREMENTS);
-        $utilization = $actualRatio / $allowableRatio;
+        try {
+            $spanDepth = $this->simplifiedSpanDepth->calculate($geometry->effectiveSpan, $geometry->width, $effectiveDepth,
+                $concrete->fck, $steel->fyk, $requiredArea, $providedArea, $structuralFactor, $requirements);
+        } catch (\InvalidArgumentException) {
+            throw new BeamDeflectionVerificationException(BeamDeflectionVerificationRejectionReason::INVALID_DEFLECTION_REQUIREMENTS);
+        }
 
         return new BeamDeflectionVerificationResult(
             BeamDeflectionMethod::SIMPLIFIED_SPAN_DEPTH,
             BeamDeflectionVerificationStatus::COMPLIANT,
             $geometry->effectiveSpan,
             $effectiveDepth,
-            $actualRatio,
+            $spanDepth->actualSpanDepthRatio,
             $concrete->fck,
             $requiredArea,
             $providedArea,
-            $reinforcementRatio,
-            $referenceRatio,
+            $spanDepth->reinforcementRatio,
+            $spanDepth->referenceReinforcementRatio,
             $compressionRatio,
             $configuration->supportSystem,
             $structuralFactor,
-            $branch,
-            $baseRatio,
-            $steelStressCorrection,
-            $allowableRatio,
-            $utilization,
-            $actualRatio <= $allowableRatio ? BeamDeflectionVerificationStatus::COMPLIANT : BeamDeflectionVerificationStatus::NOT_COMPLIANT,
+            BeamDeflectionFormulaBranch::from($spanDepth->formulaBranch),
+            $spanDepth->baseAllowableSpanDepthRatio,
+            $spanDepth->steelStressCorrectionFactor,
+            $spanDepth->allowableSpanDepthRatio,
+            $spanDepth->utilization,
+            $spanDepth->actualSpanDepthRatio <= $spanDepth->allowableSpanDepthRatio ? BeamDeflectionVerificationStatus::COMPLIANT : BeamDeflectionVerificationStatus::NOT_COMPLIANT,
             ['SIMPLIFIED_METHOD_ONLY', 'NO_EXPLICIT_DEFLECTION_CALCULATED', 'LONG_TERM_EFFECTS_NOT_EXPLICITLY_MODELLED', 'PARTITION_DAMAGE_CHECK_NOT_MODELLED'],
         );
     }
 
     private function ensureSupportedConfiguration(BeamCalculationConfiguration $configuration, BeamReinforcementCandidateRecalculationResult $candidate): void
     {
-        if ($configuration->materialType !== BeamMaterialType::REINFORCED_CONCRETE
+        if ($configuration->materialType !== MaterialType::REINFORCED_CONCRETE
             || $configuration->sectionType !== BeamSectionType::RECTANGULAR
             || $configuration->supportSystem !== BeamSupportSystem::SIMPLY_SUPPORTED
             || $candidate->status === BeamReinforcementCandidateRecalculationStatus::INVALID_SINGLY_REINFORCED_DOMAIN) {

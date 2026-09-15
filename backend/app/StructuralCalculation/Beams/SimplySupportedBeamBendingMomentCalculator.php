@@ -4,6 +4,7 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Eurocode\Profiles\FundamentalUltimateCombinationExpression;
 use App\StructuralCalculation\Eurocode\Profiles\ServiceabilityCombinationExpression;
+use App\StructuralCalculation\Statics\SimplySupportedUniformlyDistributedLoadCalculator;
 use App\StructuralCalculation\Units\LengthConverter;
 
 /** Analyse M = wL²/8, strictement limitée à la poutre simplement appuyée sous charge uniforme. */
@@ -16,7 +17,10 @@ final readonly class SimplySupportedBeamBendingMomentCalculator
 
     public const FORMULA = 'Mmax = w × l_eff² / 8';
 
-    public function __construct(private LengthConverter $lengthConverter) {}
+    public function __construct(
+        private LengthConverter $lengthConverter,
+        private SimplySupportedUniformlyDistributedLoadCalculator $staticCalculator,
+    ) {}
 
     public function calculate(
         BeamCalculationConfiguration $configuration,
@@ -65,7 +69,7 @@ final readonly class SimplySupportedBeamBendingMomentCalculator
     ): BeamBendingMoment {
         return new BeamBendingMoment(
             lineLoad: $lineLoad,
-            maximumMoment: $lineLoad * $effectiveSpan ** 2 * self::SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_MOMENT_COEFFICIENT,
+            maximumMoment: $this->staticCalculator->maximumMoment($lineLoad, $effectiveSpan),
             combinationReference: $combinationReference,
             formula: self::FORMULA,
         );

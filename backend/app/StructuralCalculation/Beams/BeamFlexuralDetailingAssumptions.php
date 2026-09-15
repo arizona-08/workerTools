@@ -2,6 +2,8 @@
 
 namespace App\StructuralCalculation\Beams;
 
+use App\StructuralCalculation\Detailing\PreliminaryLongitudinalBarDiameter;
+
 /** Hypothèses de detailing configurables pour la géométrie initiale de flexion MVP. */
 final readonly class BeamFlexuralDetailingAssumptions
 {
@@ -14,7 +16,7 @@ final readonly class BeamFlexuralDetailingAssumptions
     {
         return new self(
             transverseReinforcementDiameter: 8.0,
-            designTensionBarDiameter: 16.0,
+            designTensionBarDiameter: PreliminaryLongitudinalBarDiameter::MVP_MILLIMETRES,
         );
     }
 }

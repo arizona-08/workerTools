@@ -4,9 +4,10 @@ import { BeamCalculationConfigurationView, BeamCalculationMode, MVP_BEAM_CALCULA
 import { BeamCalculationPayload, BeamGeometryPayload, BeamMaterialsPayload, BeamPermanentLoadsPayload, BeamVariableLoadPayload, buildBeamGeometryPayload } from './beam-geometry';
 import { BeamLongitudinalReinforcementPayload, calculateProvidedSteelArea } from './beam-longitudinal-reinforcement';
 import { BeamMaterialCatalogService } from './beam-material-catalog.service';
-import { nonNegativeFiniteNumberValidator } from './non-negative-finite-number.validator';
+import { MVP_MATERIAL_DEFAULTS } from '../material-defaults';
+import { nonNegativeFiniteNumberValidator } from '../non-negative-finite-number.validator';
 import { positiveIntegerValidator } from './positive-integer.validator';
-import { positiveFiniteNumberValidator } from './positive-finite-number.validator';
+import { positiveFiniteNumberValidator } from '../positive-finite-number.validator';
 
 @Component({
   selector: 'app-beam-form',
@@ -24,9 +25,9 @@ export class BeamForm {
     height: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
   });
   readonly materialsForm = new FormGroup({
-    concreteClass: new FormControl('C30/37', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
-    steelGrade: new FormControl('B500B', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
-    exposureClass: new FormControl('XC1', { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
+    concreteClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.concreteClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
+    steelGrade: new FormControl<string>(MVP_MATERIAL_DEFAULTS.steelGrade, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
+    exposureClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.exposureClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
   });
   readonly permanentLoadsForm = new FormGroup({
     includeSelfWeight: new FormControl(true, { nonNullable: true }),

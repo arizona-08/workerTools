@@ -1733,6 +1733,51 @@ warning
 
 ---
 
+# EPIC 13 — Export de note de calcul PDF
+
+## PDF-01 — Modèle de note de calcul
+Définir la structure commune du document :
+- titre ;
+- type de calcul ;
+- date ;
+- profil normatif ;
+- hypothèses ;
+- géométrie ;
+- matériaux ;
+- charges ;
+- combinaisons ;
+- sollicitations ;
+- vérifications ;
+- ferraillage proposé ;
+- statut final ;
+- avertissements / limitations.
+
+## PDF-02 — Génération backend
+Générer le PDF côté backend à partir du résultat structuré existant.
+
+Le générateur ne doit effectuer aucun calcul normatif.
+
+Il consomme :
+- `summary`
+- `verifications`
+- `details`
+- les entrées du calcul
+
+## PDF-03 — Note de calcul Poutre
+Mapper les résultats Beam vers le modèle PDF commun.
+
+## PDF-04 — Note de calcul Dalle
+Mapper les résultats Slab vers le même modèle.
+
+## PDF-05 — Téléchargement frontend
+Ajouter le bouton :
+`Exporter la note de calcul`
+
+avec gestion :
+- loading ;
+- erreur ;
+- téléchargement du PDF.
+
 # Définition du MVP
 
 Une fois les Epics `0 → 12` terminées, WorkerTools dispose de son premier vrai MVP :

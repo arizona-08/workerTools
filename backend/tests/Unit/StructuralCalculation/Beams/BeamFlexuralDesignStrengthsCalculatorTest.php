@@ -62,6 +62,7 @@ it('uses alphaCc gammaC and gammaS from the supplied profile', function () {
         beamDeflectionRequirements: $reference->beamDeflectionRequirements,
         beamServiceStressRequirements: $reference->beamServiceStressRequirements,
         reinforcementSpacingRequirements: $reference->reinforcementSpacingRequirements,
+        slabReinforcementRequirements: $reference->slabReinforcementRequirements,
         combinationFactorsByActionCategory: [],
     );
     $result = beamFlexuralDesignStrengthsCalculator()->calculate(flexuralMaterials(ConcreteStrengthClass::C30_37), $profile);

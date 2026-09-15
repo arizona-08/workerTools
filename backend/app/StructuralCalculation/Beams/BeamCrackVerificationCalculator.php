@@ -4,6 +4,7 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Eurocode\Beams\BeamCrackWidthRequirements;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
+use App\StructuralCalculation\Eurocode\Serviceability\DirectCrackWidthCalculator;
 use App\StructuralCalculation\Materials\Concrete\ConcreteProperties;
 use App\StructuralCalculation\Materials\Exposure\ExposureClassCode;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelProperties;
@@ -11,6 +12,8 @@ use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelPro
 /** Vérifie wk à la combinaison quasi-permanente, selon EC2 §7.3.4. */
 final class BeamCrackVerificationCalculator
 {
+    public function __construct(private DirectCrackWidthCalculator $directCrackWidth) {}
+
     public function calculate(
         BeamGeometry $geometry,
         BeamEffectiveDepthResult $effectiveDepth,
@@ -66,50 +69,27 @@ final class BeamCrackVerificationCalculator
         $this->ensurePositiveFinite($barSpacing, BeamCrackVerificationRejectionReason::INVALID_BAR_LAYOUT);
         $clearBarSpacing = $barSpacing - $barDiameter;
 
-        $effectiveHeightFromDepth = 2.5 * ($geometry->height - $effectiveDepth->effectiveDepth);
-        $effectiveHeightFromNeutralAxis = ($geometry->height - $x) / 3;
-        $effectiveHeightFromHalfDepth = $geometry->height / 2;
-        $effectiveTensionHeight = min($effectiveHeightFromDepth, $effectiveHeightFromNeutralAxis, $effectiveHeightFromHalfDepth);
-        $this->ensurePositiveFinite($effectiveTensionHeight, BeamCrackVerificationRejectionReason::INVALID_EFFECTIVE_DEPTH);
-        $effectiveTensionArea = $geometry->width * $effectiveTensionHeight;
-        $this->ensurePositiveFinite($effectiveTensionArea, BeamCrackVerificationRejectionReason::INVALID_TENSION_REINFORCEMENT);
-        $effectiveReinforcementRatio = $longitudinalReinforcement->providedArea / $effectiveTensionArea;
-        $this->ensurePositiveFinite($effectiveReinforcementRatio, BeamCrackVerificationRejectionReason::INVALID_TENSION_REINFORCEMENT);
-
         $loadDuration = BeamCrackLoadDuration::LONG_TERM;
         $kt = $requirements->ktFor($loadDuration);
-        $closeSpacingLimit = 5 * ($coverToLongitudinalBar + $barDiameter / 2);
-        $spacingFormulaCriterion = $barSpacing <= $closeSpacingLimit
-            ? BeamCrackSpacingFormulaCriterion::CLOSELY_SPACED_BARS
-            : BeamCrackSpacingFormulaCriterion::WIDELY_SPACED_BARS;
-        $maximumCrackSpacing = $spacingFormulaCriterion === BeamCrackSpacingFormulaCriterion::CLOSELY_SPACED_BARS
-            ? $requirements->crackSpacingCoefficient3 * $coverToLongitudinalBar
-                + $requirements->crackBondCoefficient * $requirements->crackStrainDistributionCoefficient
-                * $requirements->crackSpacingCoefficient4 * $barDiameter / $effectiveReinforcementRatio
-            : 1.3 * ($geometry->height - $x);
-        $this->ensurePositiveFinite($maximumCrackSpacing, BeamCrackVerificationRejectionReason::INVALID_CRACK_WIDTH_REQUIREMENTS);
-
-        $strainDifferenceMain = ($steelStress - $kt * $concrete->fctm / $effectiveReinforcementRatio * (1 + $alpha * $effectiveReinforcementRatio)) / $steel->es;
-        $strainDifferenceMinimum = 0.6 * $steelStress / $steel->es;
-        $strainDifference = max($strainDifferenceMain, $strainDifferenceMinimum);
-        if (! is_finite($strainDifference) || $strainDifference < 0) {
+        try {
+            $direct = $this->directCrackWidth->calculate($geometry->width, $geometry->height, $effectiveDepth->effectiveDepth,
+                $longitudinalReinforcement->providedArea, $barDiameter, $barSpacing, $coverToLongitudinalBar,
+                $x, $alpha, $steelStress, $steel->es, $concrete->fctm, $requirements);
+        } catch (\InvalidArgumentException) {
             throw new BeamCrackVerificationException(BeamCrackVerificationRejectionReason::INVALID_STEEL_STRESS);
         }
-        $strainDifferenceCriterion = $strainDifferenceMain >= $strainDifferenceMinimum
-            ? BeamCrackStrainDifferenceCriterion::MAIN_STRAIN_EXPRESSION
-            : BeamCrackStrainDifferenceCriterion::MINIMUM_STRAIN_DIFFERENCE;
-        $crackWidth = $maximumCrackSpacing * $strainDifference;
+        $crackWidth = $direct->crackWidth;
         $utilization = $crackWidth / $crackWidthLimit;
 
         return new BeamCrackVerificationResult(
             'QUASI_PERMANENT', $loadDuration, $serviceStresses->sectionModel,
             $coverToLongitudinalBar, $barDiameter, $longitudinalReinforcement->barCount, $barSpacing, $clearBarSpacing,
-            $effectiveHeightFromDepth, $effectiveHeightFromNeutralAxis, $effectiveHeightFromHalfDepth, $effectiveTensionHeight,
-            $effectiveTensionArea, $effectiveReinforcementRatio, $concrete->fctm, $alpha, $steelStress, $kt,
+            $direct->effectiveTensionHeightFromDepth, $direct->effectiveTensionHeightFromNeutralAxis, $direct->effectiveTensionHeightFromHalfDepth, $direct->effectiveTensionHeight,
+            $direct->effectiveTensionArea, $direct->effectiveReinforcementRatio, $concrete->fctm, $alpha, $steelStress, $kt,
             $requirements->crackBondCoefficient, $requirements->crackStrainDistributionCoefficient,
-            $requirements->crackSpacingCoefficient3, $requirements->crackSpacingCoefficient4, $maximumCrackSpacing,
-            $spacingFormulaCriterion, $strainDifferenceMain, $strainDifferenceMinimum, $strainDifference,
-            $strainDifferenceCriterion, $crackWidth, $crackWidthLimit, $utilization,
+            $requirements->crackSpacingCoefficient3, $requirements->crackSpacingCoefficient4, $direct->maximumCrackSpacing,
+            BeamCrackSpacingFormulaCriterion::from($direct->spacingFormulaCriterion), $direct->strainDifferenceMain, $direct->strainDifferenceMinimum, $direct->strainDifference,
+            BeamCrackStrainDifferenceCriterion::from($direct->strainDifferenceCriterion), $crackWidth, $crackWidthLimit, $utilization,
             $crackWidth <= $crackWidthLimit ? BeamCrackVerificationStatus::COMPLIANT : BeamCrackVerificationStatus::NOT_COMPLIANT,
         );
     }

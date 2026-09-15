@@ -6,12 +6,12 @@ use App\StructuralCalculation\Beams\BeamCalculationConfigurationValidator;
 use App\StructuralCalculation\Beams\BeamCalculationMode;
 use App\StructuralCalculation\Beams\BeamConfigurationException;
 use App\StructuralCalculation\Beams\BeamConfigurationRejectionReason;
-use App\StructuralCalculation\Beams\BeamDesignSituation;
 use App\StructuralCalculation\Beams\BeamLoadModel;
-use App\StructuralCalculation\Beams\BeamMaterialType;
 use App\StructuralCalculation\Beams\BeamSectionType;
 use App\StructuralCalculation\Beams\BeamSupportSystem;
+use App\StructuralCalculation\DesignSituation;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
+use App\StructuralCalculation\MaterialType;
 
 function beamConfigurationValidator(): BeamCalculationConfigurationValidator
 {
@@ -25,10 +25,10 @@ it('validates the explicit MVP beam configuration and reuses the French profile'
 
     expect($configuration->sectionType)->toBe(BeamSectionType::RECTANGULAR)
         ->and($configuration->calculationMode)->toBe(BeamCalculationMode::DESIGN)
-        ->and($configuration->materialType)->toBe(BeamMaterialType::REINFORCED_CONCRETE)
+        ->and($configuration->materialType)->toBe(MaterialType::REINFORCED_CONCRETE)
         ->and($configuration->supportSystem)->toBe(BeamSupportSystem::SIMPLY_SUPPORTED)
         ->and($configuration->loadModel)->toBe(BeamLoadModel::UNIFORMLY_DISTRIBUTED)
-        ->and($configuration->designSituation)->toBe(BeamDesignSituation::PERSISTENT_TRANSIENT)
+        ->and($configuration->designSituation)->toBe(DesignSituation::PERSISTENT_TRANSIENT)
         ->and($configuration->designCodeProfile)->toBe(DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR);
 });
 

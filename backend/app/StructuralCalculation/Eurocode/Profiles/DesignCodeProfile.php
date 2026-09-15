@@ -9,6 +9,7 @@ use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequir
 use App\StructuralCalculation\Eurocode\Beams\BeamServiceStressRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
+use App\StructuralCalculation\Eurocode\Slabs\SlabReinforcementRequirements;
 
 /**
  * Jeu de paramètres normatifs sélectionné par un calcul.
@@ -32,6 +33,7 @@ final readonly class DesignCodeProfile
         public BeamDeflectionRequirements $beamDeflectionRequirements,
         public BeamServiceStressRequirements $beamServiceStressRequirements,
         public ReinforcementSpacingRequirements $reinforcementSpacingRequirements,
+        public SlabReinforcementRequirements $slabReinforcementRequirements,
         private array $combinationFactorsByActionCategory,
     ) {}
 

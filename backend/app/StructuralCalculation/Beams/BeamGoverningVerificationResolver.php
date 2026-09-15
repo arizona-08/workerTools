@@ -7,7 +7,12 @@ final class BeamGoverningVerificationResolver
 {
     public function resolve(BeamVerificationAggregationResult $aggregation): BeamGoverningVerificationResult
     {
-        $components = [$aggregation->flexureVerification, $aggregation->shearVerification, $aggregation->stressVerification, $aggregation->crackVerification, $aggregation->deflectionVerification];
+        return $this->resolveComponents([$aggregation->flexureVerification, $aggregation->shearVerification, $aggregation->stressVerification, $aggregation->crackVerification, $aggregation->deflectionVerification]);
+    }
+
+    /** @param list<BeamVerificationComponent> $components */
+    public function resolveComponents(array $components): BeamGoverningVerificationResult
+    {
         $candidates = [];
         $exclusions = [];
         foreach ($components as $component) {

@@ -116,18 +116,219 @@ d'une valeur métier reconnue mais non supportée.
 
 | Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
 |---|---|---|---|---|
-| `elementType` | `BeamElementType::BEAM` | FIXED_MVP | élément configuré ; la poutre est explicite même si le formulaire est déjà le module Poutre | — |
-| `materialType` | `BeamMaterialType::REINFORCED_CONCRETE` | FIXED_MVP | matériau structurel du MVP ; aucun béton précontraint, acier, bois ou béton non armé | — |
+| `elementType` | `ElementType::BEAM` | FIXED_MVP | élément configuré ; enum partagé avec le module Dalle | — |
+| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_MVP | matériau structurel du MVP ; enum partagé avec le module Dalle, sans béton précontraint, acier, bois ou béton non armé | — |
 | `sectionType` | `RECTANGULAR` supporté ; `T_SECTION`, `L_SECTION`, `VARIABLE`, `CIRCULAR` reconnus mais refusés | FIXED_MVP | type de section. La valeur détermine plus tard les champs de géométrie, sans les créer ici | — |
 | `supportSystem` | `SIMPLY_SUPPORTED` supporté ; `CONTINUOUS`, `CANTILEVER`, `FIXED_ENDED`, `MULTI_SPAN` refusés | FIXED_MVP | système statique ; aucun calcul d'effort n'est effectué | — |
 | `loadModel` | `UNIFORMLY_DISTRIBUTED` supporté ; `POINT_LOAD`, `TRIANGULAR`, `APPLIED_MOMENT` refusés | FIXED_MVP | modèle de chargement qui déterminera ultérieurement les données à saisir | — |
 | `designCodeProfile` | `NF_EN_1992_1_1_2005_FR` | PROFILE | référence au profil `FrenchEurocodeProfileRepository`, sans duplication de `γ`, `α` ou `ψ` | — |
-| `designSituation` | `PERSISTENT_TRANSIENT` | FIXED_MVP | situation persistante/transitoire du MVP ; accidentelle et sismique absentes | — |
+| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_MVP | situation persistante/transitoire du MVP ; enum partagé avec le module Dalle, accidentelle et sismique absentes | — |
 | `BeamConfigurationRejectionReason` | `INVALID_CONFIGURATION_VALUE` et motifs `UNSUPPORTED_*` | DERIVED | retour métier de validation. Un identifiant libre inconnu est invalide ; une section T connue est explicitement non supportée | — |
 
 Référence de contexte : EN 1990 pour la situation de projet et EN 1992-1-1
 pour le calcul des structures en béton. Ces normes ne sont pas encore évaluées
 par BEAM-01 ; elles sont seulement référencées par la configuration.
+
+## Configuration Dalle SLAB-01
+
+`SlabCalculationConfiguration` fixe explicitement le seul cas préparé par le
+module Dalle. Il ne porte aucune dimension, classe de béton, nuance d'acier,
+exposition, action, résultat ou formule.
+
+| Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
+|---|---|---|---|---|
+| `elementType` | `ElementType::SLAB` | FIXED_MVP | élément associé au module Dalle ; `ElementType` est partagé avec Poutre (`BEAM`) | — |
+| `slabType` | `SlabType::SOLID` | FIXED_MVP | dalle pleine ; aucune dalle nervurée, alvéolaire, précontrainte ou mixte n'est représentée | — |
+| `spanningSystem` | `SlabSpanningSystem::ONE_WAY` | FIXED_MVP | fonctionnement dans une direction principale ; aucun comportement bidirectionnel n'est disponible | — |
+| `structuralSystem` | `SlabStructuralSystem::SINGLE_SPAN_SIMPLY_SUPPORTED_ON_OPPOSITE_SIDES` | FIXED_MVP | une travée : bande de calcul simplement appuyée sur deux côtés opposés ; aucune continuité, console ou autre condition d'appui n'est représentée | — |
+| `loadModel` | `SlabLoadModel::VERTICAL_UNIFORMLY_DISTRIBUTED` | FIXED_MVP | charges verticales uniformément réparties ; aucune charge ponctuelle, linéaire localisée ou horizontale n'est représentée | — |
+| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_MVP | béton armé, sans classe de béton ni acier d'armature détaillés avant SLAB-03 | — |
+| `designCodeProfile` | `DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR` | PROFILE | identifiant du profil français partagé avec Poutre ; aucun coefficient ni règle normative n'est évalué ici | — |
+| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_MVP | situation persistante/transitoire préparée, sans combinaison d'actions | — |
+| `SlabCalculationConfigurationFactory` / `Validator` | configuration et motifs `INVALID_CONFIGURATION_VALUE`, `UNSUPPORTED_*` | DERIVED | conversion typée et validation backend, indépendante du frontend ; pas de DTO de calcul Dalle à ce stade | — |
+
+Le formulaire affiche comme hypothèses non interactives « Dalle pleine »,
+« Unidirectionnelle », « Béton armé », « Une travée », « Bande simplement
+appuyée sur deux côtés opposés » et « Charges verticales uniformément
+réparties ». Les matériaux détaillés (SLAB-03), les charges surfaciques
+(SLAB-04) et tout calcul restent explicitement hors périmètre.
+
+## Géométrie Dalle SLAB-02
+
+`SlabGeometry` contient seulement les longueurs nécessaires à la future bande
+unitaire. Les conversions sont réalisées une seule fois dans
+`buildSlabGeometryPayload`, entre la saisie Angular et le payload interne ;
+`SlabGeometryFactory` valide ensuite exclusivement des millimètres.
+
+| Nom dans le code | Symbole | Type / valeurs | Origine | Signification et limite | Unité UI / interne |
+|---|---|---|---|---|---|
+| `effectiveSpan` | `L` | nombre fini `> 0` | USER | portée de calcul saisie directement ; aucune portée libre, appui ou dérivation automatique | m / mm |
+| `thickness` | `h` | nombre fini `> 0` | USER | épaisseur totale de la dalle pleine ; ce n'est pas la hauteur utile `d` | cm / mm |
+| `calculationStripWidth` | `b` | `SlabGeometry::CALCULATION_STRIP_WIDTH_MM = 1000` | FIXED_MVP | bande unitaire automatique du modèle unidirectionnel ; elle n'est ni saisie ni envoyée par le client | — / mm |
+| `SlabGeometryPayload` | — | `effectiveSpan`, `thickness`, `unit: 'mm'` | DERIVED | contrat de géométrie sans `width`, `stripWidth` ou autre largeur utilisateur | mm |
+| `SlabGeometryRejectionReason` | — | motifs `MISSING_*`, `INVALID_*` | DERIVED | validation backend : présence, nombre fini et strictement positif | — |
+
+La bande de 1 m est une convention de modélisation du MVP, sans référence
+normative attribuée à ce stade. SLAB-02 ne calcule ni surface, volume, poids
+propre, hauteur utile, ratio `L/h`, moment, effort, armature ou conformité.
+
+## Matériaux Dalle SLAB-03
+
+La dalle réutilise directement `ConcreteStrengthClass`,
+`ReinforcementSteelGrade` et `ExposureClassCode` des référentiels communs ;
+elle ne définit aucun équivalent `Slab*`. `SlabMaterialsFactory` délègue la
+résolution et les capabilities MVP à `BeamMaterialsFactory` et
+`BeamCalculationCapabilities`, qui restent la source unique actuelle.
+
+| Nom | Origine | Contexte Dalle |
+|---|---|---|
+| `concreteClass` | USER | identifiant de `ConcreteStrengthClass`, parmi les capabilities communes |
+| `steelGrade` | USER | identifiant de `ReinforcementSteelGrade`, explicitement B500B dans le MVP courant |
+| `exposureClass` | USER | identifiant de `ExposureClassCode`, explicitement XC1 dans le MVP courant |
+
+Les propriétés `fck`, `fcm`, `fctm`, `Ecm`, `fyd`, les coefficients de profil
+et l'enrobage restent dérivés par le moteur commun ; elles ne sont ni saisies
+ni calculées dans SLAB-03. Aucune charge ou vérification de dalle n'est ajoutée.
+
+## Charges surfaciques Dalle SLAB-04
+
+`SlabCalculationInput` agrège configuration, géométrie, matériaux et
+`SlabSurfaceLoads` sans lancer de chaîne de calcul. `SlabCharacteristicActionsCalculator`
+combine les actions avec la géométrie Dalle et récupère le poids volumique via
+`ReinforcedConcreteUnitWeightRepository`. Toutes les charges restent surfaciques : aucune
+largeur de bande, charge linéique, combinaison ELU/ELS ou sollicitation n'est
+produite.
+
+| Nom dans le code | Symbole | Origine | Signification, dépendances et limite | Unité |
+|---|---|---|---|---|
+| `finishes` | `gk_finishes` | USER | revêtement caractéristique ; peut être nul | kN/m² |
+| `partitions` | `gk_partitions` | USER | cloisons caractéristiques ; peut être nul | kN/m² |
+| `otherPermanent` | `gk_otherPermanent` | USER | autres charges permanentes caractéristiques ; peut être nul | kN/m² |
+| `imposedLoad` | `qk` / `Qk` | USER | charge d'exploitation caractéristique, distincte des permanentes ; peut être nulle | kN/m² |
+| `thicknessMillimetres` | `h` | USER | épaisseur de `SlabGeometry`, conservée en interne avant conversion | mm |
+| `thicknessMetres` | `h` | DERIVED | épaisseur convertie par `LengthConverter` pour le poids propre | m |
+| `ReinforcedConcreteUnitWeight` / `unitWeight` | `γ_concrete` | CONFIG | poids volumique du béton armé normal : 25 ; référentiel commun EN 1991-1-1, indépendant de `ConcreteStrengthClass` | kN/m³ |
+| `selfWeight` | `gk_self` | DERIVED | poids propre surfacique : `γ_concrete × h` ; la largeur de bande n'intervient pas | kN/m² |
+| `permanentTotal` | `Gk_total` | DERIVED | `gk_self + gk_finishes + gk_partitions + gk_otherPermanent` ; reste une action caractéristique | kN/m² |
+
+`SlabCharacteristicActions` garde les valeurs utilisées, les résultats et les
+formules textuelles pour la traçabilité. Aucun coefficient `γG`, `γQ` ou `ψ`
+n'est appliqué dans SLAB-04 ; `wEd`, `MEd`, `VEd`, armatures, ELS et conformité
+ne sont pas calculés. La valeur de 25 kN/m³ provient de
+`ReinforcedConcreteUnitWeightRepository::normalWeightReinforcedConcrete()` ;
+elle est relative au béton armé de masse volumique normale et non à une classe
+de résistance de béton.
+
+## Combinaisons Dalle SLAB-05
+
+Le moteur commun `ActionCombinationCalculator` est la seule implémentation des
+combinaisons EN 1990 pour la paire `Gk_total` / `Qk`. Les adaptateurs Poutre et
+Dalle lui transmettent des actions caractéristiques, puis conservent leurs
+unités propres : `kN/m` pour la Poutre et `kN/m²` pour la Dalle. Il ne connaît
+ni portée, ni bande de calcul, ni condition d'appui, ni analyse.
+
+| Nom dans le code | Symbole | Origine | Signification, dépendances et référence | Unité Dalle |
+|---|---|---|---|---|
+| `permanentTotal` | `Gk,total` | DERIVED | total permanent issu de SLAB-04, consommé sans recalcul des contributions | kN/m² |
+| `imposedLoad` | `Qk` | USER | action variable principale issue de SLAB-04 ; catégorie A fixée par le MVP, sans sélecteur utilisateur | kN/m² |
+| `gammaGUnfavourable`, `gammaGFavourable`, `gammaQ` | `γG,sup`, `γG,inf`, `γQ` | PROFILE | `ActionSafetyFactors` du profil français ; ELU fondamental EN 1990 6.10 | — |
+| `psi0`, `psi1`, `psi2` | `ψ0`, `ψ1`, `ψ2` | PROFILE | `CombinationFactors` du profil selon la catégorie A ; `ψ0` n'est pas utilisé pour l'unique action principale de l'ELS caractéristique | — |
+| `uls.value` | `qEd` | DERIVED | `γG,sup × Gk,total + γQ × Qk`, expression du profil `EN1990_6_10` | kN/m² |
+| `slsCharacteristic.value` | `qSlsCharacteristic` | DERIVED | `Gk,total + Qk`, EN 1990 6.14 ; la variable principale garde le facteur 1 | kN/m² |
+| `slsFrequent.value` | `qSlsFrequent` | DERIVED | `Gk,total + ψ1 × Qk`, EN 1990 6.15 | kN/m² |
+| `slsQuasiPermanent.value` | `qSlsQuasiPermanent` | DERIVED | `Gk,total + ψ2 × Qk`, EN 1990 6.16 | kN/m² |
+
+`SlabActionCombinations` regroupe ces quatre résultats de
+`SlabSurfaceLoadCombination`, chacun traçable par ses entrées, contributions,
+facteurs, formule et référence d'expression. Les valeurs `γG`, `γQ`, `ψ1` et
+`ψ2` ne sont jamais saisies ou éditables dans Angular. SLAB-05 ne crée aucune
+charge linéique, aucun `MEd`, `VEd`, calcul de flexion, armature ou vérification
+de conformité ; ces sujets restent hors périmètre jusqu'à SLAB-06 et suivants.
+
+## Pré-analyse de bande Dalle SLAB-06
+
+SLAB-01 définit maintenant explicitement une bande à une travée simplement
+appuyée sur deux côtés opposés, sous charges verticales uniformément réparties.
+Cette hypothèse était absente lors de la première implémentation de SLAB-06 :
+le calculateur existant reste volontairement limité à la conversion de charge
+de bande et ne produit encore aucun moment ni effort tranchant.
+
+| Nom dans le code | Symbole | Origine | Signification et limite | Unité |
+|---|---|---|---|---|
+| `calculationStripWidth` | `b` | FIXED_MVP | bande de `SlabGeometry`, égale à 1000 mm ; non saisie par l'utilisateur | mm |
+| `stripWidthMetres` | `b` | DERIVED | conversion explicite de la bande via `LengthConverter` avant le produit physique | m |
+| `SlabSurfaceLoadCombination.value` | `qEd`, `qSls*` | DERIVED | charge surfacique issue directement de SLAB-05 ; jamais recombinée ici | kN/m² |
+| `SlabStripLinearLoad.lineLoad` | `wEd`, `wSlsCharacteristic`, `wSlsFrequent`, `wSlsQuasiPermanent` | DERIVED | `q × b`, charge linéique de la bande ; aucune analyse d'appui ni sollicitation interne | kN/m |
+| `SlabStripAnalysis.linearLoads` | `wEd`, `wSlsCharacteristic`, `wSlsFrequent`, `wSlsQuasiPermanent` | DERIVED | charges linéiques obtenues sans recalcul de `q`, facteurs `γ` ou `ψ` ; chaque résultat conserve son nom, formule et substitution | kN/m |
+| `SlabStripInternalForce.maximumMoment` | `MEd`, `MCharacteristic`, `MFrequent`, `MQuasiPermanent` | DERIVED | `w × L² / 8` pour la bande unitaire simplement appuyée ; les valeurs sont en kN·m pour une bande de 1 m, et non en kN·m/m | kN·m |
+| `SlabStripInternalForce.maximumShear` | `VEd`, `VCharacteristic`, `VFrequent`, `VQuasiPermanent` | DERIVED | `w × L / 2`, effort maximal aux appuis pour la même hypothèse statique | kN |
+| `SlabStripInternalForce.effectiveSpan` | `L` | USER → DERIVED | portée de `SlabGeometry`, convertie explicitement de mm vers m avant l'analyse | m |
+
+La chaîne SLAB-06 est `q → w → M/V` : elle utilise `w = q × b`, puis
+`Mmax = w × L² / 8` et `Vmax = w × L / 2`. `SlabStripAnalysisCalculator`
+refuse une portée non positive et exige le système fixe
+`SINGLE_SPAN_SIMPLY_SUPPORTED_ON_OPPOSITE_SIDES` ainsi que le modèle de charge
+`VERTICAL_UNIFORMLY_DISTRIBUTED`. Les expressions analytiques sont centralisées
+dans `SimplySupportedUniformlyDistributedLoadCalculator`, également utilisé par
+la Poutre. SLAB-06 ne produit ni armature, ni hauteur utile, ni résistance au
+cisaillement, ni vérification ELS matériau, ni conformité.
+
+## Flexion ELU de la bande Dalle SLAB-07
+
+`SlabUlsFlexureCalculator` consomme exclusivement `MEd` fourni par
+`SlabStripAnalysis.internalForces.uls` : il ne refait ni l'analyse statique,
+ni les actions ou combinaisons. La section est celle de la bande unitaire en
+flexion positive, avec les armatures principales tendues en sous-face. Les
+valeurs d'aire sont exprimées en `mm²/m` ; elles sont numériquement celles de
+la section de 1000 mm, sans constituer une proposition de diamètre ou
+d'espacement.
+
+| Nom dans le code | Symbole | Origine | Signification, dépendances et limite | Unité |
+|---|---|---|---|---|
+| `SlabStripInternalForce.maximumMoment` | `MEd` | DERIVED | moment ELU reçu de SLAB-06, correspondant à la bande de 1 m ; converti explicitement en N·mm par le moteur commun avant les équations de section | kN·m |
+| `SlabGeometry.calculationStripWidth` | `b` | FIXED_MVP | largeur de la section rectangulaire, toujours 1000 mm ; jamais une saisie utilisateur | mm |
+| `SlabGeometry.thickness` | `h` | USER | hauteur totale de la dalle, provenant de SLAB-02 | mm |
+| `SlabFlexuralDetailingAssumptions.preliminaryMainBarDiameter` | `φmain` | CONFIG | diamètre provisoire centralisé à 16 mm, partagé avec l'hypothèse initiale Poutre ; utilisé pour l'enrobage et `d`, à réévaluer quand SLAB-08 sélectionnera un diamètre réel | mm |
+| `CoverCalculationResult.cNom` | `cnom` | DERIVED / PROFILE | calcul automatique commun EC2-05 à partir de la classe de béton, de l'exposition, de la durée de vie de 50 ans et de `φmain` ; aucune valeur d'enrobage n'est codée dans SLAB-07 | mm |
+| `SlabEffectiveDepthResult.effectiveDepth` | `d` | DERIVED | `d = h - cnom - φmain / 2`, sans diamètre d'étrier car la nappe principale de dalle n'est pas enveloppée comme celle d'une poutre | mm |
+| `concreteDesignStrength` | `fcd` | DERIVED / PROFILE | résistance de calcul commune, obtenue de la classe de béton et du profil français | MPa |
+| `steelDesignStrength` | `fyd` | DERIVED / PROFILE | résistance de calcul commune, obtenue de la nuance d'acier et du profil français | MPa |
+| `meanTensileConcreteStrength` | `fctm` | DERIVED | propriété de la classe de béton commune, utilisée par l'armature minimale | MPa |
+| `reducedMoment` | `μEd` | DERIVED | `MEd_Nmm / (b × d² × fcd)`, par le calculateur commun de moment réduit | — |
+| `neutralAxisRatio`, `neutralAxisDepth` | `ξ`, `x` | DERIVED | axe neutre issu du bloc comprimé rectangulaire EC2 commun ; le domaine simplement armé est refusé s'il n'est pas valide | — / mm |
+| `leverArm` | `z` | DERIVED | bras de levier commun : `z = d - λ × x / 2` | mm |
+| `requiredReinforcementArea` | `As,req` | DERIVED | acier requis par l'équilibre `MEd / (fyd × z)` pour la bande de 1 m | mm²/m |
+| `minimumStrengthBasedReinforcementArea`, `minimumAbsoluteReinforcementArea`, `minimumReinforcementArea` | `As,min,1`, `As,min,2`, `As,min` | DERIVED / PROFILE | règle EC2 actuellement portée par le profil français : `max(0.26 × fctm/fyk × bt × d, 0.0013 × bt × d)`, avec `bt = b = 1000 mm` | mm²/m |
+| `designReinforcementArea` | `As,design` | DERIVED | cible continue `max(As,req, As,min)` pour SLAB-08 ; pas une aire fournie | mm²/m |
+
+Les calculateurs de moment réduit, axe neutre, bras de levier, armature requise,
+minimum et domaine sont les briques communes déjà validées dans le moteur
+Poutre. SLAB-07 les adapte à sa géométrie puis ne retourne que le résultat
+Dalle. Aucun `As,provided`, ferraillage discret, armature secondaire,
+cisaillement, ELS ou conformité n'est produit.
+
+## Proposition de ferraillage principal Dalle SLAB-08
+
+`SlabMainReinforcementProposalGenerator` consomme `As,design` de SLAB-07 puis
+recalcule entièrement SLAB-07 pour chaque diamètre candidat. Le diamètre réel
+est donc utilisé par le calcul commun d'enrobage, puis par `d`, `μ`, `ξ`, `x`,
+`z`, `As,req`, `As,min` et `As,design` avant toute acceptation.
+
+| Nom dans le code | Symbole | Origine | Signification et limite | Unité |
+|---|---|---|---|---|
+| `ReinforcementBarDiameterCatalog` | `φmain` | CONFIG | catalogue commun MVP : 8, 10, 12, 14, 16, 20, 25, 32 ; ce n'est pas une liste normative exhaustive | mm |
+| `SlabMainReinforcementProposalConfiguration.candidateSpacings()` | `s` | CONFIG | discrétisation Dalle : 100, 125, 150, 175, 200, 250, 300 ; aucune limite normative d'espacement Dalle n'est prétendue à ce stade | mm |
+| `SlabMainReinforcementProposal.barArea` | `Aφ` | DERIVED | aire géométrique commune : `π × φ² / 4` | mm² |
+| `SlabMainReinforcementProposal.providedAreaPerMeter` | `As,provided` | DERIVED | `Aφ × 1000 / s` pour la bande de référence | mm²/m |
+| `SlabUlsFlexureResult.designReinforcementArea` | `As,target` / `As,design` | DERIVED | cible SLAB-07 initiale puis cible finale recalculée avec le diamètre candidat | mm²/m |
+| `SlabMainReinforcementProposal.overProvision` | — | DERIVED | `As,provided - As,design final`, toujours positif ou nul pour une proposition retenue | mm²/m |
+
+Le classement est une politique applicative déterministe, non normative : plus
+faible surdimensionnement, puis espacement le plus grand, puis diamètre le plus
+petit, puis ordre stable du catalogue. Une proposition est retenue seulement si
+`As,provided ≥ As,design` après recalcul. En l'absence de candidat valide, le
+statut local est `NO_VALID_REINFORCEMENT_PROPOSAL` sans fallback. SLAB-08 ne
+calcule ni armatures secondaires, ni ELS, ni conformité globale.
 
 ## Mode de calcul Poutre BEAM-02
 
@@ -869,3 +1070,79 @@ Angular ne contient aucune table de propriétés mécaniques, d'enrobage ou de
 fissuration. Une modification de matériau efface le résultat précédemment
 affiché : le prochain résultat ne peut ainsi pas être confondu avec l'entrée
 modifiée.
+
+## Armatures secondaires de dalle SLAB-09
+
+| Nom | Symbole | Type / origine | Rôle | Unité |
+|---|---|---|---|---|
+| `mainProvidedAreaPerMeter` | `As_main,provided` | DERIVED / SLAB-08 | aire réellement proposée pour la nappe principale ; c'est l'unique entrée d'armature du calcul secondaire. | mm²/m |
+| `secondaryReinforcementRatio` | — | PROFILE | ratio minimal d'armature secondaire, égal à `0,20`. | sans dimension |
+| `minimumRequiredAreaPerMeter` | `As_secondary,min` | DERIVED | `0,20 × As_main,provided`. Il ne dépend ni de `As_req` ni de `As_design`. | mm²/m |
+| `maximumAllowedSpacing` | `s_secondary,max` | DERIVED / PROFILE | `min(3,5 × h, 450 mm)` avec `h` en mm. | mm |
+| `secondaryBarDiameter` | `φ_secondary` | DERIVED / CONFIG | diamètre issu du catalogue commun de barres ; il reste distinct de celui de la nappe principale. | mm |
+| `secondarySpacing` | `s_secondary` | DERIVED / CONFIG | espacement issu du catalogue commun SLAB-08 et retenu seulement s'il respecte `s_secondary,max`. | mm |
+| `secondaryBarArea` | `Aφ_secondary` | DERIVED | aire d'une barre : `π × φ² / 4`. | mm² |
+| `providedAreaPerMeter` | `As_secondary,provided` | DERIVED | aire réellement fournie par une proposition : `Aφ × 1000 / s`. | mm²/m |
+| `secondaryOverProvision` | — | DERIVED | `As_secondary,provided − As_secondary,min`, utilisée uniquement pour classer les propositions recevables. | mm²/m |
+
+Les paramètres `0,20`, `3,5` et `450 mm` appartiennent au profil normatif
+dans `SlabReinforcementRequirements`; ils ne sont ni des constantes du
+calculateur ni des propriétés intrinsèques de l'acier. Le résultat SLAB-09 est
+un résultat local de proposition, sans conclusion de conformité globale.
+
+La règle d'espacement appliquée est la règle générale de l'EN 1992-1-1:2004,
+§9.3.1.1(3). Les zones localisées de moment maximal ou de charge concentrée,
+où une limite plus stricte est prévue, ne sont pas modélisées : le MVP ne porte
+pas de position de charge ni de zonage de dalle. Cette limite doit être levée
+avant d'étendre le calcul à ces cas. La confirmation exhaustive de l'incidence
+de l'amendement national français 2026 reste à effectuer à partir de son texte
+normatif exploitable.
+
+## Vérifications ELS Dalle SLAB-10
+
+SLAB-10 produit deux résultats locaux (`crackVerification` et
+`deflectionVerification`) dans `SlabServiceabilityResult`. Il ne produit ni
+`slsStatus`, ni `overallStatus`, ni une conformité globale Dalle.
+
+| Nom | Origine | Rôle | Unité |
+|---|---|---|---|
+| `M_sls` | DERIVED / SLAB-06 | moment de la combinaison `QUASI_PERMANENT`, consommé sans refaire l'analyse statique. | kN·m |
+| `αe`, `x_sls`, `Icr`, `σs` | DERIVED | résultats de la section fissurée élastique commune, avec `As_main,provided`, `d` et les modules matériaux. | —, mm, mm⁴, MPa |
+| `Ac,eff`, `ρp,eff`, `sr,max`, `εsm − εcm` | DERIVED | grandeurs du calcul direct de fissuration commun EC2 §7.3.4. | mm², —, mm, — |
+| `wk`, `wk,max` | DERIVED / PROFILE | largeur calculée et limite issue de `BeamCrackWidthRequirements` du profil français. | mm |
+| `actualSpanDepthRatio` | DERIVED | `L / d`, avec la portée SLAB-02 et la hauteur utile réelle SLAB-08. | sans dimension |
+| `reinforcementRatio`, `referenceReinforcementRatio`, `structuralFactor` | DERIVED / PROFILE | paramètres du contrôle simplifié EC2 §7.4.2 ; `K` est lu du profil pour le système simplement appuyé. | sans dimension |
+| `allowableSpanDepthRatio`, `utilization` | DERIVED | limite `l/d` et ratio `actual / allowable`; aucune flèche en mm n'est déduite. | sans dimension |
+
+Le ferraillage de fissuration est exclusivement celui réellement proposé par
+SLAB-08 : diamètre, espacement, `As,provided/m`, `d` et `c_nom`. XC1 est la
+seule exposition actuellement dotée d'une limite `wk,max` validée dans le
+profil; une exposition telle que XC2 retourne
+`CALCULATION_METHOD_NOT_SUPPORTED`, sans valeur de fissure spéculative.
+
+Les noyaux communs `CrackedElasticSectionCalculator`,
+`DirectCrackWidthCalculator` et `SimplifiedSpanDepthCalculator` sont utilisés
+par Poutre et Dalle. Les références restent EN 1992-1-1:2004 §§7.3.4 et 7.4.2;
+la validation d'une éventuelle incidence de l'Annexe Nationale française 2026
+reste en attente d'un texte normatif exploitable.
+
+## Résultat final Dalle SLAB-11
+
+`SlabCalculationResult` expose le contrat final `status`, `summary`,
+`verifications` et `details`. Ces éléments sont des projections des résultats
+SLAB-01 à SLAB-10 : aucune charge, sollicitation, résistance ou armature n'y
+est recalculée.
+
+| Nom | Origine | Rôle |
+|---|---|---|
+| `overallStatus` / `status` | DERIVED | agrégation des statuts locaux par la même priorité que Beam. |
+| `ulsStatus` | DERIVED | agrégation de `FLEXURE`, `MAIN_REINFORCEMENT` et `SECONDARY_REINFORCEMENT`. |
+| `slsStatus` | DERIVED | agrégation de `CRACK` et `DEFLECTION`. |
+| `governingVerification` | DERIVED | vérification ayant l'utilisation existante finie la plus élevée. |
+| `governingUtilization` | DERIVED | utilisation brute de cette vérification ; aucune valeur n'est créée pour un contrôle qui n'en porte pas. |
+
+La priorité est commune : `NOT_COMPLIANT`, puis `NOT_CHECKED` ou
+`CALCULATION_METHOD_NOT_SUPPORTED` (agrégés en `NOT_CHECKED`), puis
+`COMPLIANT`. `NOT_APPLICABLE` est neutre. Les contrôles sans utilisation
+fiable, notamment les propositions de ferraillage, ne participent pas au choix
+gouvernant.
