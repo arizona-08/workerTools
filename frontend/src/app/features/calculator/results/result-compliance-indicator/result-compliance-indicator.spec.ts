@@ -46,6 +46,15 @@ describe('ResultComplianceIndicator', () => {
     expect(fixture.nativeElement.querySelector('section').getAttribute('aria-label')).toBe('Statut vérification incomplète, aucune vérification gouvernante disponible.');
   });
 
+  it('does not expose NaN when an invalid utilization reaches the presentation layer', () => {
+    fixture.componentRef.setInput('utilization', Number.NaN);
+    fixture.componentRef.setInput('status', 'NOT_CHECKED');
+    fixture.detectChanges();
+
+    expect(component.displayedPercentage()).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('NaN');
+  });
+
   it('keeps the actual displayed percentage while limiting an exceeded donut to 100 percent', () => {
     fixture.componentRef.setInput('utilization', 1.12);
     fixture.componentRef.setInput('status', 'NOT_COMPLIANT');

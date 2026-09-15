@@ -96,6 +96,36 @@ describe('Calculator', () => {
     expect(fixture.nativeElement.textContent).toContain('Conforme');
   });
 
+  it('applies the same loading and double-submission protection to a slab calculation', () => {
+    component.handleModuleChange('Dalle');
+    fixture.detectChanges();
+    http.expectOne('/api/beam/material-catalog').flush({
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+    });
+    const form = fixture.debugElement.query(By.directive(SlabForm)).componentInstance as SlabForm;
+    form.geometryForm.setValue({ effectiveSpan: 5, thickness: 20 });
+    form.surfaceLoadsForm.setValue({ finishes: 1.5, partitions: 0, otherPermanent: 0, imposedLoad: 2 });
+
+    component.calculateSlab();
+    component.calculateSlab();
+    fixture.detectChanges();
+
+    expect(component.isCalculating()).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Calcul en cours…');
+    const requests = http.match('/api/slab/calculations');
+    expect(requests).toHaveLength(1);
+    requests[0].flush({
+      status: 'COMPLIANT',
+      summary: { status: 'COMPLIANT', utilization: 0.75, governingVerificationType: 'FLEXURE', designBendingMoment: 10.1234, effectiveDepth: 160, requiredMainReinforcementArea: 200.5, minimumMainReinforcementArea: 150, mainReinforcement: null, secondaryReinforcement: null },
+      verifications: [], details: {},
+    });
+    fixture.detectChanges();
+
+    expect(component.isCalculating()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Conformité de la dalle');
+    expect(fixture.nativeElement.textContent).toContain('10,12 kN·m');
+  });
+
   it('shows an actionable backend error and restores the submission button', () => {
     const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
     form.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
@@ -106,6 +136,57 @@ describe('Calculator', () => {
 
     expect(component.isCalculating()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('Configuration non prise en charge.');
+  });
+
+  it('prevents concurrent submissions and removes an obsolete result while loading', () => {
+    const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
+    form.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
+    component.calculationResult.set({
+      summary: { utilization: 0.9, status: 'COMPLIANT', governingVerificationType: 'FLEXURE', designBendingMoment: 1, effectiveDepth: 1, requiredLongitudinalReinforcementArea: 1, longitudinalReinforcement: null },
+      verifications: {}, details: { overallStatus: 'COMPLIANT', ulsStatus: 'COMPLIANT', slsStatus: 'COMPLIANT', governingVerification: null, assumptions: {}, combinations: {}, internalForces: {}, flexure: {}, reinforcement: {}, shear: {}, serviceability: {}, warnings: [] },
+    });
+
+    component.calculateBeam();
+    component.calculateBeam();
+    fixture.detectChanges();
+
+    expect(component.isCalculating()).toBe(true);
+    expect(component.calculationResult()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Calcul en cours…');
+    expect(fixture.nativeElement.querySelector('button[type="button"]').disabled).toBe(true);
+    const requests = http.match('/api/beam/calculations');
+    expect(requests.length).toBe(1);
+    requests[0].flush({ summary: { utilization: null, status: 'NOT_CHECKED', governingVerificationType: null, designBendingMoment: null, effectiveDepth: null, requiredLongitudinalReinforcementArea: null, longitudinalReinforcement: null }, verifications: {}, details: { overallStatus: 'NOT_CHECKED', ulsStatus: 'NOT_CHECKED', slsStatus: 'NOT_CHECKED', governingVerification: null, assumptions: {}, combinations: {}, internalForces: {}, flexure: {}, reinforcement: {}, shear: {}, serviceability: {}, warnings: [] } });
+  });
+
+  it('uses a safe message for server and network failures and restores the CTA', () => {
+    const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
+    form.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
+
+    component.calculateBeam();
+    http.expectOne('/api/beam/calculations').flush({ message: 'Trace technique à ne pas afficher' }, { status: 500, statusText: 'Server Error' });
+    fixture.detectChanges();
+
+    expect(component.isCalculating()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Le calcul n’a pas pu être exécuté. Réessayez dans quelques instants.');
+    expect(fixture.nativeElement.textContent).not.toContain('Trace technique à ne pas afficher');
+  });
+
+  it('keeps validation messages for 400 errors and uses the generic fallback on network errors', () => {
+    const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
+    form.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
+
+    component.calculateBeam();
+    http.expectOne('/api/beam/calculations').flush({ message: 'La largeur fournie est invalide.' }, { status: 400, statusText: 'Bad Request' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('La largeur fournie est invalide.');
+
+    component.calculateBeam();
+    http.expectOne('/api/beam/calculations').error(new ProgressEvent('error'));
+    fixture.detectChanges();
+
+    expect(component.isCalculating()).toBe(false);
+    expect(fixture.nativeElement.textContent).toContain('Le calcul n’a pas pu être exécuté. Réessayez dans quelques instants.');
   });
 
   it('sends a changed concrete selection and clears an obsolete result before the next calculation', () => {

@@ -37,6 +37,9 @@ export class SlabForm {
 
   constructor() {
     this.materialCatalog.load();
+    this.geometryForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.materialsForm.valueChanges.subscribe(() => this.formChanged.emit());
+    this.surfaceLoadsForm.valueChanges.subscribe(() => this.formChanged.emit());
     effect(() => {
       this.materialCatalog.catalog();
       this.materialsForm.updateValueAndValidity();

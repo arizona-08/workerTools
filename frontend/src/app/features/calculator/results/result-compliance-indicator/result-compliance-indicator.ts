@@ -51,14 +51,14 @@ export class ResultComplianceIndicator {
   readonly displayedPercentage = computed<number | null>(() => {
     const utilization = this.utilization();
 
-    return utilization === null ? null : Math.round(utilization * 100);
+    return utilization === null || !Number.isFinite(utilization) ? null : Math.round(utilization * 100);
   });
 
   /** Bornage exclusif au tracé SVG ; le taux affiché reste la valeur backend. */
   readonly visualProgress = computed(() => {
     const utilization = this.utilization();
 
-    return utilization === null ? 0 : Math.min(Math.max(utilization, 0), 1);
+    return utilization === null || !Number.isFinite(utilization) ? 0 : Math.min(Math.max(utilization, 0), 1);
   });
 
   readonly governingVerificationLabel = computed(() => {
