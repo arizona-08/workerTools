@@ -9,6 +9,7 @@ use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequir
 use App\StructuralCalculation\Eurocode\Beams\BeamServiceStressRequirements;
 use App\StructuralCalculation\Eurocode\Cover\CoverRequirements;
 use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRequirements;
+use App\StructuralCalculation\Eurocode\Slabs\SlabReinforcementRequirements;
 
 /**
  * Profil MVP : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
@@ -119,6 +120,7 @@ final class FrenchEurocodeProfileRepository
             reinforcementSpacingRequirements: new ReinforcementSpacingRequirements(
                 ...self::REINFORCEMENT_SPACING_REQUIREMENTS,
             ),
+            slabReinforcementRequirements: SlabReinforcementRequirements::frenchMvp(),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),
                 self::COMBINATION_FACTORS_BY_ACTION_CATEGORY,

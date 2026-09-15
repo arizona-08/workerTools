@@ -45,14 +45,17 @@ final readonly class SlabUlsFlexureCalculator
         private BeamFlexuralDomainCheckCalculator $domainCheckCalculator,
     ) {}
 
-    public function calculate(SlabCalculationInput $input, SlabStripAnalysis $analysis): SlabUlsFlexureResult
-    {
+    public function calculate(
+        SlabCalculationInput $input,
+        SlabStripAnalysis $analysis,
+        ?SlabFlexuralDetailingAssumptions $detailing = null,
+    ): SlabUlsFlexureResult {
         $profile = $this->profiles->find($input->configuration->designCodeProfile->value);
         if ($profile === null) {
             throw new SlabUlsFlexureException(SlabUlsFlexureRejectionReason::INVALID_INPUT);
         }
 
-        $detailing = SlabFlexuralDetailingAssumptions::mvp();
+        $detailing ??= SlabFlexuralDetailingAssumptions::mvp();
         $cover = $this->coverCalculator->calculate(new CoverCalculationInput(
             coverMode: CoverMode::AUTO,
             exposureClasses: [$input->materials->exposureClass],

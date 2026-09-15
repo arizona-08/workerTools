@@ -66,6 +66,10 @@ export class ResultSummaryMessage {
         return 'Fissuration';
       case 'DEFLECTION':
         return 'Déformation';
+      case 'MAIN_REINFORCEMENT':
+        return 'Armatures principales';
+      case 'SECONDARY_REINFORCEMENT':
+        return 'Armatures secondaires';
       case null:
         return null;
     }

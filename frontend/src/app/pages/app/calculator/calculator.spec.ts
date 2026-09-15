@@ -45,7 +45,7 @@ describe('Calculator', () => {
     expect(fixture.debugElement.query(By.directive(SlabForm))).toBeTruthy();
     expect(fixture.debugElement.query(By.directive(BeamForm))).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Dalle pleine');
-    expect(fixture.nativeElement.querySelector('button[type="button"][disabled]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('button[type="button"][disabled]')).toBeNull();
     http.expectNone('/api/beam/calculations');
   });
 

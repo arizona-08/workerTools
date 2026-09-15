@@ -1,0 +1,9 @@
+<?php
+
+namespace App\StructuralCalculation\Slabs;
+
+enum SlabSecondaryReinforcementProposalStatus: string
+{
+    case SECONDARY_REINFORCEMENT_PROPOSAL_FOUND = 'SECONDARY_REINFORCEMENT_PROPOSAL_FOUND';
+    case NO_VALID_SECONDARY_REINFORCEMENT_PROPOSAL = 'NO_VALID_SECONDARY_REINFORCEMENT_PROPOSAL';
+}

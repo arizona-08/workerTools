@@ -1,4 +1,4 @@
-import { Component, effect, inject } from '@angular/core';
+import { Component, effect, inject, output } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 
 import { MVP_MATERIAL_DEFAULTS } from '../material-defaults';
@@ -15,6 +15,7 @@ import { SlabSurfaceLoadsPayload } from './slab-surface-loads';
   templateUrl: './slab-form.html',
 })
 export class SlabForm {
+  readonly formChanged = output<void>();
   /** Hypothèses explicites et non interactives du MVP. */
   readonly configuration = MVP_SLAB_CALCULATION_CONFIGURATION;
   readonly materialCatalog = inject(BeamMaterialCatalogService);
@@ -58,6 +59,16 @@ export class SlabForm {
     const loads = this.surfaceLoadsForm.getRawValue() as { finishes: number; partitions: number; otherPermanent: number; imposedLoad: number };
 
     return { ...loads, unit: 'kN/m²' };
+  }
+
+  requestPayload(): object | null {
+    const geometry = this.geometryPayload();
+    const loads = this.surfaceLoadsPayload();
+    if (geometry === null || loads === null || this.materialsForm.invalid) {
+      return null;
+    }
+
+    return { configuration: this.configuration, geometry, materials: this.materialsForm.getRawValue(), loads };
   }
 
   private catalogValueValidator(control: AbstractControl, values: Array<string | number>): ValidationErrors | null {

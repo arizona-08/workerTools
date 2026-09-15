@@ -307,6 +307,29 @@ Poutre. SLAB-07 les adapte à sa géométrie puis ne retourne que le résultat
 Dalle. Aucun `As,provided`, ferraillage discret, armature secondaire,
 cisaillement, ELS ou conformité n'est produit.
 
+## Proposition de ferraillage principal Dalle SLAB-08
+
+`SlabMainReinforcementProposalGenerator` consomme `As,design` de SLAB-07 puis
+recalcule entièrement SLAB-07 pour chaque diamètre candidat. Le diamètre réel
+est donc utilisé par le calcul commun d'enrobage, puis par `d`, `μ`, `ξ`, `x`,
+`z`, `As,req`, `As,min` et `As,design` avant toute acceptation.
+
+| Nom dans le code | Symbole | Origine | Signification et limite | Unité |
+|---|---|---|---|---|
+| `ReinforcementBarDiameterCatalog` | `φmain` | CONFIG | catalogue commun MVP : 8, 10, 12, 14, 16, 20, 25, 32 ; ce n'est pas une liste normative exhaustive | mm |
+| `SlabMainReinforcementProposalConfiguration.candidateSpacings()` | `s` | CONFIG | discrétisation Dalle : 100, 125, 150, 175, 200, 250, 300 ; aucune limite normative d'espacement Dalle n'est prétendue à ce stade | mm |
+| `SlabMainReinforcementProposal.barArea` | `Aφ` | DERIVED | aire géométrique commune : `π × φ² / 4` | mm² |
+| `SlabMainReinforcementProposal.providedAreaPerMeter` | `As,provided` | DERIVED | `Aφ × 1000 / s` pour la bande de référence | mm²/m |
+| `SlabUlsFlexureResult.designReinforcementArea` | `As,target` / `As,design` | DERIVED | cible SLAB-07 initiale puis cible finale recalculée avec le diamètre candidat | mm²/m |
+| `SlabMainReinforcementProposal.overProvision` | — | DERIVED | `As,provided - As,design final`, toujours positif ou nul pour une proposition retenue | mm²/m |
+
+Le classement est une politique applicative déterministe, non normative : plus
+faible surdimensionnement, puis espacement le plus grand, puis diamètre le plus
+petit, puis ordre stable du catalogue. Une proposition est retenue seulement si
+`As,provided ≥ As,design` après recalcul. En l'absence de candidat valide, le
+statut local est `NO_VALID_REINFORCEMENT_PROPOSAL` sans fallback. SLAB-08 ne
+calcule ni armatures secondaires, ni ELS, ni conformité globale.
+
 ## Mode de calcul Poutre BEAM-02
 
 | Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
@@ -1047,3 +1070,79 @@ Angular ne contient aucune table de propriétés mécaniques, d'enrobage ou de
 fissuration. Une modification de matériau efface le résultat précédemment
 affiché : le prochain résultat ne peut ainsi pas être confondu avec l'entrée
 modifiée.
+
+## Armatures secondaires de dalle SLAB-09
+
+| Nom | Symbole | Type / origine | Rôle | Unité |
+|---|---|---|---|---|
+| `mainProvidedAreaPerMeter` | `As_main,provided` | DERIVED / SLAB-08 | aire réellement proposée pour la nappe principale ; c'est l'unique entrée d'armature du calcul secondaire. | mm²/m |
+| `secondaryReinforcementRatio` | — | PROFILE | ratio minimal d'armature secondaire, égal à `0,20`. | sans dimension |
+| `minimumRequiredAreaPerMeter` | `As_secondary,min` | DERIVED | `0,20 × As_main,provided`. Il ne dépend ni de `As_req` ni de `As_design`. | mm²/m |
+| `maximumAllowedSpacing` | `s_secondary,max` | DERIVED / PROFILE | `min(3,5 × h, 450 mm)` avec `h` en mm. | mm |
+| `secondaryBarDiameter` | `φ_secondary` | DERIVED / CONFIG | diamètre issu du catalogue commun de barres ; il reste distinct de celui de la nappe principale. | mm |
+| `secondarySpacing` | `s_secondary` | DERIVED / CONFIG | espacement issu du catalogue commun SLAB-08 et retenu seulement s'il respecte `s_secondary,max`. | mm |
+| `secondaryBarArea` | `Aφ_secondary` | DERIVED | aire d'une barre : `π × φ² / 4`. | mm² |
+| `providedAreaPerMeter` | `As_secondary,provided` | DERIVED | aire réellement fournie par une proposition : `Aφ × 1000 / s`. | mm²/m |
+| `secondaryOverProvision` | — | DERIVED | `As_secondary,provided − As_secondary,min`, utilisée uniquement pour classer les propositions recevables. | mm²/m |
+
+Les paramètres `0,20`, `3,5` et `450 mm` appartiennent au profil normatif
+dans `SlabReinforcementRequirements`; ils ne sont ni des constantes du
+calculateur ni des propriétés intrinsèques de l'acier. Le résultat SLAB-09 est
+un résultat local de proposition, sans conclusion de conformité globale.
+
+La règle d'espacement appliquée est la règle générale de l'EN 1992-1-1:2004,
+§9.3.1.1(3). Les zones localisées de moment maximal ou de charge concentrée,
+où une limite plus stricte est prévue, ne sont pas modélisées : le MVP ne porte
+pas de position de charge ni de zonage de dalle. Cette limite doit être levée
+avant d'étendre le calcul à ces cas. La confirmation exhaustive de l'incidence
+de l'amendement national français 2026 reste à effectuer à partir de son texte
+normatif exploitable.
+
+## Vérifications ELS Dalle SLAB-10
+
+SLAB-10 produit deux résultats locaux (`crackVerification` et
+`deflectionVerification`) dans `SlabServiceabilityResult`. Il ne produit ni
+`slsStatus`, ni `overallStatus`, ni une conformité globale Dalle.
+
+| Nom | Origine | Rôle | Unité |
+|---|---|---|---|
+| `M_sls` | DERIVED / SLAB-06 | moment de la combinaison `QUASI_PERMANENT`, consommé sans refaire l'analyse statique. | kN·m |
+| `αe`, `x_sls`, `Icr`, `σs` | DERIVED | résultats de la section fissurée élastique commune, avec `As_main,provided`, `d` et les modules matériaux. | —, mm, mm⁴, MPa |
+| `Ac,eff`, `ρp,eff`, `sr,max`, `εsm − εcm` | DERIVED | grandeurs du calcul direct de fissuration commun EC2 §7.3.4. | mm², —, mm, — |
+| `wk`, `wk,max` | DERIVED / PROFILE | largeur calculée et limite issue de `BeamCrackWidthRequirements` du profil français. | mm |
+| `actualSpanDepthRatio` | DERIVED | `L / d`, avec la portée SLAB-02 et la hauteur utile réelle SLAB-08. | sans dimension |
+| `reinforcementRatio`, `referenceReinforcementRatio`, `structuralFactor` | DERIVED / PROFILE | paramètres du contrôle simplifié EC2 §7.4.2 ; `K` est lu du profil pour le système simplement appuyé. | sans dimension |
+| `allowableSpanDepthRatio`, `utilization` | DERIVED | limite `l/d` et ratio `actual / allowable`; aucune flèche en mm n'est déduite. | sans dimension |
+
+Le ferraillage de fissuration est exclusivement celui réellement proposé par
+SLAB-08 : diamètre, espacement, `As,provided/m`, `d` et `c_nom`. XC1 est la
+seule exposition actuellement dotée d'une limite `wk,max` validée dans le
+profil; une exposition telle que XC2 retourne
+`CALCULATION_METHOD_NOT_SUPPORTED`, sans valeur de fissure spéculative.
+
+Les noyaux communs `CrackedElasticSectionCalculator`,
+`DirectCrackWidthCalculator` et `SimplifiedSpanDepthCalculator` sont utilisés
+par Poutre et Dalle. Les références restent EN 1992-1-1:2004 §§7.3.4 et 7.4.2;
+la validation d'une éventuelle incidence de l'Annexe Nationale française 2026
+reste en attente d'un texte normatif exploitable.
+
+## Résultat final Dalle SLAB-11
+
+`SlabCalculationResult` expose le contrat final `status`, `summary`,
+`verifications` et `details`. Ces éléments sont des projections des résultats
+SLAB-01 à SLAB-10 : aucune charge, sollicitation, résistance ou armature n'y
+est recalculée.
+
+| Nom | Origine | Rôle |
+|---|---|---|
+| `overallStatus` / `status` | DERIVED | agrégation des statuts locaux par la même priorité que Beam. |
+| `ulsStatus` | DERIVED | agrégation de `FLEXURE`, `MAIN_REINFORCEMENT` et `SECONDARY_REINFORCEMENT`. |
+| `slsStatus` | DERIVED | agrégation de `CRACK` et `DEFLECTION`. |
+| `governingVerification` | DERIVED | vérification ayant l'utilisation existante finie la plus élevée. |
+| `governingUtilization` | DERIVED | utilisation brute de cette vérification ; aucune valeur n'est créée pour un contrôle qui n'en porte pas. |
+
+La priorité est commune : `NOT_COMPLIANT`, puis `NOT_CHECKED` ou
+`CALCULATION_METHOD_NOT_SUPPORTED` (agrégés en `NOT_CHECKED`), puis
+`COMPLIANT`. `NOT_APPLICABLE` est neutre. Les contrôles sans utilisation
+fiable, notamment les propositions de ferraillage, ne participent pas au choix
+gouvernant.

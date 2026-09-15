@@ -9,7 +9,7 @@ export type VerificationStatus =
   | 'NOT_APPLICABLE'
   | 'CALCULATION_METHOD_NOT_SUPPORTED';
 
-export type VerificationType = 'FLEXURE' | 'SHEAR' | 'STRESS' | 'CRACK' | 'DEFLECTION';
+export type VerificationType = 'FLEXURE' | 'SHEAR' | 'STRESS' | 'CRACK' | 'DEFLECTION' | 'MAIN_REINFORCEMENT' | 'SECONDARY_REINFORCEMENT';
 
 interface CompliancePresentation {
   label: string;
@@ -73,6 +73,10 @@ export class ResultComplianceIndicator {
         return 'Fissuration';
       case 'DEFLECTION':
         return 'Déformation';
+      case 'MAIN_REINFORCEMENT':
+        return 'Armatures principales';
+      case 'SECONDARY_REINFORCEMENT':
+        return 'Armatures secondaires';
       case null:
         return null;
     }

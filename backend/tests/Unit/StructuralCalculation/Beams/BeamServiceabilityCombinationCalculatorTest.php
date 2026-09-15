@@ -98,6 +98,7 @@ it('uses psi1 and psi2 supplied by the selected profile rather than calculator c
         beamDeflectionRequirements: $referenceProfile->beamDeflectionRequirements,
         beamServiceStressRequirements: $referenceProfile->beamServiceStressRequirements,
         reinforcementSpacingRequirements: $referenceProfile->reinforcementSpacingRequirements,
+        slabReinforcementRequirements: $referenceProfile->slabReinforcementRequirements,
         combinationFactorsByActionCategory: [
             'A' => new CombinationFactors(psi0: 0.6, psi1: 0.4, psi2: 0.2),
         ],

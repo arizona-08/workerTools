@@ -152,3 +152,11 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
   aucun facteur pour systèmes continus, consoles, dalles, cloisons fragiles ou
   acier comprimé n'est interpolé. La même réserve nationale 2016/A1:2026 reste
   applicable faute de texte français exploitable établissant une divergence.
+- Pour SLAB-09, `SlabReinforcementRequirements` centralise les dispositions
+  générales d'EN 1992-1-1:2004 §9.3.1.1 : armature transverse secondaire au
+  moins égale à 20 % de l'armature principale, et espacement général limité à
+  `min(3,5h, 450 mm)`. Les zones de moment maximal ou de charge concentrée,
+  auxquelles §9.3.1.1(3) applique `min(3h, 400 mm)`, ne sont pas représentées
+  dans le MVP et ne sont donc pas appliquées. L'incidence éventuelle de
+  NF EN 1992-1-1/NA/A1:2026 sur ces dispositions doit être validée sur le texte
+  normatif français exploitable avant extension du périmètre.

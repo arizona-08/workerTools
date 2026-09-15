@@ -4,6 +4,7 @@ import { BeamForm } from '../../../features/calculator/forms/beam-form/beam-form
 import { SlabForm } from '../../../features/calculator/forms/slab-form/slab-form';
 import { CalculatorModule, ModuleSelectorFieldType } from '../../../../types';
 import { BeamCalculationResponse, BeamCalculationService } from '../../../features/calculator/beam-calculation.service';
+import { SlabCalculationResponse, SlabCalculationService } from '../../../features/calculator/slab-calculation.service';
 import { ResultComplianceIndicator } from '../../../features/calculator/results/result-compliance-indicator/result-compliance-indicator';
 import { ResultSummaryCards } from '../../../features/calculator/results/result-summary-cards/result-summary-cards';
 import { ResultSummaryMessage } from '../../../features/calculator/results/result-summary-message/result-summary-message';
@@ -17,7 +18,9 @@ import { CalculationDetailsAccordion } from '../../../features/calculator/result
 })
 export class Calculator {
   private readonly calculations = inject(BeamCalculationService);
+  private readonly slabCalculations = inject(SlabCalculationService);
   @ViewChild(BeamForm) private beamForm?: BeamForm;
+  @ViewChild(SlabForm) private slabForm?: SlabForm;
   readonly modules: readonly CalculatorModule[] = [
     { id: 'Poutre', label: 'Poutres', description: 'Élément linéaire en béton armé' },
     { id: 'Dalle', label: 'Dalles', description: 'Élément surfacique en béton armé' },
@@ -25,6 +28,7 @@ export class Calculator {
 
   selectedModule = signal<ModuleSelectorFieldType>('Poutre');
   readonly calculationResult = signal<BeamCalculationResponse | null>(null);
+  readonly slabCalculationResult = signal<SlabCalculationResponse | null>(null);
   readonly calculationError = signal<string | null>(null);
   readonly isCalculating = signal(false);
 
@@ -59,7 +63,18 @@ export class Calculator {
     });
   }
 
+  calculateSlab(): void {
+    const payload = this.slabForm?.requestPayload();
+    if (payload === null || payload === undefined) { this.calculationError.set('Complétez les champs obligatoires avant de lancer le calcul.'); return; }
+    this.isCalculating.set(true); this.calculationError.set(null);
+    this.slabCalculations.calculate(payload).subscribe({
+      next: (result) => { this.slabCalculationResult.set(result); this.isCalculating.set(false); },
+      error: (error: { error?: { message?: string } }) => { this.calculationError.set(error.error?.message ?? 'Le calcul de dalle n’a pas pu être exécuté.'); this.isCalculating.set(false); },
+    });
+  }
+
   clearCalculationResult(): void {
     this.calculationResult.set(null);
+    this.slabCalculationResult.set(null);
   }
 }
