@@ -67,6 +67,15 @@ describe('SlabForm', () => {
     expect(component.materialsForm.valid).toBe(true);
   });
 
+  it('notifies the calculator when a slab input changes so an obsolete result can be removed', () => {
+    let changes = 0;
+    component.formChanged.subscribe(() => changes++);
+
+    component.geometryForm.controls.thickness.setValue(20);
+
+    expect(changes).toBe(1);
+  });
+
   it('validates geometry and converts UI metres and centimetres to internal millimetres once', () => {
     component.geometryForm.setValue({ effectiveSpan: 5.35, thickness: 20 });
 

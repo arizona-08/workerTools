@@ -48,7 +48,9 @@ final readonly class SlabCalculationResultAssembler
 
     private function mainStatus(SlabMainReinforcementProposalResult $main): BeamVerificationStatus
     {
-        return $main->proposal === null ? BeamVerificationStatus::NOT_CHECKED : BeamVerificationStatus::COMPLIANT;
+        // Une flexion calculable sans proposition SLAB-08 est une insuffisance de
+        // ferraillage disponible, pas une vérification simplement non exécutée.
+        return $main->proposal === null ? BeamVerificationStatus::NOT_COMPLIANT : BeamVerificationStatus::COMPLIANT;
     }
 
     private function secondaryStatus(SlabSecondaryReinforcementResult $secondary): BeamVerificationStatus

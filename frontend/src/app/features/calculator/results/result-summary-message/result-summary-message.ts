@@ -78,7 +78,7 @@ export class ResultSummaryMessage {
   readonly displayedPercentage = computed<number | null>(() => {
     const utilization = this.utilization();
 
-    return utilization === null ? null : Math.round(utilization * 100);
+    return utilization === null || !Number.isFinite(utilization) ? null : Math.round(utilization * 100);
   });
 
   readonly secondaryMessage = computed(() => {
