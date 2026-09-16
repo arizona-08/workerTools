@@ -48,8 +48,8 @@ function candidateRecalculationContext(): array
     $ultimate = app(BeamUltimateCombinationCalculator::class)->calculate($actions, $profile);
     $serviceability = app(BeamServiceabilityCombinationCalculator::class)->calculate($actions, $profile);
     $bending = app(SimplySupportedBeamBendingMomentCalculator::class)->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
-    $cover = app(NominalCoverCalculator::class)->calculate(new CoverCalculationInput(CoverMode::AUTO, $setup->materials->exposureClasses, $setup->materials->concreteClass, 50, BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter), $profile);
-    $depth = app(BeamEffectiveDepthCalculator::class)->calculate($setup->configuration->calculationMode, $setup->geometry, $cover, BeamFlexuralDetailingAssumptions::mvp());
+    $cover = app(NominalCoverCalculator::class)->calculate(new CoverCalculationInput(CoverMode::AUTO, $setup->materials->exposureClasses, $setup->materials->concreteClass, 50, BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter), $profile);
+    $depth = app(BeamEffectiveDepthCalculator::class)->calculate($setup->configuration->calculationMode, $setup->geometry, $cover, BeamFlexuralDetailingAssumptions::supported());
     $strengths = app(BeamFlexuralDesignStrengthsCalculator::class)->calculate($setup->materials, $profile);
     $reduced = app(BeamReducedMomentCalculator::class)->calculate($bending->ultimate, $setup->geometry, $depth, $strengths->concrete);
     $neutral = app(BeamNeutralAxisCalculator::class)->calculate($reduced, $depth, $strengths->concrete);
@@ -75,7 +75,7 @@ function recalculateCandidates(array $checks, ?float $initialRequiredArea = null
         $context['required'] = new BeamRequiredTensionReinforcementResult(95.45859375, 95458593.75, 500 / 1.15, 528.96131457381, (500 / 1.15) * 528.96131457381, $initialRequiredArea);
     }
     $result = beamReinforcementCandidateRecalculator()->recalculate(
-        $geometryCandidates, $context['bending']->ultimate, $context['setup']->geometry, $context['cover'], BeamFlexuralDetailingAssumptions::mvp(), $context['strengths'],
+        $geometryCandidates, $context['bending']->ultimate, $context['setup']->geometry, $context['cover'], BeamFlexuralDetailingAssumptions::supported(), $context['strengths'],
         app(ConcreteClassRepository::class)->get($context['setup']->materials->concreteClass), app(ReinforcementSteelGradeRepository::class)->get($context['setup']->materials->steelGrade),
         $context['profile'], $context['depth'], $context['required'],
     );
@@ -129,7 +129,7 @@ it('rejects a candidate explicitly when its recalculated singly reinforced domai
     );
 
     $result = beamReinforcementCandidateRecalculator()->recalculate(
-        $geometryCandidates, $invalidDomainMoment, $context['setup']->geometry, $context['cover'], BeamFlexuralDetailingAssumptions::mvp(), $context['strengths'],
+        $geometryCandidates, $invalidDomainMoment, $context['setup']->geometry, $context['cover'], BeamFlexuralDetailingAssumptions::supported(), $context['strengths'],
         app(ConcreteClassRepository::class)->get($context['setup']->materials->concreteClass), app(ReinforcementSteelGradeRepository::class)->get($context['setup']->materials->steelGrade),
         $context['profile'], $context['depth'], $context['required'],
     );

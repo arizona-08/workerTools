@@ -17,7 +17,7 @@ restent donc surchargeables par un futur profil national. Le profil
 `NF_EN_1992_1_1_2005_FR`, fondé sur NF EN 1992-1-1/NA:2016-03-24 et son
 amendement A1:2026-04-14, retient les valeurs recommandées de §9.2.1.1(1).
 
-## Hypothèse géométrique MVP
+## Hypothèse géométrique V1
 
 Dans le seul cas actuellement couvert — section `RECTANGULAR`, moment positif
 en travée — la largeur moyenne de la zone tendue est assimilée à la largeur de

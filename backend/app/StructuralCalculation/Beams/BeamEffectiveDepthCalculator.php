@@ -4,7 +4,7 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Eurocode\Cover\CoverCalculationResult;
 
-/** Détermine d depuis l'enrobage EC2-05 et le centre du seul lit tendu du MVP. */
+/** Détermine d depuis l'enrobage EC2-05 et le centre du seul lit tendu du V1. */
 final class BeamEffectiveDepthCalculator
 {
     public function calculate(

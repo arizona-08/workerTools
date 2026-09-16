@@ -32,7 +32,7 @@ it('calculates effective depth from the actual verification bar diameter', funct
         BeamCalculationMode::VERIFICATION,
         new BeamGeometry(6500, 300, 600),
         flexuralManualCover(30),
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
         new BeamLongitudinalReinforcement(4, 16),
     );
 
@@ -52,7 +52,7 @@ it('uses the explicit configurable design bar diameter before reinforcement is s
         BeamCalculationMode::DESIGN,
         new BeamGeometry(6500, 300, 600),
         flexuralManualCover(30),
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
     );
 
     expect($result->longitudinalBarDiameter)->toBe(16.0)
@@ -66,7 +66,7 @@ it('updates the verification effective depth when the supplied longitudinal diam
         BeamCalculationMode::VERIFICATION,
         new BeamGeometry(6500, 300, 600),
         flexuralManualCover(30),
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
         new BeamLongitudinalReinforcement(4, 20),
     );
 
@@ -93,7 +93,7 @@ it('rejects an impossible geometry that would produce a non-positive effective d
             BeamCalculationMode::DESIGN,
             new BeamGeometry(6500, 300, 40),
             flexuralManualCover(30),
-            BeamFlexuralDetailingAssumptions::mvp(),
+            BeamFlexuralDetailingAssumptions::supported(),
         );
     } catch (BeamEffectiveDepthException $exception) {
         expect($exception->reason)->toBe(BeamEffectiveDepthRejectionReason::NON_POSITIVE_EFFECTIVE_DEPTH);
@@ -134,7 +134,7 @@ it('uses the EC2-05 nominal cover result in an input-to-verification integration
             exposureClasses: $setup->materials->exposureClasses,
             concreteClass: $setup->materials->concreteClass,
             designWorkingLifeYears: 50,
-            reinforcementDiameter: BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter,
+            reinforcementDiameter: BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter,
         ),
         app(FrenchEurocodeProfileRepository::class)->get(),
     );
@@ -142,7 +142,7 @@ it('uses the EC2-05 nominal cover result in an input-to-verification integration
         $setup->configuration->calculationMode,
         $setup->geometry,
         $cover,
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
         $setup->longitudinalReinforcement,
     );
 

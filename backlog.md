@@ -1,13 +1,13 @@
-# WorkerTools — Backlog MVP
+# WorkerTools — Backlog V1
 
 ## Objectif
 
-Construire progressivement le MVP de WorkerTools autour de deux modules de calcul en béton armé :
+Construire progressivement le V1 de WorkerTools autour de deux modules de calcul en béton armé :
 
 - Poutres
 - Dalles
 
-Le MVP doit rester centré sur des cas simples, fiables et clairement documentés :
+Le V1 doit rester centré sur des cas simples, fiables et clairement documentés :
 
 - poutre rectangulaire simplement appuyée ;
 - dalle unidirectionnelle ;
@@ -211,7 +211,7 @@ si elles peuvent être déterminées à partir de la classe.
 
 Même principe.
 
-Exemple MVP :
+Exemple V1 :
 
 ```text
 B500B
@@ -271,43 +271,43 @@ Enrobage nominal
 
 ---
 
-# EPIC 3 — Poutre : formulaire MVP
+# EPIC 3 — Poutre : formulaire V1
 
 > **Cadre normatif de cette Epic**
 >
-> Le MVP Poutre est cadré sur une poutre en béton armé, à section rectangulaire, simplement appuyée et soumise à des charges verticales uniformément réparties. Les règles de béton armé relèvent de NF EN 1992-1-1 et de l’Annexe Nationale française applicable. Les actions et combinaisons nécessaires au calcul relèvent également d’EN 1990 / EN 1991. Les paramètres déterminés nationalement ne doivent pas être codés en dur dans les formulaires.
+> Le V1 Poutre est cadré sur une poutre en béton armé, à section rectangulaire, simplement appuyée et soumise à des charges verticales uniformément réparties. Les règles de béton armé relèvent de NF EN 1992-1-1 et de l’Annexe Nationale française applicable. Les actions et combinaisons nécessaires au calcul relèvent également d’EN 1990 / EN 1991. Les paramètres déterminés nationalement ne doivent pas être codés en dur dans les formulaires.
 >
 > **Convention importante :**
 >
 > - `USER` = valeur saisie ou choisie par l’utilisateur ;
 > - `DERIVED` = valeur calculée par WorkerTools ;
 > - `PROFILE` = valeur provenant du profil normatif / Annexe Nationale ;
-> - `FIXED_MVP` = hypothèse volontairement figée pour le premier MVP.
+> - `FIXED_SCOPE` = hypothèse volontairement figée pour le premier V1.
 
 ## Champs métier complets du formulaire Poutre
 
 ### A. Configuration générale
 
-| Champ | Symbole / clé suggérée | Type | Origine | Unité | MVP |
+| Champ | Symbole / clé suggérée | Type | Origine | Unité | V1 |
 |---|---|---:|---|---|---|
 | Mode de calcul | `calculationMode` | enum `DESIGN / VERIFICATION` | USER | — | Oui |
-| Type de section | `sectionType` | enum | FIXED_MVP = `RECTANGULAR` | — | Oui |
-| Système statique | `supportSystem` | enum | FIXED_MVP = `SIMPLY_SUPPORTED` | — | Oui |
-| Type de matériau | `materialType` | enum | FIXED_MVP = `REINFORCED_CONCRETE` | — | Oui |
-| Type de chargement | `loadModel` | enum | FIXED_MVP = `UNIFORMLY_DISTRIBUTED` | — | Oui |
+| Type de section | `sectionType` | enum | FIXED_SCOPE = `RECTANGULAR` | — | Oui |
+| Système statique | `supportSystem` | enum | FIXED_SCOPE = `SIMPLY_SUPPORTED` | — | Oui |
+| Type de matériau | `materialType` | enum | FIXED_SCOPE = `REINFORCED_CONCRETE` | — | Oui |
+| Type de chargement | `loadModel` | enum | FIXED_SCOPE = `UNIFORMLY_DISTRIBUTED` | — | Oui |
 | Profil normatif | `designCodeProfile` | enum/id | PROFILE | — | Oui |
-| Situation de projet | `designSituation` | enum | FIXED_MVP = persistante/transitoire | — | Oui |
+| Situation de projet | `designSituation` | enum | FIXED_SCOPE = persistante/transitoire | — | Oui |
 
-Ne pas afficher les valeurs `FIXED_MVP` comme des sélecteurs inutiles si un seul choix est supporté. Elles doivent toutefois exister explicitement dans le domaine afin de ne pas rendre les hypothèses implicites.
+Ne pas afficher les valeurs `FIXED_SCOPE` comme des sélecteurs inutiles si un seul choix est supporté. Elles doivent toutefois exister explicitement dans le domaine afin de ne pas rendre les hypothèses implicites.
 
 ### B. Portée et appuis
 
-L’Eurocode distingue la portée libre de la portée efficace. Pour le MVP, deux stratégies sont acceptables :
+L’Eurocode distingue la portée libre de la portée efficace. Pour le V1, deux stratégies sont acceptables :
 
 1. **Mode simple recommandé au départ :** l’utilisateur saisit directement la **portée efficace de calcul** `l_eff`.
 2. **Mode assisté ultérieur :** l’utilisateur saisit la portée libre et la géométrie des appuis ; WorkerTools détermine `l_eff`.
 
-#### Champs MVP
+#### Champs V1
 
 | Champ | Symbole / clé | Origine | Unité | Validation |
 |---|---|---|---|---|
@@ -379,7 +379,7 @@ Le backend doit convertir les dimensions vers une unité interne unique avant to
 
 Deux modes doivent être distingués.
 
-#### Mode manuel MVP possible
+#### Mode manuel V1 possible
 
 | Champ | Clé | Origine | Unité |
 |---|---|---|---|
@@ -414,7 +414,7 @@ La hauteur utile dépend du ferraillage envisagé. Le moteur doit donc connaîtr
 | Nombre maximal de lits autorisés | `maxRebarLayers` | USER / config | — |
 | Diamètres autorisés | `availableLongitudinalDiameters` | config | mm |
 
-Pour un premier MVP simple, le formulaire peut uniquement demander le diamètre longitudinal préféré et le diamètre d’étrier ; les règles de proposition de ferraillage appartiennent à l’EPIC 6.
+Pour un premier V1 simple, le formulaire peut uniquement demander le diamètre longitudinal préféré et le diamètre d’étrier ; les règles de proposition de ferraillage appartiennent à l’EPIC 6.
 
 ### H. Armatures longitudinales — mode Vérification
 
@@ -428,7 +428,7 @@ Pour un premier MVP simple, le formulaire peut uniquement demander le diamètre 
 | Diamètre des barres comprimées | `compressionBarDiameter` | USER | mm |
 | Aire d’acier comprimé fournie | `As2_prov` | DERIVED | mm² |
 
-Pour le MVP en flexion simple, les armatures comprimées peuvent être optionnelles et la configuration doit être déclarée `non supportée` si la méthode de calcul nécessite un dimensionnement doublement armé non encore implémenté.
+Pour le V1 en flexion simple, les armatures comprimées peuvent être optionnelles et la configuration doit être déclarée `non supportée` si la méthode de calcul nécessite un dimensionnement doublement armé non encore implémenté.
 
 ### I. Armatures transversales — mode Vérification
 
@@ -439,7 +439,7 @@ Ces champs deviennent obligatoires lorsque la vérification du cisaillement avec
 | Diamètre d’étrier | `stirrupDiameter` | USER | mm |
 | Nombre de branches efficaces | `stirrupLegs` | USER | — |
 | Espacement des étriers | `stirrupSpacing` | USER | mm |
-| Angle des étriers | `alpha` | FIXED_MVP | 90° |
+| Angle des étriers | `alpha` | FIXED_SCOPE | 90° |
 | Aire transversale par étrier | `Asw` | DERIVED | mm² |
 | Ratio fourni | `Asw_over_s_prov` | DERIVED | mm²/mm |
 
@@ -454,7 +454,7 @@ Ces champs deviennent obligatoires lorsque la vérification du cisaillement avec
 
 ### K. Action variable
 
-Pour le MVP, une seule action variable uniformément répartie est supportée.
+Pour le V1, une seule action variable uniformément répartie est supportée.
 
 | Champ | Clé | Origine | Unité |
 |---|---|---|---|
@@ -481,7 +481,7 @@ La section « Coefficients de sécurité » du design peut afficher ces valeurs 
 | paramètres nationaux de fissuration | PROFILE |
 | paramètres nationaux de cisaillement | PROFILE |
 
-Pour le MVP, ne pas autoriser la modification libre de ces coefficients dans l’UI standard.
+Pour le V1, ne pas autoriser la modification libre de ces coefficients dans l’UI standard.
 
 
 On attaque le premier vrai module.
@@ -492,7 +492,7 @@ On attaque le premier vrai module.
 
 Créer les choix structurants du formulaire.
 
-Pour le MVP :
+Pour le V1 :
 
 ```text
 Élément
@@ -589,7 +589,7 @@ Charge variable Qk
 [     ] kN/m
 ```
 
-Pour le MVP, on reste sur des charges uniformément réparties.
+Pour le V1, on reste sur des charges uniformément réparties.
 
 Pas encore de charges ponctuelles.
 
@@ -637,7 +637,7 @@ Le backend doit malgré tout refaire la validation.
 
 ## Données d’entrée et de sortie de l’analyse
 
-Cette Epic transforme les caractéristiques et actions saisies dans l’EPIC 3 en sollicitations de calcul. Le cas MVP reste strictement :
+Cette Epic transforme les caractéristiques et actions saisies dans l’EPIC 3 en sollicitations de calcul. Le cas V1 reste strictement :
 
 - poutre simplement appuyée ;
 - portée efficace `l_eff` ;
@@ -680,7 +680,7 @@ Cette Epic transforme les caractéristiques et actions saisies dans l’EPIC 3 e
 | Moment ELS fréquent | `MFrequent` | kN·m |
 | Moment ELS quasi-permanent | `MQuasiPermanent` | kN·m |
 
-Pour la poutre simplement appuyée sous charge uniformément répartie, le moteur peut appliquer les expressions analytiques adaptées au cas, mais il doit refuser toute configuration qui ne correspond pas aux hypothèses du MVP.
+Pour la poutre simplement appuyée sous charge uniformément répartie, le moteur peut appliquer les expressions analytiques adaptées au cas, mais il doit refuser toute configuration qui ne correspond pas aux hypothèses du V1.
 
 ### Traçabilité à retourner
 
@@ -727,7 +727,7 @@ Qk
 
 ## BEAM-CALC-03 — Combinaisons ELU
 
-Implémenter la combinaison utilisée dans le périmètre MVP.
+Implémenter la combinaison utilisée dans le périmètre V1.
 
 Le moteur doit retourner les valeurs intermédiaires nécessaires à la traçabilité.
 
@@ -832,7 +832,7 @@ As_prov >= As_req
 As_prov >= As_min
 d > 0
 x/d dans le domaine de validité de la méthode
-section simplement armée compatible avec le périmètre MVP
+section simplement armée compatible avec le périmètre V1
 ```
 
 En mode `DESIGN`, si le moment dépasse le domaine géré par le dimensionnement simplement armé, ne pas générer arbitrairement une quantité d’acier. Retourner une limitation explicite, par exemple :
@@ -957,7 +957,7 @@ plutôt qu’un résultat approximatif.
 
 ## Données nécessaires au moteur de proposition
 
-Le moteur de proposition de ferraillage ne doit pas uniquement trouver une aire d’acier supérieure à `As_req`. Il doit également vérifier que la disposition est constructible dans la poutre et qu’elle respecte les règles de détail couvertes par le MVP.
+Le moteur de proposition de ferraillage ne doit pas uniquement trouver une aire d’acier supérieure à `As_req`. Il doit également vérifier que la disposition est constructible dans la poutre et qu’elle respecte les règles de détail couvertes par le V1.
 
 ### Entrées
 
@@ -975,7 +975,7 @@ Le moteur de proposition de ferraillage ne doit pas uniquement trouver une aire 
 | Taille maximale de granulat `d_g` | `maxAggregateSize` | USER si la vérification d’espacement l’exige |
 | Règles d’espacement minimal | paramètres normatifs | PROFILE |
 
-### Champ supplémentaire à ajouter au formulaire si la constructibilité complète est incluse dans le MVP
+### Champ supplémentaire à ajouter au formulaire si la constructibilité complète est incluse dans le V1
 
 | Champ | Clé | Unité | Pourquoi |
 |---|---|---|---|
@@ -1008,7 +1008,7 @@ barres physiquement contenues dans la largeur disponible
 espacement libre minimal entre barres
 enrobage respecté
 diamètres appartenant au catalogue autorisé
-nombre de lits <= limite du MVP
+nombre de lits <= limite du V1
 ```
 
 Le moteur peut essayer plusieurs combinaisons, puis classer les solutions par simplicité, proximité avec `As_req` et préférence de diamètre. Éviter de considérer automatiquement la combinaison avec le moins d’acier comme la meilleure si elle conduit à une disposition peu pratique.
@@ -1064,7 +1064,7 @@ Inclut le filtrage géométrique des candidats et le recalcul de la chaîne de f
 | Béton | `fck`, `fcd` | référentiel |
 | Acier | `fywd` / propriété de calcul correspondante | référentiel |
 | Aire d’armatures longitudinales ancrées au droit de la section | `Asl` | EPIC 5/6 ou saisie vérification |
-| Effort normal | `NEd` | FIXED_MVP = 0 |
+| Effort normal | `NEd` | FIXED_SCOPE = 0 |
 | Aire béton | `Ac` | DERIVED |
 | Paramètres nationaux de cisaillement | `CRd,c`, `vmin`, `k1`, etc. | PROFILE |
 
@@ -1082,7 +1082,7 @@ Grandeurs dérivées à conserver :
 | Résistance béton au cisaillement | `VRd,c` | kN |
 | Taux d’utilisation béton | `VEd / VRd,c` | % |
 
-Pour le cas MVP sans effort normal :
+Pour le cas V1 sans effort normal :
 
 ```text
 NEd = 0
@@ -1093,7 +1093,7 @@ mais ces valeurs doivent rester explicites dans le moteur.
 
 ### B. Dimensionnement d’armatures transversales
 
-#### Hypothèses MVP
+#### Hypothèses V1
 
 | Paramètre | Valeur |
 |---|---|
@@ -1102,7 +1102,7 @@ mais ces valeurs doivent rester explicites dans le moteur.
 | Modèle treillis | selon profil EC2 retenu |
 | Inclinaison des bielles `θ` | déterminée/contrôlée dans le domaine EC2 supporté |
 
-Si `θ` est choisi par l’utilisateur dans une future version, il devra être exposé comme paramètre avancé. Pour le MVP, préférer une stratégie déterministe documentée plutôt qu’un champ expert supplémentaire.
+Si `θ` est choisi par l’utilisateur dans une future version, il devra être exposé comme paramètre avancé. Pour le V1, préférer une stratégie déterministe documentée plutôt qu’un champ expert supplémentaire.
 
 #### Données dérivées
 
@@ -1212,7 +1212,7 @@ et utiliser la combinaison exigée par la vérification considérée et par le p
 | Module acier | `Es` |
 | Résistances matériaux | `fck`, `fyk` |
 | Moment ELS de la combinaison pertinente | `M_sls` |
-| Effort normal ELS | FIXED_MVP = 0 |
+| Effort normal ELS | FIXED_SCOPE = 0 |
 
 ### Valeurs dérivées possibles
 
@@ -1284,7 +1284,7 @@ Le détail doit explicitement indiquer la combinaison ELS utilisée.
 
 ## BEAM-SLS-03 — Flèche / déformation
 
-### Stratégie MVP recommandée
+### Stratégie V1 recommandée
 
 Commencer par la **méthode simplifiée de contrôle par rapport portée / hauteur utile** prévue par EC2 pour les poutres et dalles de bâtiments lorsque son domaine d’application est satisfait.
 
@@ -1326,7 +1326,7 @@ Ne pas prétendre avoir calculé une flèche en millimètres si seule la méthod
 | Statut | `deflectionStatus` |
 | Méthode | `SIMPLIFIED_SPAN_DEPTH` |
 
-### Calcul explicite de flèche — hors MVP initial
+### Calcul explicite de flèche — hors V1 initial
 
 Un calcul explicite ultérieur pourra nécessiter notamment :
 
@@ -1342,7 +1342,7 @@ conditions de support
 combinaisons quasi-permanentes
 ```
 
-Ne pas ajouter ces champs au formulaire MVP tant que le calcul explicite de déformation n’est pas réellement implémenté.
+Ne pas ajouter ces champs au formulaire V1 tant que le calcul explicite de déformation n’est pas réellement implémenté.
 
 ## Résultat ELS global
 
@@ -1391,9 +1391,9 @@ ou la méthode retenue dans le périmètre validé.
 
 ## BEAM-SLS-03 — Flèche
 
-Implémenter la méthode de vérification choisie pour le MVP.
+Implémenter la méthode de vérification choisie pour le V1.
 
-Pour le premier MVP, privilégier une approche simplifiée Eurocode 2 avant un calcul complet de déformation.
+Pour le premier V1, privilégier une approche simplifiée Eurocode 2 avant un calcul complet de déformation.
 
 ---
 
@@ -1528,7 +1528,7 @@ Une fois le module Poutre stabilisé, réutiliser les briques communes.
 
 ## SLAB-01 — Configuration
 
-MVP :
+V1 :
 
 ```text
 Dalle pleine
@@ -1585,7 +1585,7 @@ Réutiliser le moteur commun lorsqu’il est réellement applicable.
 
 ## SLAB-06 — Analyse
 
-Calculer les sollicitations de la bande de dalle dans le cas MVP.
+Calculer les sollicitations de la bande de dalle dans le cas V1.
 
 ## SLAB-07 — Flexion ELU
 
@@ -1659,7 +1659,7 @@ plutôt que deux implémentations entièrement indépendantes.
 
 ---
 
-# EPIC 12 — Fiabilisation du MVP
+# EPIC 12 — Fiabilisation du V1
 
 Cette étape est obligatoire avant de considérer le calculateur terminé.
 
@@ -1778,12 +1778,12 @@ avec gestion :
 - erreur ;
 - téléchargement du PDF.
 
-# Définition du MVP
+# Définition du V1
 
-Une fois les Epics `0 → 12` terminées, WorkerTools dispose de son premier vrai MVP :
+Une fois les Epics `0 → 12` terminées, WorkerTools dispose de son premier vrai V1 :
 
 ```text
-                    WORKERTOOLS MVP
+                    WORKERTOOLS V1
 
                       Calculateur
                            │
@@ -1812,7 +1812,7 @@ Une fois les Epics `0 → 12` terminées, WorkerTools dispose de son premier vra
 
 ---
 
-# Hors périmètre MVP
+# Hors périmètre V1
 
 Ces fonctionnalités pourront être traitées dans une V1 ou plus tard :
 

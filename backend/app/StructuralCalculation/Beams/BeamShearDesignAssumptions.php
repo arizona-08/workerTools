@@ -7,7 +7,7 @@ final readonly class BeamShearDesignAssumptions
 {
     public function __construct(public float $designCotTheta) {}
 
-    public static function mvp(): self
+    public static function supported(): self
     {
         return new self(designCotTheta: 2.5);
     }

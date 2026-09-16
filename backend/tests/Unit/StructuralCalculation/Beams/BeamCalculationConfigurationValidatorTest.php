@@ -18,8 +18,8 @@ function beamConfigurationValidator(): BeamCalculationConfigurationValidator
     return app(BeamCalculationConfigurationValidator::class);
 }
 
-it('validates the explicit MVP beam configuration and reuses the French profile', function () {
-    $configuration = BeamCalculationConfiguration::mvp();
+it('validates the explicit V1 beam configuration and reuses the French profile', function () {
+    $configuration = BeamCalculationConfiguration::supported();
 
     beamConfigurationValidator()->validate($configuration);
 
@@ -41,7 +41,7 @@ it('accepts both supported calculation modes in the beam configuration', functio
     expect($configuration->calculationMode)->toBe($mode);
 })->with([BeamCalculationMode::DESIGN, BeamCalculationMode::VERIFICATION]);
 
-it('rejects valid conceptual configurations that are not supported by the MVP', function (BeamCalculationConfiguration $configuration, BeamConfigurationRejectionReason $reason) {
+it('rejects valid conceptual configurations that are not supported by the V1', function (BeamCalculationConfiguration $configuration, BeamConfigurationRejectionReason $reason) {
     try {
         beamConfigurationValidator()->validate($configuration);
     } catch (BeamConfigurationException $exception) {
@@ -77,7 +77,7 @@ function configurationValues(
     ?BeamSupportSystem $supportSystem = null,
     ?BeamLoadModel $loadModel = null,
 ): array {
-    $configuration = BeamCalculationConfiguration::mvp();
+    $configuration = BeamCalculationConfiguration::supported();
 
     return [
         'calculationMode' => $calculationMode ?? $configuration->calculationMode,

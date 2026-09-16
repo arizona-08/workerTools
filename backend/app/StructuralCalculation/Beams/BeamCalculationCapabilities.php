@@ -9,7 +9,7 @@ use App\StructuralCalculation\Materials\Exposure\ExposureClassCode;
 use App\StructuralCalculation\Materials\Exposure\ExposureClassRepository;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelGradeRepository;
 
-/** Capacités réellement disponibles pour la chaîne de calcul Poutre MVP. */
+/** Capacités réellement disponibles pour la chaîne de calcul Poutre V1. */
 final readonly class BeamCalculationCapabilities
 {
     public function __construct(

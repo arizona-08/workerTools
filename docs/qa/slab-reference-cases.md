@@ -1,6 +1,6 @@
 # QA-02 — Cas de référence Dalle
 
-Les trois cas couvrent le MVP : dalle pleine en béton armé, unidirectionnelle,
+Les trois cas couvrent le V1 : dalle pleine en béton armé, unidirectionnelle,
 une travée, simplement appuyée sur deux côtés opposés, sous charge verticale
 uniforme. La bande de calcul vaut 1 m. Tous utilisent C30/37, B500B et XC1,
 seule classe d'exposition actuellement prise en charge de bout en bout pour la

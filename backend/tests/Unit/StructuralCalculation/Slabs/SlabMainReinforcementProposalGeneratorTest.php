@@ -38,7 +38,7 @@ function slabProposalCombination(SlabSurfaceLoadCombinationType $type, float $va
 function slabProposalSetup(float $uls = 13.8): array
 {
     $input = new SlabCalculationInput(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         new SlabMaterials(ConcreteStrengthClass::C30_37, ReinforcementSteelGrade::B500B, ExposureClassCode::XC1),
         new SlabSurfaceLoads(0, 0, 0, 0),

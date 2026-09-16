@@ -4,7 +4,7 @@ namespace App\StructuralCalculation\Beams;
 
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementBarAreaCalculator;
 
-/** Armatures longitudinales tendues existantes ; un seul lit dans le MVP. */
+/** Armatures longitudinales tendues existantes ; un seul lit dans le V1. */
 final readonly class BeamLongitudinalReinforcement
 {
     public float $providedSteelArea;

@@ -17,6 +17,6 @@ it('turns beam and slab rejection codes into actionable user messages', function
     'shear capacity' => ['MAXIMUM_SHEAR_RESISTANCE_EXCEEDED', 'L’effort tranchant est trop important pour cette section dans le périmètre de calcul actuel.'],
     'bar spacing' => ['LONGITUDINAL_SPACING_EXCEEDED', 'Les armatures ne peuvent pas être disposées dans la section en respectant les espacements requis.'],
     'provided reinforcement' => ['INSUFFICIENT_LONGITUDINAL_REINFORCEMENT', 'Les armatures fournies sont insuffisantes pour cette configuration.'],
-    'unsupported method' => ['CALCULATION_METHOD_NOT_SUPPORTED', 'Cette configuration nécessite une méthode de calcul qui n’est pas encore prise en charge par le MVP.'],
+    'unsupported method' => ['CALCULATION_METHOD_NOT_SUPPORTED', 'Cette configuration nécessite une méthode de calcul qui n’est pas encore prise en charge par WorkerTools.'],
     'fallback' => ['UNEXPECTED_DOMAIN_FAILURE', 'Cette configuration ne peut pas être calculée dans le périmètre actuel. Vérifiez les données saisies et les hypothèses du calcul.'],
 ]);

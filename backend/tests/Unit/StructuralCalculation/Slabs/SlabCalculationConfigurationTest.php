@@ -14,8 +14,8 @@ use App\StructuralCalculation\Slabs\SlabSpanningSystem;
 use App\StructuralCalculation\Slabs\SlabStructuralSystem;
 use App\StructuralCalculation\Slabs\SlabType;
 
-it('validates the explicit fixed MVP slab configuration without starting a calculation', function () {
-    $configuration = SlabCalculationConfiguration::mvp();
+it('validates the explicit fixed V1 slab configuration without starting a calculation', function () {
+    $configuration = SlabCalculationConfiguration::supported();
 
     app(SlabCalculationConfigurationValidator::class)->validate($configuration);
 
@@ -30,7 +30,7 @@ it('validates the explicit fixed MVP slab configuration without starting a calcu
         ->and(method_exists($configuration, 'calculate'))->toBeFalse();
 });
 
-it('rejects an external configuration identifier outside the representable slab MVP', function () {
+it('rejects an external configuration identifier outside the representable slab V1', function () {
     app(SlabCalculationConfigurationFactory::class)->fromValues(
         'SLAB',
         'RIBBED',
@@ -44,16 +44,16 @@ it('rejects an external configuration identifier outside the representable slab 
 })->throws(SlabConfigurationException::class, SlabConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE->value);
 
 it('refuses a configuration for another existing structural element', function () {
-    $mvp = SlabCalculationConfiguration::mvp();
+    $v1 = SlabCalculationConfiguration::supported();
     $configuration = new SlabCalculationConfiguration(
         ElementType::BEAM,
-        $mvp->slabType,
-        $mvp->spanningSystem,
-        $mvp->structuralSystem,
-        $mvp->loadModel,
-        $mvp->materialType,
-        $mvp->designCodeProfile,
-        $mvp->designSituation,
+        $v1->slabType,
+        $v1->spanningSystem,
+        $v1->structuralSystem,
+        $v1->loadModel,
+        $v1->materialType,
+        $v1->designCodeProfile,
+        $v1->designSituation,
     );
 
     app(SlabCalculationConfigurationValidator::class)->validate($configuration);

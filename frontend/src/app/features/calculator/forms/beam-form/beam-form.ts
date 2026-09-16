@@ -1,10 +1,10 @@
 import { Component, EventEmitter, Output, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { BeamCalculationConfigurationView, BeamCalculationMode, MVP_BEAM_CALCULATION_CONFIGURATION } from './beam-calculation-configuration';
+import { BeamCalculationConfigurationView, BeamCalculationMode, SUPPORTED_BEAM_CALCULATION_CONFIGURATION } from './beam-calculation-configuration';
 import { BeamCalculationPayload, BeamGeometryPayload, BeamMaterialsPayload, BeamPermanentLoadsPayload, BeamVariableLoadPayload, buildBeamGeometryPayload } from './beam-geometry';
 import { BeamLongitudinalReinforcementPayload, calculateProvidedSteelArea } from './beam-longitudinal-reinforcement';
 import { BeamMaterialCatalogService } from './beam-material-catalog.service';
-import { MVP_MATERIAL_DEFAULTS } from '../material-defaults';
+import { SUPPORTED_MATERIAL_DEFAULTS } from '../material-defaults';
 import { nonNegativeFiniteNumberValidator } from '../non-negative-finite-number.validator';
 import { positiveIntegerValidator } from './positive-integer.validator';
 import { positiveFiniteNumberValidator } from '../positive-finite-number.validator';
@@ -17,7 +17,7 @@ import { positiveFiniteNumberValidator } from '../positive-finite-number.validat
 export class BeamForm {
   @Output() readonly formChanged = new EventEmitter<void>();
   readonly materialCatalog = inject(BeamMaterialCatalogService);
-  readonly configuration: BeamCalculationConfigurationView = { ...MVP_BEAM_CALCULATION_CONFIGURATION };
+  readonly configuration: BeamCalculationConfigurationView = { ...SUPPORTED_BEAM_CALCULATION_CONFIGURATION };
   readonly calculationMode = signal<BeamCalculationMode>(this.configuration.calculationMode);
   readonly geometryForm = new FormGroup({
     effectiveSpan: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
@@ -25,9 +25,9 @@ export class BeamForm {
     height: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
   });
   readonly materialsForm = new FormGroup({
-    concreteClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.concreteClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
-    steelGrade: new FormControl<string>(MVP_MATERIAL_DEFAULTS.steelGrade, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
-    exposureClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.exposureClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
+    concreteClass: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.concreteClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
+    steelGrade: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.steelGrade, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
+    exposureClass: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.exposureClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
   });
   readonly permanentLoadsForm = new FormGroup({
     includeSelfWeight: new FormControl(true, { nonNullable: true }),

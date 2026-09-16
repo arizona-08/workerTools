@@ -3,7 +3,7 @@
 ## Processus DESIGN
 
 Le diamètre `Ø16` fourni par
-`BeamFlexuralDetailingAssumptions::mvp()` est une hypothèse de départ pour
+`BeamFlexuralDetailingAssumptions::supported()` est une hypothèse de départ pour
 établir le premier `d`, puis le premier `As_target`. Il ne représente pas le
 diamètre finalement retenu.
 
@@ -45,5 +45,5 @@ comparaison `As_prov ≥ As_target`.
 Ce recalcul n'est pas une vérification de résistance finale : il ne produit pas
 `MRd`, ne conclut pas à la conformité globale, ne traite ni plusieurs lits ni
 armatures comprimées, et ne sélectionne pas un candidat final. La convention
-MVP d'enrobage autour de l'étrier, documentée dans BEAM-FLEX-01, reste celle
+V1 d'enrobage autour de l'étrier, documentée dans BEAM-FLEX-01, reste celle
 utilisée ici.

@@ -55,7 +55,7 @@ final readonly class SlabUlsFlexureCalculator
             throw new SlabUlsFlexureException(SlabUlsFlexureRejectionReason::INVALID_INPUT);
         }
 
-        $detailing ??= SlabFlexuralDetailingAssumptions::mvp();
+        $detailing ??= SlabFlexuralDetailingAssumptions::supported();
         $cover = $this->coverCalculator->calculate(new CoverCalculationInput(
             coverMode: CoverMode::AUTO,
             exposureClasses: [$input->materials->exposureClass],

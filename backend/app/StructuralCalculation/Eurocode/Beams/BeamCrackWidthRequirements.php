@@ -5,7 +5,7 @@ namespace App\StructuralCalculation\Eurocode\Beams;
 use App\StructuralCalculation\Beams\BeamCrackLoadDuration;
 use App\StructuralCalculation\Materials\Exposure\ExposureClassCode;
 
-/** Paramètres nationaux de fissuration EC2 §7.3.4, pour les cas MVP validés. */
+/** Paramètres nationaux de fissuration EC2 §7.3.4, pour les cas V1 validés. */
 final readonly class BeamCrackWidthRequirements
 {
     /** @param array<string, float> $crackWidthLimitsByExposureClass */

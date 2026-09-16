@@ -7,7 +7,7 @@ use App\StructuralCalculation\Eurocode\Combinations\ActionCombinationException;
 use App\StructuralCalculation\Eurocode\Combinations\CharacteristicActions;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 
-/** Applique EN 1990 6.10 au cas MVP d'une action variable principale. */
+/** Applique EN 1990 6.10 au cas V1 d'une action variable principale. */
 final readonly class BeamUltimateCombinationCalculator
 {
     public function __construct(private ActionCombinationCalculator $calculator) {}

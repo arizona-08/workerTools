@@ -1,4 +1,4 @@
-# QA-06 — Checklist UX MVP
+# QA-06 — Checklist UX V1
 
 Cette checklist couvre le parcours `Renseigner → Calculer → Comprendre le résultat` des modules Poutre et Dalle. Elle ne modifie aucune règle de calcul ni donnée normative.
 

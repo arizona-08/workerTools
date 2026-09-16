@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Catalogues applicatifs MVP d'étriers, sans valeur normative implicite. */
+/** Catalogues applicatifs V1 d'étriers, sans valeur normative implicite. */
 final readonly class BeamStirrupProposalConfiguration
 {
     /** @param list<float> $diameters @param list<float> $spacings */

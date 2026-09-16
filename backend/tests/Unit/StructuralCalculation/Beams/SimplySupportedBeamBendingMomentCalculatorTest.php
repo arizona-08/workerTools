@@ -41,7 +41,7 @@ function bendingServiceabilityCombinations(float $characteristic, float $frequen
 
 function bendingConfiguration(BeamSupportSystem $supportSystem = BeamSupportSystem::SIMPLY_SUPPORTED, BeamLoadModel $loadModel = BeamLoadModel::UNIFORMLY_DISTRIBUTED): BeamCalculationConfiguration
 {
-    $configuration = BeamCalculationConfiguration::mvp();
+    $configuration = BeamCalculationConfiguration::supported();
 
     return new BeamCalculationConfiguration(
         $configuration->calculationMode,
@@ -138,7 +138,7 @@ it('rejects a negative line load from any input combination', function (
     'quasi-permanent serviceability' => [bendingUltimateCombination(0), bendingServiceabilityCombinations(0, 0, -0.1), BeamBendingMomentRejectionReason::INVALID_QUASI_PERMANENT_SERVICEABILITY_LINE_LOAD],
 ]);
 
-it('rejects a structural configuration outside the static MVP model', function (BeamCalculationConfiguration $configuration, BeamBendingMomentRejectionReason $reason) {
+it('rejects a structural configuration outside the static V1 model', function (BeamCalculationConfiguration $configuration, BeamBendingMomentRejectionReason $reason) {
     try {
         simplySupportedBendingMomentCalculator()->calculate(
             $configuration,

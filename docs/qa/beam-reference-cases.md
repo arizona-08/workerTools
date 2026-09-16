@@ -13,4 +13,4 @@ B500B, XC1, poutre rectangulaire simplement appuyée sous charge uniforme.
 
 Les comparaisons utilisent une tolérance absolue de `1e-9` (et `1e-10` pour
 les charges). XC1 est la classe actuellement supportée de bout en bout par la
-vérification de fissuration du MVP.
+vérification de fissuration du V1.

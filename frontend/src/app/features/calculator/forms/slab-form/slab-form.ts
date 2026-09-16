@@ -1,11 +1,11 @@
 import { Component, effect, inject, output } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 
-import { MVP_MATERIAL_DEFAULTS } from '../material-defaults';
+import { SUPPORTED_MATERIAL_DEFAULTS } from '../material-defaults';
 import { nonNegativeFiniteNumberValidator } from '../non-negative-finite-number.validator';
 import { positiveFiniteNumberValidator } from '../positive-finite-number.validator';
 import { BeamMaterialCatalogService } from '../beam-form/beam-material-catalog.service';
-import { MVP_SLAB_CALCULATION_CONFIGURATION } from './slab-calculation-configuration';
+import { SUPPORTED_SLAB_CALCULATION_CONFIGURATION } from './slab-calculation-configuration';
 import { buildSlabGeometryPayload, SlabGeometryPayload } from './slab-geometry';
 import { SlabSurfaceLoadsPayload } from './slab-surface-loads';
 
@@ -16,17 +16,17 @@ import { SlabSurfaceLoadsPayload } from './slab-surface-loads';
 })
 export class SlabForm {
   readonly formChanged = output<void>();
-  /** Hypothèses explicites et non interactives du MVP. */
-  readonly configuration = MVP_SLAB_CALCULATION_CONFIGURATION;
+  /** Hypothèses explicites et non interactives du V1. */
+  readonly configuration = SUPPORTED_SLAB_CALCULATION_CONFIGURATION;
   readonly materialCatalog = inject(BeamMaterialCatalogService);
   readonly geometryForm = new FormGroup({
     effectiveSpan: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
     thickness: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
   });
   readonly materialsForm = new FormGroup({
-    concreteClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.concreteClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
-    steelGrade: new FormControl<string>(MVP_MATERIAL_DEFAULTS.steelGrade, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
-    exposureClass: new FormControl<string>(MVP_MATERIAL_DEFAULTS.exposureClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
+    concreteClass: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.concreteClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.concreteClasses ?? [])] }),
+    steelGrade: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.steelGrade, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.steelGrades ?? [])] }),
+    exposureClass: new FormControl<string>(SUPPORTED_MATERIAL_DEFAULTS.exposureClass, { nonNullable: true, validators: [Validators.required, (control) => this.catalogValueValidator(control, this.materialCatalog.catalog()?.exposureClasses.map(({ code }) => code) ?? [])] }),
   });
   readonly surfaceLoadsForm = new FormGroup({
     finishes: new FormControl(0, { nonNullable: true, validators: [Validators.required, nonNegativeFiniteNumberValidator] }),

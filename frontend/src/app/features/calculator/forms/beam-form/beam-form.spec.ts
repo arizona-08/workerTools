@@ -23,7 +23,7 @@ describe('BeamForm', () => {
     await fixture.whenStable();
   });
 
-  it('presents the fixed MVP beam configuration without editable alternatives', () => {
+  it('presents the fixed V1 beam configuration without editable alternatives', () => {
     expect(component.configuration.sectionType).toBe('RECTANGULAR');
     expect(component.configuration.supportSystem).toBe('SIMPLY_SUPPORTED');
     expect(component.configuration.materialType).toBe('REINFORCED_CONCRETE');

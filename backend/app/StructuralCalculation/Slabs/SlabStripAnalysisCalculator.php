@@ -5,7 +5,7 @@ namespace App\StructuralCalculation\Slabs;
 use App\StructuralCalculation\Statics\SimplySupportedUniformlyDistributedLoadCalculator;
 use App\StructuralCalculation\Units\LengthConverter;
 
-/** Analyse de la bande Dalle MVP, limitée à une travée simplement appuyée sous charge uniforme. */
+/** Analyse de la bande Dalle V1, limitée à une travée simplement appuyée sous charge uniforme. */
 final readonly class SlabStripAnalysisCalculator
 {
     public function __construct(

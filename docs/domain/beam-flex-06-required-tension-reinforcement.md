@@ -2,7 +2,7 @@
 
 ## Équilibre ELU
 
-Pour la section rectangulaire simplement armée couverte par le MVP, la
+Pour la section rectangulaire simplement armée couverte par le V1, la
 résultante de traction dans l'acier est :
 
 `Fs = As × fyd`

@@ -35,7 +35,7 @@ function stirrupDesignContext(float $ved = 58.74375, float $leverArm = 531.01960
     $force = new BeamShearForce($ved, $ved, $ved, -$ved, FundamentalUltimateCombinationExpression::EN1990_6_10, 'VEd');
     $concreteShear = app(BeamConcreteShearResistanceCalculator::class)->calculate(
         $force,
-        BeamCalculationConfiguration::mvp(),
+        BeamCalculationConfiguration::supported(),
         $geometry,
         $effectiveDepth,
         $concrete,
@@ -57,7 +57,7 @@ function calculateStirrupDesign(array $context, ?BeamShearDesignAssumptions $ass
 {
     return beamShearReinforcementDesignCalculator()->calculate(
         $context['concreteShear'], $context['leverArm'], $context['concrete'], $context['steel'],
-        $context['profile'], $assumptions ?? BeamShearDesignAssumptions::mvp(),
+        $context['profile'], $assumptions ?? BeamShearDesignAssumptions::supported(),
     );
 }
 

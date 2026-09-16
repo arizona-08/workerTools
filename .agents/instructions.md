@@ -4,7 +4,7 @@
 
 WorkerTools est une application web de calcul de structures destinée à proposer des outils simples, fiables et lisibles pour le dimensionnement et la vérification d'éléments en béton armé.
 
-Le cœur du MVP repose sur deux modules :
+Le périmètre V1 repose sur deux modules :
 
 - **Calcul de poutres en béton armé**
 - **Calcul de dalles en béton armé**
@@ -269,7 +269,7 @@ Créer et maintenir le fichier :
 
 `docs/domain/variables-and-constants.md`
 
-Ce document doit servir de référentiel commun pour comprendre les données manipulées par WorkerTools, notamment les variables de calcul, constantes normatives, paramètres nationaux, enums métier et hypothèses du MVP.
+Ce document doit servir de référentiel commun pour comprendre les données manipulées par WorkerTools, notamment les variables de calcul, constantes normatives, paramètres nationaux, enums métier et hypothèses de périmètre.
 
 À chaque feature ajoutant, modifiant ou utilisant un concept métier important, mettre à jour cette documentation.
 
@@ -293,7 +293,7 @@ Utiliser les catégories d’origine suivantes lorsque pertinent :
 - `USER` : donnée saisie ou choisie par l’utilisateur ;
 - `DERIVED` : valeur calculée à partir d’autres données ;
 - `PROFILE` : valeur provenant du profil normatif / Annexe Nationale ;
-- `FIXED_MVP` : hypothèse volontairement figée dans le MVP ;
+- `FIXED_SCOPE` : hypothèse volontairement figée dans le périmètre supporté ;
 - `CONFIG` : valeur provenant d’une configuration technique ou métier.
 
 Exemple :
@@ -934,7 +934,7 @@ Seul le prompt courant et le backlog validé définissent le scope fonctionnel.
 
 ---
 
-## 36. Fonctionnalités MVP prioritaires
+## 36. Fonctionnalités V1 prioritaires
 
 Le périmètre initial se concentre sur :
 
@@ -950,7 +950,7 @@ Le périmètre initial se concentre sur :
 
 Commencer par les cas explicitement définis dans le backlog et les prompts.
 
-Ne pas supposer que toutes les variantes de poutres doivent être supportées dès le MVP.
+Ne pas supposer que toutes les variantes de poutres doivent être supportées dès la V1.
 
 ### Dalles en béton armé
 

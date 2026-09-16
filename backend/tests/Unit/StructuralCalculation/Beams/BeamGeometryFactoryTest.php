@@ -54,7 +54,7 @@ it('rejects non-positive and non-numeric geometry fields', function (mixed $effe
 
 it('keeps the configuration and geometry as distinct parts of the future calculation setup', function () {
     $setup = new BeamCalculationSetup(
-        BeamCalculationConfiguration::mvp(),
+        BeamCalculationConfiguration::supported(),
         beamGeometryFactory()->fromInternalValues(6500, 300, 600),
     );
 

@@ -3,7 +3,7 @@
 namespace App\StructuralCalculation\Beams;
 
 /**
- * Assemble le contrat d'entrée Poutre MVP sans déclencher de calcul.
+ * Assemble le contrat d'entrée Poutre V1 sans déclencher de calcul.
  * Les propriétés dérivées ou mécaniques envoyées par le client sont refusées.
  */
 final readonly class BeamCalculationInputFactory

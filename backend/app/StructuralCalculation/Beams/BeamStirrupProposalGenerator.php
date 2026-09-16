@@ -5,7 +5,7 @@ namespace App\StructuralCalculation\Beams;
 use App\StructuralCalculation\Eurocode\Cover\CoverCalculationResult;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 
-/** Génère, filtre et classe le catalogue discret MVP des étriers à deux branches. */
+/** Génère, filtre et classe le catalogue discret V1 des étriers à deux branches. */
 final readonly class BeamStirrupProposalGenerator
 {
     public function __construct(private BeamShearReinforcementResistanceCalculator $resistanceCalculator) {}

@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Types conceptuellement reconnus ; seul RECTANGULAR appartient au MVP. */
+/** Types conceptuellement reconnus ; seul RECTANGULAR appartient au V1. */
 enum BeamSectionType: string
 {
     case RECTANGULAR = 'RECTANGULAR';

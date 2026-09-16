@@ -39,7 +39,7 @@ function slabSlsCombination(SlabSurfaceLoadCombinationType $type, float $value):
 function slabSlsSetup(ExposureClassCode $exposure = ExposureClassCode::XC1, float $quasiPermanentLoad = 5): array
 {
     $input = new SlabCalculationInput(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         new SlabMaterials(ConcreteStrengthClass::C30_37, ReinforcementSteelGrade::B500B, $exposure),
         new SlabSurfaceLoads(0, 0, 0, 0),

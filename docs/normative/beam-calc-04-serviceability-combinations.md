@@ -2,7 +2,7 @@
 
 ## Périmètre
 
-Cette note documente les combinaisons d'états limites de service du MVP pour
+Cette note documente les combinaisons d'états limites de service du V1 pour
 une poutre soumise à des charges linéaires uniformément réparties. Le moteur
 reçoit les actions caractéristiques déjà constituées : `Gk_total` et une seule
 action variable principale `Qk`, de catégorie A.
@@ -13,7 +13,7 @@ dispersée dans les calculateurs.
 
 ## Expressions retenues
 
-| Combinaison | Référence | Expression MVP |
+| Combinaison | Référence | Expression V1 |
 |---|---|---|
 | Caractéristique | EN 1990 6.14 | `wSlsCharacteristic = Gk_total + Qk` |
 | Fréquente | EN 1990 6.15 | `wSlsFrequent = Gk_total + ψ1 × Qk` |
@@ -21,7 +21,7 @@ dispersée dans les calculateurs.
 
 Dans le cas d'une seule action variable principale, `ψ0` n'est pas appliqué à
 `Qk` dans la combinaison caractéristique. Il demeure une donnée du profil pour
-les futures actions variables accompagnatrices, hors périmètre du MVP.
+les futures actions variables accompagnatrices, hors périmètre du V1.
 
 `ψ1` et `ψ2` sont demandés au `DesignCodeProfile` par
 `combinationFactorsFor(category)`. Pour la catégorie A actuellement couverte

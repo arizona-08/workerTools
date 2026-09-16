@@ -55,11 +55,11 @@ final readonly class BeamReinforcementCandidatesGenerator
 
     private function ensureConfiguration(): void
     {
-        if ($this->configuration->minimumTensionBarCount < BeamReinforcementProposalConfiguration::MVP_MINIMUM_TENSION_BAR_COUNT) {
+        if ($this->configuration->minimumTensionBarCount < BeamReinforcementProposalConfiguration::SUPPORTED_MINIMUM_TENSION_BAR_COUNT) {
             throw new BeamReinforcementCandidatesException(BeamReinforcementCandidatesRejectionReason::INVALID_MINIMUM_TENSION_BAR_COUNT);
         }
         if ($this->configuration->maximumTensionBarCount < $this->configuration->minimumTensionBarCount
-            || $this->configuration->maximumTensionBarCount > BeamReinforcementProposalConfiguration::MVP_MAXIMUM_TENSION_BAR_COUNT) {
+            || $this->configuration->maximumTensionBarCount > BeamReinforcementProposalConfiguration::SUPPORTED_MAXIMUM_TENSION_BAR_COUNT) {
             throw new BeamReinforcementCandidatesException(BeamReinforcementCandidatesRejectionReason::INVALID_MAXIMUM_TENSION_BAR_COUNT);
         }
     }

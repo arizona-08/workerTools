@@ -39,7 +39,7 @@ function concreteShearContext(float $depth = 546, float $asl = 452.3893421169302
 
     return [
         'force' => concreteShearForce($ved),
-        'configuration' => BeamCalculationConfiguration::mvp(),
+        'configuration' => BeamCalculationConfiguration::supported(),
         'geometry' => new BeamGeometry(6500, 300, 600),
         'depth' => concreteShearEffectiveDepth($depth),
         'concrete' => $concrete,
@@ -110,7 +110,7 @@ it('uses the supplied Asl rather than a flexural required area and converts the 
         ->and($result->concreteShearResistance)->toBe($result->governingResistanceStress * 300 * 546 / 1000);
 });
 
-it('keeps the MVP normal force fixed at zero', function () {
+it('keeps the V1 normal force fixed at zero', function () {
     $context = concreteShearContext();
 
     expect(fn () => beamConcreteShearResistanceCalculator()->calculate(

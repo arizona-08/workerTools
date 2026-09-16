@@ -42,7 +42,7 @@ it('represents a beam-shaped note without calculating its values again', functio
         ],
         new CalculationNoteFinalStatus(BeamVerificationStatus::COMPLIANT, 'FLEXURE', 0.75, [new CalculationNoteValue('MEd', 'Moment ELU', 95.45859375, 'kN·m')]),
         ['Méthode simplifiée de déformation.'],
-        ['Le périmètre MVP est limité.'],
+        ['Le périmètre V1 est limité.'],
     );
 
     expect($document->metadata->calculationType)->toBe(ElementType::BEAM)
@@ -51,7 +51,7 @@ it('represents a beam-shaped note without calculating its values again', functio
         ->and($document->reinforcement[0]->count)->toBe(4)
         ->and($document->reinforcement[0]->diameter)->toBe(12.0)
         ->and($document->warnings)->toBe(['Méthode simplifiée de déformation.'])
-        ->and($document->limitations)->toBe(['Le périmètre MVP est limité.']);
+        ->and($document->limitations)->toBe(['Le périmètre V1 est limité.']);
 });
 
 it('represents a slab-shaped note with module-specific sections left absent when unavailable', function () {

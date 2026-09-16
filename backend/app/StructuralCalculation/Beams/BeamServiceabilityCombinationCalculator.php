@@ -8,7 +8,7 @@ use App\StructuralCalculation\Eurocode\Combinations\CharacteristicActions;
 use App\StructuralCalculation\Eurocode\Combinations\CombinedAction;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 
-/** Applique les expressions ELS EN 1990 au cas MVP d'une action variable principale. */
+/** Applique les expressions ELS EN 1990 au cas V1 d'une action variable principale. */
 final readonly class BeamServiceabilityCombinationCalculator
 {
     public function __construct(private ActionCombinationCalculator $calculator) {}

@@ -7,7 +7,7 @@ BEAM-SLS-03 applique EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §7.4.2 et les
 être omis. La méthode retournée est `SIMPLIFIED_SPAN_DEPTH` : elle ne calcule
 **aucune flèche en mm**, courbure, retrait, fluage `φ(t,t0)` ou module effectif.
 
-Elle est strictement limitée au MVP : poutre en béton armé, section
+Elle est strictement limitée au V1 : poutre en béton armé, section
 rectangulaire, simplement appuyée, flexion simple et section simplement armée.
 Un candidat insuffisant ou hors domaine est refusé explicitement, sans statut
 de conformité.
@@ -21,7 +21,7 @@ réel**. La méthode utilise :
 ```text
 ρ  = As_req / (b d)
 ρ0 = sqrt(fck) × 10^-3
-ρ' = 0  (MVP, pas d'armature comprimée)
+ρ' = 0  (V1, pas d'armature comprimée)
 ```
 
 Pour `ρ ≤ ρ0`, elle applique l'équation 7.16a :
@@ -32,7 +32,7 @@ Pour `ρ ≤ ρ0`, elle applique l'équation 7.16a :
 ```
 
 Pour `ρ > ρ0`, l'équation 7.16b est utilisée. Puisque `ρ'=0`, elle se réduit
-dans le MVP à `K[11 + 1,5sqrt(fck)ρ0/ρ]`. La frontière `ρ = ρ0` utilise de
+dans le V1 à `K[11 + 1,5sqrt(fck)ρ0/ρ]`. La frontière `ρ = ρ0` utilise de
 façon déterministe la branche 7.16a.
 
 Le seul facteur structural intégré est `K=1,0` pour une poutre simplement

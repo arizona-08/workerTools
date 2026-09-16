@@ -158,7 +158,7 @@ it('chains the real beam input through moment, depth, strengths, muEd and neutra
             exposureClasses: $setup->materials->exposureClasses,
             concreteClass: $setup->materials->concreteClass,
             designWorkingLifeYears: 50,
-            reinforcementDiameter: BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter,
+            reinforcementDiameter: BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter,
         ),
         $profile,
     );
@@ -166,7 +166,7 @@ it('chains the real beam input through moment, depth, strengths, muEd and neutra
         $setup->configuration->calculationMode,
         $setup->geometry,
         $cover,
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
     );
     $strengths = app(BeamFlexuralDesignStrengthsCalculator::class)->calculate($setup->materials, $profile);
     $reducedMoment = app(BeamReducedMomentCalculator::class)->calculate($bending->ultimate, $setup->geometry, $depth, $strengths->concrete);

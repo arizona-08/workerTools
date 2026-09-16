@@ -9,8 +9,8 @@ final readonly class SlabFlexuralDetailingAssumptions
 {
     public function __construct(public float $preliminaryMainBarDiameter) {}
 
-    public static function mvp(): self
+    public static function supported(): self
     {
-        return new self(PreliminaryLongitudinalBarDiameter::MVP_MILLIMETRES);
+        return new self(PreliminaryLongitudinalBarDiameter::DEFAULT_MILLIMETRES);
     }
 }

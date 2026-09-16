@@ -25,7 +25,7 @@ final class CalculationFailureMessage
             $reason === 'INVALID_SINGLY_REINFORCED_DOMAIN', $reason === 'NEUTRAL_AXIS_BEYOND_EFFECTIVE_DEPTH', $reason === 'INVALID_NEUTRAL_AXIS_RADICAND' => 'Le moment de flexion est trop important pour une section simplement armée dans le périmètre de calcul actuel.',
             str_contains($reason, 'INSUFFICIENT_HORIZONTAL_SPACE'), str_contains($reason, 'SPACING_EXCEEDED') => 'Les armatures ne peuvent pas être disposées dans la section en respectant les espacements requis.',
             str_contains($reason, 'INSUFFICIENT_LONGITUDINAL_REINFORCEMENT'), str_contains($reason, 'INSUFFICIENT_REINFORCEMENT_PER_LENGTH') => 'Les armatures fournies sont insuffisantes pour cette configuration.',
-            $reason === 'CALCULATION_METHOD_NOT_SUPPORTED' => 'Cette configuration nécessite une méthode de calcul qui n’est pas encore prise en charge par le MVP.',
+            $reason === 'CALCULATION_METHOD_NOT_SUPPORTED' => 'Cette configuration nécessite une méthode de calcul qui n’est pas encore prise en charge par WorkerTools.',
             str_contains($reason, 'VARIABLE_LOAD') || str_contains($reason, 'IMPOSED_LOAD') => 'La charge d’exploitation doit être renseignée avec une valeur valide ; réduisez-la si la configuration dépasse le domaine de calcul.',
             str_contains($reason, 'PERMANENT_LOAD') || str_contains($reason, 'FINISHES') || str_contains($reason, 'PARTITIONS') || str_contains($reason, 'OTHER_PERMANENT') => 'Les charges permanentes doivent être renseignées avec des valeurs valides.',
             str_contains($reason, 'EFFECTIVE_SPAN') => 'La portée de calcul doit être renseignée avec une valeur strictement positive.',

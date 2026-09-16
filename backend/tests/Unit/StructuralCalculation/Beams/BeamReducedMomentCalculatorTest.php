@@ -163,7 +163,7 @@ it('chains input, structural analysis, cover, effective depth and material stren
             exposureClasses: $setup->materials->exposureClasses,
             concreteClass: $setup->materials->concreteClass,
             designWorkingLifeYears: 50,
-            reinforcementDiameter: BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter,
+            reinforcementDiameter: BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter,
         ),
         $profile,
     );
@@ -171,7 +171,7 @@ it('chains input, structural analysis, cover, effective depth and material stren
         $setup->configuration->calculationMode,
         $setup->geometry,
         $cover,
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
     );
     $strengths = app(BeamFlexuralDesignStrengthsCalculator::class)->calculate($setup->materials, $profile);
     $result = beamReducedMomentCalculator()->calculate($bending->ultimate, $setup->geometry, $depth, $strengths->concrete);

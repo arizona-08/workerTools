@@ -1,4 +1,4 @@
-# Modèle statique Poutre MVP — BEAM-CALC-05
+# Modèle statique Poutre V1 — BEAM-CALC-05
 
 ## Hypothèses applicables
 

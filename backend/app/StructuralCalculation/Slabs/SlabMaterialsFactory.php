@@ -6,7 +6,7 @@ use App\StructuralCalculation\Beams\BeamCalculationCapabilities;
 use App\StructuralCalculation\Beams\BeamMaterialsException;
 use App\StructuralCalculation\Beams\BeamMaterialsFactory;
 
-/** Réutilise les repositories et capabilities matériaux du MVP sans les recopier. */
+/** Réutilise les repositories et capabilities matériaux du V1 sans les recopier. */
 final readonly class SlabMaterialsFactory
 {
     public function __construct(

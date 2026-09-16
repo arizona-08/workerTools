@@ -6,12 +6,12 @@ use App\StructuralCalculation\Materials\Concrete\ConcreteStrengthClass;
 use App\StructuralCalculation\Materials\Exposure\ExposureClassCode;
 
 /**
- * Paramètres d'enrobage du profil français MVP.
+ * Paramètres d'enrobage du profil français V1.
  *
  * Les valeurs nationales sont centralisées ici ; aucun calculateur ne les
  * contient en dur. Les expositions XF et XA n'ont volontairement pas de
  * valeur : elles nécessitent respectivement une classe de référence et une
- * caractérisation complémentaire hors du périmètre MVP.
+ * caractérisation complémentaire hors du périmètre V1.
  */
 final readonly class CoverRequirements
 {
@@ -26,7 +26,7 @@ final readonly class CoverRequirements
         private array $minimumDurabilityCoverByStructuralClass,
     ) {}
 
-    public static function frenchMvp(): self
+    public static function frenchSupported(): self
     {
         return new self(
             initialStructuralClass: StructuralClass::S4,

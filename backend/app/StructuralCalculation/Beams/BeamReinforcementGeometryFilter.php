@@ -96,7 +96,7 @@ final class BeamReinforcementGeometryFilter
 
     private function ensurePositiveBarCount(int $barCount): void
     {
-        if ($barCount < BeamReinforcementProposalConfiguration::MVP_MINIMUM_TENSION_BAR_COUNT) {
+        if ($barCount < BeamReinforcementProposalConfiguration::SUPPORTED_MINIMUM_TENSION_BAR_COUNT) {
             throw new BeamReinforcementGeometryRejection('INVALID_TENSION_BAR_COUNT');
         }
     }

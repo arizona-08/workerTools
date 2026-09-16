@@ -28,7 +28,7 @@ VRd,c = vRd,c × bw × d
 Le produit final est obtenu en N puis converti explicitement en kN. `fck`, et
 non `fcd`, est utilisé dans l'expression principale et dans `vmin`.
 
-## Paramètres du profil français MVP
+## Paramètres du profil français V1
 
 `BeamConcreteShearResistanceRequirements` centralise les paramètres du profil
 `NF_EN_1992_1_1_2005_FR` : `CRd,c = 0,12` (`0,18 / 1,50`), coefficient de
@@ -43,21 +43,21 @@ accessible publiquement, son impact exhaustif sur §6.2.2 reste à confirmer.
 Une nouvelle NF EN 1992-1-1/NA publiée en août 2026 est hors périmètre du
 profil actuel et devra être analysée avant toute affirmation de compatibilité.
 
-## Hypothèses et limites MVP
+## Hypothèses et limites V1
 
 La section est rectangulaire, donc `bw = b`. Le moteur reçoit le `d` associé
 aux armatures réellement évaluées et ne le recalcule jamais. `Asl` est l'aire
 longitudinale fournie : `As_prov` du candidat en DESIGN ou aire existante en
 VERIFICATION; elle n'est pas remplacée par `As_req`.
 
-Le MVP fixe `NEd = 0 kN`, donc conserve explicitement `Ac = b × h` et
+Le V1 fixe `NEd = 0 kN`, donc conserve explicitement `Ac = b × h` et
 `σcp = 0 MPa`, mais refuse tout cas avec effort normal non nul. Il suppose que
 les armatures `Asl` sont pertinentes et correctement ancrées au droit de la
 section étudiée; aucune vérification d'ancrage ou de position n'est réalisée.
 
 ## Dimensionnement théorique des étriers — BEAM-SHEAR-02
 
-Pour les étriers verticaux MVP, `α = 90°`, donc `sin α = 1` et `cot α = 0`.
+Pour les étriers verticaux V1, `α = 90°`, donc `sin α = 1` et `cot α = 0`.
 BEAM-SHEAR-02 applique EN 1992-1-1 §6.2.3 avec le modèle à inclinaison
 variable :
 
@@ -68,7 +68,7 @@ Asw/s_req = VEd / (z × fywd × cot θ)
 
 Le profil détermine la plage `1,0 ≤ cot θ ≤ 2,5`. La valeur de départ
 `cot θ = 2,5` appartient à `BeamShearDesignAssumptions` : c'est une stratégie
-MVP de dimensionnement et non une valeur imposée universellement par EC2. Le
+V1 de dimensionnement et non une valeur imposée universellement par EC2. Le
 choix devra être contrôlé contre `VRd,max` dans BEAM-SHEAR-03, ce que cette
 étape ne calcule pas.
 
@@ -84,7 +84,7 @@ Asw/s_target = max(Asw/s_req, Asw/s_min)
 La formule de minimum utilise `fyk`; le modèle de treillis utilise `fywd`,
 dérivé du même acier B500B et du profil. `z` provient du calcul de flexion
 réel, pas de `0,9d`. Lorsque `VEd ≤ VRd,c`, `Asw/s_req = 0`, mais le minimum
-reste la cible pour la poutre MVP : aucune exemption n'est inventée.
+reste la cible pour la poutre V1 : aucune exemption n'est inventée.
 
 La demande des étriers est calculée contre `VEd` entier, jamais contre
 `VEd - VRd,c`; le moteur ne cumule jamais `VRd,c + VRd,s`. Aucune proposition
@@ -108,7 +108,7 @@ convertit le résultat N en kN. Il utilise le `z` mécanique réel fourni par
 BEAM-FLEX-05 / BEAM-REBAR-04, jamais `0,9d`; `fcd` est la résistance de calcul
 existante, non une nouvelle dérivation de `αcc` et `γc`.
 
-Pour le MVP non précontraint sans effort normal (`NEd = 0`), `αcw = 1,0` est
+Pour le V1 non précontraint sans effort normal (`NEd = 0`), `αcw = 1,0` est
 conservé explicitement dans le profil. Les branches liées à la précontrainte ou
 à la compression normale ne sont pas implémentées. Un dépassement de
 `VRd,max` est retourné comme tel : augmenter `Asw/s` ne corrige pas la
@@ -122,18 +122,18 @@ paramètres de ce contrôle.
 ## Proposition d'étriers — BEAM-SHEAR-04
 
 BEAM-SHEAR-04 transforme seulement `Asw/s_target` en dispositions discrètes.
-Le MVP utilise des étriers verticaux homogènes à deux branches, diamètres
+Le V1 utilise des étriers verticaux homogènes à deux branches, diamètres
 applicatifs Ø6/8/10/12 et pas constants du catalogue 100 à 400 mm. Ces choix
 sont des configurations WorkerTools, non des prescriptions EC2.
 
 Pour chaque disposition, `Asw = n_legs πφ²/4`, `Asw/s = Asw/s`, et les règles
 §9.2.2 contrôlées sont `s_l,max = 0,75d` et
-`s_t,max = min(0,75d, 600 mm)`. La distance transversale MVP entre axes vaut
+`s_t,max = min(0,75d, 600 mm)`. La distance transversale V1 entre axes vaut
 `bw - 2(c_nom + φ/2)`. `VRd,s` est recalculé à partir de la densité réellement
 proposée avec la formule déjà utilisée par BEAM-SHEAR-02.
 
 Aucune proposition n'est admise si BEAM-SHEAR-03 retourne un dépassement de
-`VRd,max`. Le MVP exclut étriers inclinés, plus de deux branches, cadres
+`VRd,max`. Le V1 exclut étriers inclinés, plus de deux branches, cadres
 complexes, pas variables, zones d'appui, torsion et sections T/L. Une
 proposition recommandée reste une disposition locale, non une conformité
 globale de poutre.
