@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -17,4 +17,5 @@ export interface SlabCalculationResponse {
 export class SlabCalculationService {
   private readonly http = inject(HttpClient);
   calculate(payload: object): Observable<SlabCalculationResponse> { return this.http.post<SlabCalculationResponse>('/api/slab/calculations', payload); }
+  exportPdf(payload: object): Observable<HttpResponse<Blob>> { return this.http.post('/api/slab/calculations/pdf', payload, { observe: 'response', responseType: 'blob' }); }
 }

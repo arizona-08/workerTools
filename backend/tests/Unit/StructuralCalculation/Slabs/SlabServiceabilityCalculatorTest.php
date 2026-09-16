@@ -9,6 +9,7 @@ use App\StructuralCalculation\Slabs\SlabActionCombinations;
 use App\StructuralCalculation\Slabs\SlabCalculationConfiguration;
 use App\StructuralCalculation\Slabs\SlabCalculationInput;
 use App\StructuralCalculation\Slabs\SlabCalculationResultAssembler;
+use App\StructuralCalculation\Slabs\SlabCharacteristicActionsCalculator;
 use App\StructuralCalculation\Slabs\SlabCrackVerificationStatus;
 use App\StructuralCalculation\Slabs\SlabDeflectionVerificationStatus;
 use App\StructuralCalculation\Slabs\SlabGeometry;
@@ -150,7 +151,8 @@ it('projects existing slab results into the final structured contract without re
     $flexure = app(SlabUlsFlexureCalculator::class)->calculate($input, $analysis);
     $secondary = app(SlabSecondaryReinforcementProposalGenerator::class)->generate($input->configuration, $input->geometry, $main);
     $serviceability = app(SlabServiceabilityCalculator::class)->calculate($input, $analysis, $main);
-    $result = app(SlabCalculationResultAssembler::class)->assemble($input, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
+    $actions = app(SlabCharacteristicActionsCalculator::class)->calculate($input->geometry, $input->loads);
+    $result = app(SlabCalculationResultAssembler::class)->assemble($input, $actions, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
 
     expect($result->status->value)->toBe('COMPLIANT')
         ->and($result->summary->designBendingMoment)->toBe($main->proposal->recalculatedFlexure->designMoment)
@@ -160,7 +162,7 @@ it('projects existing slab results into the final structured contract without re
         ->and($result->summary->governingVerificationType)->toBe('DEFLECTION')
         ->and($result->summary->utilization)->toBe($serviceability->deflectionVerification->utilization)
         ->and(array_map(fn ($verification) => $verification->identifier, $result->verifications))->toBe(['FLEXURE', 'MAIN_REINFORCEMENT', 'SECONDARY_REINFORCEMENT', 'CRACK', 'DEFLECTION'])
-        ->and(array_keys(get_object_vars($result->details)))->toBe(['overallStatus', 'ulsStatus', 'slsStatus', 'governingVerification', 'assumptions', 'combinations', 'internalForces', 'flexure', 'mainReinforcement', 'secondaryReinforcement', 'serviceability', 'warnings']);
+        ->and(array_keys(get_object_vars($result->details)))->toBe(['overallStatus', 'ulsStatus', 'slsStatus', 'governingVerification', 'assumptions', 'characteristicActions', 'combinations', 'internalForces', 'flexure', 'mainReinforcement', 'secondaryReinforcement', 'serviceability', 'warnings']);
 });
 
 it('gives priority to a non-compliant required serviceability verification in the final status', function () {
@@ -168,7 +170,8 @@ it('gives priority to a non-compliant required serviceability verification in th
     $flexure = app(SlabUlsFlexureCalculator::class)->calculate($input, $analysis);
     $secondary = app(SlabSecondaryReinforcementProposalGenerator::class)->generate($input->configuration, $input->geometry, $main);
     $serviceability = app(SlabServiceabilityCalculator::class)->calculate($input, $analysis, $main);
-    $result = app(SlabCalculationResultAssembler::class)->assemble($input, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
+    $actions = app(SlabCharacteristicActionsCalculator::class)->calculate($input->geometry, $input->loads);
+    $result = app(SlabCalculationResultAssembler::class)->assemble($input, $actions, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
 
     expect($serviceability->crackVerification->status)->toBe(SlabCrackVerificationStatus::NOT_COMPLIANT)
         ->and($result->status->value)->toBe('NOT_COMPLIANT')

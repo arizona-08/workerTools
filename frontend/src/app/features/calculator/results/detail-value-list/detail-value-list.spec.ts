@@ -48,4 +48,36 @@ describe('DetailValueList', () => {
     expect(fixture.nativeElement.textContent).toContain('Paramètre : donnée donnée valeur');
     expect(fixture.nativeElement.textContent).not.toContain('unknownBackendValue');
   });
+
+  it('translates calculation configuration identifiers into French display values', () => {
+    fixture.componentRef.setInput('values', {
+      calculationMode: 'DESIGN', material: 'REINFORCED_CONCRETE', crossSectionType: 'RECTANGULAR', structuralSystem: 'SIMPLY_SUPPORTED', loadModel: 'UNIFORMLY_DISTRIBUTED', designSituation: 'PERSISTENT_TRANSIENT', coverMode: 'AUTO',
+    });
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Dimensionnement');
+    expect(text).toContain('Béton armé');
+    expect(text).toContain('Rectangulaire');
+    expect(text).toContain('Simplement appuyée');
+    expect(text).toContain('Uniformément répartie');
+    expect(text).toContain('Persistante / transitoire');
+    expect(text).toContain('Automatique');
+    expect(text).not.toContain('REINFORCED_CONCRETE');
+  });
+
+  it('translates detailed calculation methods, criteria, warnings and unknown technical identifiers', () => {
+    fixture.componentRef.setInput('values', {
+      method: 'CANDIDATE_RECALCULATION', governingCriterion: 'MINIMUM_SHEAR_RESISTANCE', warnings: ['NO_EXPLICIT_DEFLECTION_CALCULATED', 'PARTITION_DAMAGE_CHECK_NOT_MODELLED'], rejectionReason: 'INVALID_EFFECTIVE_SPAN',
+    });
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Recalcul du candidat de ferraillage');
+    expect(text).toContain('Résistance minimale au cisaillement');
+    expect(text).toContain('Aucune flèche explicite calculée');
+    expect(text).toContain('Vérification des dommages aux cloisons non modélisée');
+    expect(text).toContain('invalide effective portée');
+    expect(text).not.toContain('INVALID_EFFECTIVE_SPAN');
+  });
 });

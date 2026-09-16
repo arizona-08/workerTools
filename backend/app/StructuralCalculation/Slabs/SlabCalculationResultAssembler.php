@@ -15,7 +15,7 @@ final readonly class SlabCalculationResultAssembler
         private BeamGoverningVerificationResolver $governingResolver,
     ) {}
 
-    public function assemble(SlabCalculationInput $input, SlabActionCombinations $combinations, SlabStripAnalysis $analysis, SlabUlsFlexureResult $initialFlexure, SlabMainReinforcementProposalResult $main, SlabSecondaryReinforcementResult $secondary, SlabServiceabilityResult $serviceability): SlabCalculationResult
+    public function assemble(SlabCalculationInput $input, SlabCharacteristicActions $actions, SlabActionCombinations $combinations, SlabStripAnalysis $analysis, SlabUlsFlexureResult $initialFlexure, SlabMainReinforcementProposalResult $main, SlabSecondaryReinforcementResult $secondary, SlabServiceabilityResult $serviceability): SlabCalculationResult
     {
         $finalFlexure = $main->proposal?->recalculatedFlexure ?? $initialFlexure;
         $flexureStatus = $main->proposal === null ? BeamVerificationStatus::NOT_CHECKED : BeamVerificationStatus::COMPLIANT;
@@ -38,6 +38,7 @@ final readonly class SlabCalculationResultAssembler
             new SlabCalculationDetails(
                 $overallStatus, $ulsStatus, $slsStatus, $governing->governingVerification,
                 ['configuration' => $input->configuration, 'geometry' => $input->geometry, 'materials' => $input->materials],
+                $actions,
                 ['uls' => $combinations->uls, 'slsCharacteristic' => $combinations->slsCharacteristic, 'slsFrequent' => $combinations->slsFrequent, 'slsQuasiPermanent' => $combinations->slsQuasiPermanent],
                 ['linearLoads' => $analysis->linearLoads, 'internalForces' => $analysis->internalForces],
                 ['initial' => $initialFlexure, 'final' => $finalFlexure],

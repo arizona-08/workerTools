@@ -17,6 +17,6 @@ final readonly class SlabCalculationOrchestrator
         $secondary = $this->secondary->generate($input->configuration, $input->geometry, $main);
         $serviceability = $this->serviceability->calculate($input, $analysis, $main);
 
-        return $this->results->assemble($input, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
+        return $this->results->assemble($input, $actions, $combinations, $analysis, $flexure, $main, $secondary, $serviceability);
     }
 }
