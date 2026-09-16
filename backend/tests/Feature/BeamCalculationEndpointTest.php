@@ -64,6 +64,7 @@ it('returns a validation response for unsupported beam configuration', function 
 
     $this->postJson('/api/beam/calculations', $payload)
         ->assertUnprocessable()
+        ->assertJsonPath('message', 'Cette configuration ou ce matériau n’est pas pris en charge par le calculateur actuel.')
         ->assertJsonPath('reason', 'UNSUPPORTED_SUPPORT_SYSTEM');
 });
 
@@ -73,6 +74,7 @@ it('rejects an exposure class known by the domain but unsupported by the complet
 
     $this->postJson('/api/beam/calculations', $payload)
         ->assertUnprocessable()
+        ->assertJsonPath('message', 'La classe d’exposition sélectionnée est absente, invalide ou non prise en charge.')
         ->assertJsonPath('reason', 'UNSUPPORTED_EXPOSURE_CLASS');
 });
 

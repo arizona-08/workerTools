@@ -55,6 +55,9 @@ it('returns a controlled 422 response for zero or negative beam dimensions', fun
 
     $this->postJson('/api/beam/calculations', $payload)
         ->assertUnprocessable()
+        ->assertJsonPath('message', $field === 'effectiveSpan'
+            ? 'La portée de calcul doit être renseignée avec une valeur strictement positive.'
+            : 'Les dimensions de la section doivent être renseignées avec des valeurs strictement positives.')
         ->assertJsonPath('reason', $reason)
         ->assertJsonMissingPath('trace');
 })->with([
@@ -69,6 +72,9 @@ it('returns a controlled 422 response for zero or negative slab dimensions', fun
 
     $this->postJson('/api/slab/calculations', $payload)
         ->assertUnprocessable()
+        ->assertJsonPath('message', $field === 'effectiveSpan'
+            ? 'La portée de calcul doit être renseignée avec une valeur strictement positive.'
+            : 'Les dimensions de la section doivent être renseignées avec des valeurs strictement positives.')
         ->assertJsonPath('reason', $reason)
         ->assertJsonMissingPath('trace');
 })->with([

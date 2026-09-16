@@ -32,7 +32,7 @@ describe('ResultSummaryMessage', () => {
     fixture.componentRef.setInput('governingVerificationType', 'CRACK');
     fixture.detectChanges();
 
-    expect(component.presentation().message).toBe('La section ne satisfait pas toutes les vérifications réalisées dans le périmètre actuel.');
+    expect(component.presentation().message).toBe('La vérification de fissuration n’est pas satisfaite : l’ouverture de fissure calculée dépasse la limite applicable.');
     expect(component.secondaryMessage()).toBe('Vérification la plus sollicitée : Fissuration — 112 %.');
   });
 
@@ -45,6 +45,22 @@ describe('ResultSummaryMessage', () => {
     expect(component.presentation().message).toContain('Aucune conclusion complète de conformité ne peut être établie.');
     expect(fixture.nativeElement.textContent).not.toContain('La section satisfait les vérifications');
     expect(component.secondaryMessage()).toBe('Vérification la plus sollicitée : Flexion — 75 %.');
+  });
+
+  it.each([
+    ['FLEXURE', 'le moment solliciteur est trop important'],
+    ['SHEAR', 'l’effort tranchant est trop important'],
+    ['STRESS', 'contrainte admissible est dépassée'],
+    ['CRACK', 'ouverture de fissure calculée dépasse'],
+    ['DEFLECTION', 'rapport portée sur hauteur utile dépasse'],
+    ['MAIN_REINFORCEMENT', 'armatures principales retenues ne satisfont pas'],
+    ['SECONDARY_REINFORCEMENT', 'armatures secondaires retenues ne satisfont pas'],
+  ] as const)('explains the failed %s verification without recalculating it', (type, reason) => {
+    fixture.componentRef.setInput('status', 'NOT_COMPLIANT');
+    fixture.componentRef.setInput('governingVerificationType', type);
+    fixture.detectChanges();
+
+    expect(component.presentation().message).toContain(reason);
   });
 
   it('does not invent a percentage or governing verification when neither is available', () => {

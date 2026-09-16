@@ -5,11 +5,12 @@ import { DetailValueList } from '../detail-value-list/detail-value-list';
 import { CalculationFormulaListComponent } from '../calculation-formula-list/calculation-formula-list';
 import { ResultAccordionItem } from '../result-accordion-item/result-accordion-item';
 import { BeamCalculationDetails } from './beam-calculation-details';
+import { ReinforcementDetails } from './reinforcement-details';
 
 /** Présente les sections déjà structurées par BEAM-RESULT-04, sans les recalculer. */
 @Component({
   selector: 'app-calculation-details-accordion',
-  imports: [CalculationFormulaListComponent, DetailValueList, LucideInfo, ResultAccordionItem],
+  imports: [CalculationFormulaListComponent, DetailValueList, LucideInfo, ReinforcementDetails, ResultAccordionItem],
   templateUrl: './calculation-details-accordion.html',
   styleUrl: './calculation-details-accordion.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
