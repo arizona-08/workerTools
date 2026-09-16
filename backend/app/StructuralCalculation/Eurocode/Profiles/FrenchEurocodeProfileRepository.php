@@ -90,7 +90,8 @@ final class FrenchEurocodeProfileRepository
         'highReinforcementCompressionCoefficient' => 1 / 12,
         'referenceReinforcementRatioFactor' => 0.001,
         'referenceSteelStrength' => 500.0,
-        'structuralFactorsBySupportSystem' => ['SIMPLY_SUPPORTED' => 1.0],
+        // EC2 §7.4.2, tableau 7.4N : K est propre au système structural.
+        'structuralFactorsBySupportSystem' => ['SIMPLY_SUPPORTED' => 1.0, 'CANTILEVER' => 0.4],
     ];
 
     /** @var array{barDiameterFactor: float, aggregateSizeAllowance: float, absoluteMinimumClearSpacing: float} */

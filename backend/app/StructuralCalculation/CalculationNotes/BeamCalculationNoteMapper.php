@@ -288,8 +288,13 @@ final class BeamCalculationNoteMapper
 
             return [
                 $this->value('criticalSectionLocation', 'Section critique', $scope->criticalSectionLocation->value),
-                $this->value('ved', 'Effort tranchant VEd à l’encastrement', $scope->designShearForce->maximumAbsoluteShear, 'kN'),
-                $this->value('limitation', 'Limitation de méthode', $scope->limitation),
+                $this->value('criticalSectionPosition', 'Distance à l’encastrement', $scope->criticalSectionPosition, 'mm'),
+                $this->value('fixedEndVed', 'Effort tranchant VEd à l’encastrement', $scope->fixedEndDesignShearForce->maximumAbsoluteShear, 'kN'),
+                $this->value('controlVed', 'Effort tranchant VEd à la section critique', $scope->criticalSectionDesignShearForce->maximumAbsoluteShear, 'kN'),
+                $this->value('controlFormula', 'Formule de VEd à la section critique', $scope->criticalSectionFormula),
+                $this->value('vrdc', 'Résistance béton VRd,c', $shear['concreteResistance']->concreteShearResistance, 'kN'),
+                $this->value('vrdmax', 'Résistance maximale VRd,max à l’encastrement', $shear['maximumResistance']->maximumShearResistance, 'kN'),
+                $this->value('stirrup', 'Étrier recommandé', $shear['recommendedStirrup']?->providedShearResistance, 'kN'),
             ];
         }
 
@@ -306,16 +311,14 @@ final class BeamCalculationNoteMapper
     /** @return list<CalculationNoteValue> */
     private function crackDetails(object $crack): array
     {
-        if (property_exists($crack, 'limitation')) {
-            return [
-                $this->value('tensionFace', 'Face tendue', $crack->tensionFace->value),
-                $this->value('position', 'Position des armatures principales', $crack->longitudinalReinforcementPosition->value),
-                $this->value('asProvided', 'Armature fournie As,prov', $crack->longitudinalReinforcementArea, 'mm²'),
-                $this->value('limitation', 'Limitation de méthode', $crack->limitation),
-            ];
-        }
-
         return [
+            $this->value('serviceMoment', 'Moment ELS quasi-permanent utilisé', $crack->serviceMoment, 'kN·m'),
+            $this->value('tensionFace', 'Face tendue', $crack->tensionFace->value),
+            $this->value('position', 'Position des armatures principales', $crack->longitudinalReinforcementPosition->value),
+            $this->value('asProvided', 'Armature fournie As,prov', $crack->providedLongitudinalReinforcementArea, 'mm²'),
+            $this->value('barDiameter', 'Diamètre des armatures principales', $crack->barDiameter, 'mm'),
+            $this->value('transverseBarDiameter', 'Diamètre transversal utilisé pour la géométrie', $crack->transverseBarDiameter, 'mm'),
+            $this->value('coverToLongitudinalBar', 'Enrobage jusqu’aux armatures longitudinales', $crack->coverToLongitudinalBar, 'mm'),
             $this->value('wk', 'Ouverture de fissure wk', $crack->crackWidth, 'mm'),
             $this->value('wkMax', 'Limite wk,max', $crack->crackWidthLimit, 'mm'),
             $this->value('loadCombination', 'Combinaison', $crack->loadCombination),

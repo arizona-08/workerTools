@@ -143,7 +143,7 @@ BEAM
 ├── BEAM_SIMPLE_RECTANGULAR
 │   └── pipeline Simply Supported existant
 └── BEAM_CANTILEVER_RECTANGULAR
-    └── analyse statique et flexion longitudinale console, puis limitation explicite de cisaillement à l'encastrement jusqu'au modèle local associé
+    └── analyse statique, flexion longitudinale et cisaillement à la section EC2 située à d de l'encastrement
 ```
 
 Les matériaux, actions, combinaisons, flexion, ferraillage, cisaillement, ELS,
@@ -169,10 +169,9 @@ combinaisons et unités restent communs.
 
 Le mode `DESIGN` ou `VERIFICATION` et les validations communes de géométrie,
 matériaux et charges restent portés par le formulaire partagé. La flexion et la
-proposition longitudinale sont communes depuis BEAM-CANT-03. Le `VEd` console
-est tracé à l'encastrement, mais sa vérification normative est explicitement
-limitée faute de section critique documentée ; ELS et conformité console restent
-hors périmètre.
+proposition longitudinale sont communes depuis BEAM-CANT-03. Le cisaillement
+ELU est vérifié depuis BEAM-CANT-04A ; les contrôles ELS de fissuration et de
+déformation simplifiée réutilisent les moteurs communs.
 
 ## Analyse structurale Poutre console BEAM-CANT-02
 
@@ -189,27 +188,27 @@ longueur `L` et les maximums sont à l'encastrement (`x = 0`).
 
 Le moment d'encastrement est conservé signé (négatif sous charges gravitaires
 vers le bas). Les équations de résistance emploient sa magnitude `|MEd|`, sans
-perdre le moment signé qui détermine la face tendue. Après cette analyse,
-l'orchestrateur bloque volontairement le cisaillement normatif et les
-vérifications ELS console avec `CALCULATION_METHOD_NOT_SUPPORTED`.
+perdre le moment signé qui détermine la face tendue. Les vérifications ELS non
+couvertes restent explicitement `CALCULATION_METHOD_NOT_SUPPORTED`.
 
-## Cisaillement console BEAM-CANT-04
+## Cisaillement console BEAM-CANT-04A
 
 | Nom | Valeur / origine | Rôle et limite | Unité |
 |---|---|---|---|
-| `BeamShearForceResult.ultimate` | BEAM-CANT-02 / DERIVED | fournit directement le `VEd` console ; aucune formule `wL` n'est répétée par le contrôle | kN |
-| `BeamShearCriticalSectionLocation::FIXED_END` | DERIVED | localise le maximum de cisaillement à l'encastrement, `x = 0` | m |
-| `CantileverBeamShearVerificationScopeResult` | DERIVED | conserve `VEd`, sa position, l'aire d'armatures longitudinales et sa position `TOP` | unités explicites |
-| `CANTILEVER_FIXED_END_SHEAR_VERIFICATION_NOT_SUPPORTED` | limitation métier | indique que la résistance locale ne peut pas être déclarée conforme | — |
+| `fixedEndDesignShearForce` | `VEd,enc` | DERIVED | effort maximal conservé à l'encastrement : `wEd × L` | kN |
+| `criticalSectionPosition` | `x_shear = d` | DERIVED | distance de la section EC2 depuis la face de l'encastrement, égale à la hauteur utile réelle | mm |
+| `criticalSectionDesignShearForce` | `VEd,control` | DERIVED | effort de contrôle UDL : `wEd × (L - d)` ; ne remplace pas `VEd,enc` | kN |
+| `BeamShearCriticalSectionLocation::EFFECTIVE_DEPTH_FROM_FIXED_END` | — | DERIVED | identifie explicitement la section de contrôle à une hauteur utile de l'encastrement | — |
+| `CantileverBeamShearVerificationScopeResult` | — | DERIVED | conserve les deux efforts, la position/formule et `Asl` réellement sélectionnée en `TOP` | unités explicites |
 
-Sous charge uniformément répartie, `|VEd|max = wEd × L`, à l'encastrement.
-Les règles V1 de `VRd,c`, `VRd,max` et la proposition d'étriers documentent
-l'exclusion des zones d'appui et ne définissent aucune section de contrôle pour
-l'encastrement d'une console. WorkerTools ne les transpose donc pas au nu de
-l'encastrement et ne fabrique ni `VRd,c`, ni `Asw/s`, ni proposition d'étriers.
-Le résultat de périmètre conserve néanmoins `Asl` réellement sélectionné en
-partie supérieure, afin d'éviter toute interprétation implicite d'armatures
-inférieures lors de l'extension future.
+EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §6.2.1(8), applicable au chargement
+uniformément réparti V1, place le contrôle à `d` de la face d'appui. WorkerTools
+calcule donc `VEd(d) = wEd × (L - d)` avec `0 < d < L`, puis réutilise sans
+dupliquer les calculateurs `VRd,c`, `Asw/s`, proposition d'étriers et
+`VRd,max`. Les étriers requis à `d` sont prolongés jusqu'à l'encastrement ; le
+contrôle `VRd,max` conserve `VEd,enc = wEd × L`. L'ancrage des armatures TOP,
+les charges non UDL, corbeaux et autres régions de discontinuité restent hors
+du domaine couvert.
 
 ## ELS console BEAM-CANT-05
 
@@ -218,14 +217,26 @@ inférieures lors de l'extension future.
 | `MCharacteristic`, `MFrequent`, `MQuasiPermanent` | BEAM-CANT-02 / DERIVED | moments ELS signés à l'encastrement ; la section fissurée utilise leur magnitude et conserve le signe dans la trace |
 | `BeamServiceStressVerificationResult.tensionFace` | DERIVED | `TOP` pour la console ; la géométrie utile est mesurée depuis la face comprimée inférieure jusqu'aux aciers tendus supérieurs |
 | Contraintes ELS | BEAM-SLS-01 commun | applicables à la section rectangulaire fissurée symétrique : même moteur, `d` et `As_prov` réels de la proposition TOP |
-| Fissuration directe | limitation métier | `CALCULATION_METHOD_NOT_SUPPORTED` : le moteur commun nécessite un étrier recommandé pour établir l'enrobage effectif, indisponible tant que le cisaillement à l'encastrement est limité |
-| Contrôle simplifié `L/d` | profil normatif | `CALCULATION_METHOD_NOT_SUPPORTED` : `BeamDeflectionRequirements` ne contient que `SIMPLY_SUPPORTED → 1,0`; aucun facteur `CANTILEVER` n'est inventé |
+| `BeamCrackVerificationResult.serviceMoment` | `M_ELS,qp` | DERIVED | moment quasi-permanent réutilisé depuis les contraintes ELS ; le signe est conservé, sa magnitude sert aux contraintes de fissuration | kN·m |
+| `BeamCrackVerificationResult.tensionFace` / `longitudinalReinforcementPosition` | — | DERIVED | `TOP` pour la console chargée vers le bas ; rend la face et le lit réellement employés vérifiables | — |
+| `providedLongitudinalReinforcementArea`, `barDiameter`, `barCount` | `As,prov`, `φ`, `n` | DERIVED | ferraillage longitudinal principal réel sélectionné par la flexion ; aucune nappe inférieure ni aire théorique n'est substituée | mm², mm, — |
+| `coverToLongitudinalBar` | `c` | DERIVED | `c_nom + φ_st`, jusqu'à la surface des barres tendues ; `φ_st` vient de l'étrier proposé s'il existe, sinon du diamètre transversal déjà porté par `d` | mm |
+| `effectiveReinforcementRatio`, `maximumCrackSpacing`, `strainDifference` | `ρp,eff`, `sr,max`, `εsm - εcm` | DERIVED | intermédiaires de la méthode directe EC2 §7.3.4, tracés sans calcul frontend | —, mm, — |
+| `crackWidth`, `crackWidthLimit`, `utilization` | `wk`, `wk,max`, `wk/wk,max` | DERIVED / PROFILE | résultat, limite du profil et taux de fissuration ; XC1 seulement dans le V1 | mm, mm, — |
+| Fissuration directe | BEAM-CANT-05A / DERIVED | réutilise le calculateur commun avec le lit TOP réel, sans dépendance artificielle à une proposition d'étriers | — |
+| `L` / `effectiveSpan` | `l_eff` | USER → DERIVED | longueur efficace de la console, entre encastrement et extrémité libre ; elle est utilisée directement, sans doublement artificiel | mm |
+| `d` / `effectiveDepth` | `d` | DERIVED | hauteur utile issue du lit longitudinal principal réel `TOP`, déjà déterminée par BEAM-CANT-03 ; aucune seconde profondeur utile n'est créée | mm |
+| `structuralFactor` | `K` | PROFILE | facteur structural EC2 §7.4.2, tableau 7.4N : `CANTILEVER → 0,4`, distinct de `SIMPLY_SUPPORTED → 1,0` | sans dimension |
+| `actualSpanDepthRatio` | `L/d` | DERIVED | rapport réel de la console, calculé avec `L` et le `d` TOP réutilisés | sans dimension |
+| `allowableSpanDepthRatio` | `(L/d)_adm` | DERIVED | limite de la méthode commune, obtenue par les expressions 7.16a/b et le facteur `K` du profil | sans dimension |
+| `utilization` | `(L/d)/(L/d)_adm` | DERIVED | taux de vérification ; `≤ 1` est conforme pour cette méthode simplifiée | sans dimension |
 
 Les limites de fissuration restent celles du profil (`XC1 → 0,4 mm` seulement)
-et ne sont pas étendues. La limitation de fissuration console ne résulte pas de
-la classe d'exposition : elle provient de l'absence de disposition d'étriers
-réelle à l'encastrement. BEAM-CANT-05 ne calcule aucune flèche explicite,
-aucun fluage ni retrait.
+et ne sont pas étendues. Une proposition d'étriers peut préciser la géométrie
+du lit, mais n'est plus une condition de disponibilité de `wk`. La déformation
+console emploie la dispense simplifiée `L/d` uniquement : aucune flèche en mm,
+aucun fluage, retrait, acier comprimé ou contrôle de cloisons fragiles n'est
+ajouté.
 
 ## Face tendue et position des armatures Poutre BEAM-CANT-03
 
@@ -1042,7 +1053,7 @@ coefficients homonymes du cisaillement et de l'espacement.
 | `reinforcementRatio` | `ρ` | valeur dérivée / DERIVED | `As_req / (b × d)`, avec `As_req` recalculé pour le candidat réel. `As_prov` ne doit jamais le remplacer. | sans dimension |
 | `referenceReinforcementRatio` | `ρ0` | valeur dérivée / DERIVED | `sqrt(fck) × 10^-3`, avec `fck` en MPa. | sans dimension |
 | `compressionReinforcementRatio` | `ρ'` | hypothèse V1 / FIXED_SCOPE | vaut explicitement `0` : seules les sections simplement armées sont supportées. | sans dimension |
-| `structuralFactor` | `K` | paramètre national / PROFILE | facteur lié au système statique ; seul `SIMPLY_SUPPORTED → 1,0` est supporté. | sans dimension |
+| `structuralFactor` | `K` | paramètre normatif / PROFILE | facteur lié au système statique : `SIMPLY_SUPPORTED → 1,0` et `CANTILEVER → 0,4` (EC2 §7.4.2, tableau 7.4N). | sans dimension |
 | `baseAllowableSpanDepthRatio` | `(l/d)_0` | valeur dérivée / DERIVED | rapport limite EC2 §7.4.2, obtenu par 7.16a si `ρ ≤ ρ0` ou 7.16b si `ρ > ρ0`. `K` est inclus. | sans dimension |
 | `steelStressCorrectionFactor` | — | valeur dérivée / DERIVED | correction simplifiée : `(500 / fyk) × (As_prov / As_req)`. Le `500 MPa` est centralisé dans le profil. | sans dimension |
 | `allowableSpanDepthRatio` | `l/d_adm` | valeur dérivée / DERIVED | `baseAllowableSpanDepthRatio × steelStressCorrectionFactor`; aucun facteur supplémentaire n'est inventé. | sans dimension |

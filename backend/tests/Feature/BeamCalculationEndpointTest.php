@@ -62,7 +62,7 @@ it('routes the explicit simply supported submodule through the unchanged analysi
         ->assertJsonPath('summary.utilization', $historical->json('summary.utilization'));
 });
 
-it('returns the common Beam result contract for a cantilever while preserving unsupported verification methods', function () {
+it('returns the common Beam result contract for a cantilever with a completed shear verification', function () {
     $payload = beamCalculationPayload();
     $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
     $payload['configuration']['supportSystem'] = 'CANTILEVER';
@@ -75,22 +75,28 @@ it('returns the common Beam result contract for a cantilever while preserving un
         ->assertJsonPath('summary.supportSystem', 'CANTILEVER')
         ->assertJsonPath('summary.criticalSectionLocation', 'FIXED_END')
         ->assertJsonPath('summary.longitudinalReinforcement.position', 'TOP')
-        ->assertJsonPath('verifications.shearVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
-        ->assertJsonPath('verifications.crackVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
-        ->assertJsonPath('verifications.deflectionVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
+        ->assertJsonPath('verifications.shearVerification.status', 'COMPLIANT')
+        ->assertJsonPath('verifications.crackVerification.status', 'COMPLIANT')
+        ->assertJsonPath('verifications.deflectionVerification.status', 'NOT_COMPLIANT')
         ->assertJsonPath('details.assumptions.configuration.supportSystem', 'CANTILEVER')
         ->assertJsonPath('details.assumptions.tensionFace', 'TOP')
         ->assertJsonPath('details.internalForces.criticalSectionLocation', 'FIXED_END')
         ->assertJsonPath('details.reinforcement.longitudinalReinforcement.position', 'TOP')
-        ->assertJsonPath('details.shear.scope.limitation', 'CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
-        ->assertJsonPath('details.serviceability.crack.status', 'CALCULATION_METHOD_NOT_SUPPORTED');
+        ->assertJsonPath('details.shear.scope.criticalSectionLocation', 'EFFECTIVE_DEPTH_FROM_FIXED_END')
+        ->assertJsonPath('details.serviceability.crack.tensionFace', 'TOP')
+        ->assertJsonPath('details.serviceability.crack.longitudinalReinforcementPosition', 'TOP');
 
     expect($response->json('summary.designBendingMoment'))->toBeLessThan(0)
         ->and($response->json('summary.designShearForce'))->toBeGreaterThan(0)
         ->and($response->json('summary.status'))->toBe($response->json('verifications.overallStatus'))
-        ->and($response->json('warnings'))->toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
-        ->and($response->json('warnings'))->toContain('CANTILEVER_CRACK_VERIFICATION_REQUIRES_FIXED_END_STIRRUP_LAYOUT')
-        ->and($response->json('warnings'))->toContain('CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE');
+        ->and($response->json('details.shear.concreteResistance.longitudinalReinforcementArea'))->toBe($response->json('details.reinforcement.selectedCandidate.providedArea'))
+        ->and($response->json('details.shear.scope.fixedEndDesignShearForce.maximumAbsoluteShear'))->toBeGreaterThan($response->json('details.shear.scope.criticalSectionDesignShearForce.maximumAbsoluteShear'))
+        ->and($response->json('details.shear.recommendedStirrup.accepted'))->toBeTrue()
+        ->and($response->json('details.serviceability.crack.providedLongitudinalReinforcementArea'))->toBe($response->json('details.reinforcement.selectedCandidate.providedArea'))
+        ->and($response->json('warnings'))->not->toContain('CANTILEVER_CRACK_VERIFICATION_REQUIRES_FIXED_END_STIRRUP_LAYOUT')
+        ->and($response->json('warnings'))->not->toContain('CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE')
+        ->and($response->json('details.serviceability.deflection.structuralFactor'))->toBe(0.4)
+        ->and($response->json('details.serviceability.deflection.utilization'))->toBeGreaterThan(1);
 });
 
 it('uses supplied longitudinal reinforcement in verification mode', function () {

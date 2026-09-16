@@ -6,4 +6,6 @@ namespace App\StructuralCalculation\Beams;
 enum BeamShearCriticalSectionLocation: string
 {
     case FIXED_END = 'FIXED_END';
+
+    case EFFECTIVE_DEPTH_FROM_FIXED_END = 'EFFECTIVE_DEPTH_FROM_FIXED_END';
 }

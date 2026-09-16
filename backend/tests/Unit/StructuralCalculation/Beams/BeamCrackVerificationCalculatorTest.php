@@ -65,9 +65,9 @@ function crackVerificationContext(float $width = 300, float $quasiMoment = 55.71
     ];
 }
 
-function calculateCracks(array $context)
+function calculateCracks(array $context, bool $withoutStirrups = false)
 {
-    return crackVerificationCalculator()->calculate($context['geometry'], $context['depth'], $context['longitudinal'], $context['stirrups'], $context['stresses'], $context['concrete'], $context['steel'], $context['exposure'], $context['profile']);
+    return crackVerificationCalculator()->calculate($context['geometry'], $context['depth'], $context['longitudinal'], $withoutStirrups ? null : $context['stirrups'], $context['stresses'], $context['concrete'], $context['steel'], $context['exposure'], $context['profile']);
 }
 
 it('calculates the quasi-permanent direct crack-width verification from the real bar layout', function () {
@@ -95,6 +95,19 @@ it('calculates the quasi-permanent direct crack-width verification from the real
         ->and(abs($result->crackWidth - 0.242950311652401))->toBeLessThan(1e-12)
         ->and($result->crackWidthLimit)->toBe(0.4)
         ->and(abs($result->utilization - 0.607375779131004))->toBeLessThan(1e-12)
+        ->and($result->status)->toBe(BeamCrackVerificationStatus::COMPLIANT);
+});
+
+it('calculates cracking from the longitudinal layout when no stirrup proposal is supplied', function () {
+    $result = calculateCracks(crackVerificationContext(), true);
+
+    // c = 40 + 8 = 48 mm; s = [300 - 2(48 + 12/2)] / 3 = 64 mm.
+    // The direct EC2 §7.3.4 result is independently evaluated from this layout.
+    expect($result->transverseBarDiameter)->toBe(8.0)
+        ->and($result->coverToLongitudinalBar)->toBe(48.0)
+        ->and($result->barSpacing)->toBe(64.0)
+        ->and(abs($result->maximumCrackSpacing - 345.83029719795))->toBeLessThan(1e-9)
+        ->and(abs($result->crackWidth - 0.247823215734544))->toBeLessThan(1e-10)
         ->and($result->status)->toBe(BeamCrackVerificationStatus::COMPLIANT);
 });
 

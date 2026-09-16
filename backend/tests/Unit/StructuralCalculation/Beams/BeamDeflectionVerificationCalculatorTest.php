@@ -68,11 +68,11 @@ function deflectionConfiguration(BeamSupportSystem $supportSystem = BeamSupportS
     return new BeamCalculationConfiguration($reference->calculationMode, $reference->elementType, $reference->materialType, $reference->sectionType, $supportSystem, $reference->loadModel, $reference->designCodeProfile, $reference->designSituation);
 }
 
-function calculateDeflection(BeamReinforcementCandidateRecalculationResult $candidate, ?BeamCalculationConfiguration $configuration = null, ?ReinforcementSteelProperties $steel = null)
+function calculateDeflection(BeamReinforcementCandidateRecalculationResult $candidate, ?BeamCalculationConfiguration $configuration = null, ?ReinforcementSteelProperties $steel = null, ?BeamGeometry $geometry = null)
 {
     return beamDeflectionVerificationCalculator()->calculate(
         $configuration ?? deflectionConfiguration(),
-        new BeamGeometry(6500, 300, 600),
+        $geometry ?? new BeamGeometry(6500, 300, 600),
         $candidate,
         app(ConcreteClassRepository::class)->get(ConcreteStrengthClass::C30_37),
         $steel ?? app(ReinforcementSteelGradeRepository::class)->get(ReinforcementSteelGrade::B500B),
@@ -123,13 +123,33 @@ it('refuses insufficient or unsupported candidates rather than reporting complia
         ->toThrow(BeamDeflectionVerificationException::class, 'CALCULATION_METHOD_NOT_SUPPORTED');
 });
 
-it('returns a structured unsupported result for a cantilever without a profile factor', function () {
-    $result = calculateDeflection(deflectionCandidate(), deflectionConfiguration(BeamSupportSystem::CANTILEVER));
+it('verifies a cantilever through the common simplified span-depth method', function () {
+    $result = calculateDeflection(
+        deflectionCandidate(),
+        deflectionConfiguration(BeamSupportSystem::CANTILEVER),
+        geometry: new BeamGeometry(4000, 300, 600),
+    );
 
     expect($result->structuralSystem)->toBe(BeamSupportSystem::CANTILEVER)
-        ->and($result->applicabilityStatus)->toBe(BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
-        ->and($result->status)->toBe(BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
-        ->and($result->structuralFactor)->toBeNull()
-        ->and($result->utilization)->toBeNull()
-        ->and($result->warnings)->toContain('CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE');
+        ->and($result->applicabilityStatus)->toBe(BeamDeflectionVerificationStatus::COMPLIANT)
+        ->and($result->structuralFactor)->toBe(0.4)
+        ->and(abs($result->actualSpanDepthRatio - 4000 / 546))->toBeLessThan(1e-12)
+        ->and(abs($result->allowableSpanDepthRatio - 22.323548756731768))->toBeLessThan(1e-12)
+        ->and(abs($result->utilization - 0.328173956831041))->toBeLessThan(1e-12)
+        ->and($result->allowableSpanDepthRatio)->toBeGreaterThan($result->actualSpanDepthRatio)
+        ->and($result->utilization)->toBeLessThan(1)
+        ->and($result->status)->toBe(BeamDeflectionVerificationStatus::COMPLIANT);
+});
+
+it('reports a non-compliant cantilever when its span-depth ratio exceeds the profile limit', function () {
+    $result = calculateDeflection(
+        deflectionCandidate(),
+        deflectionConfiguration(BeamSupportSystem::CANTILEVER),
+        geometry: new BeamGeometry(13000, 300, 600),
+    );
+
+    expect($result->structuralFactor)->toBe(0.4)
+        ->and($result->actualSpanDepthRatio)->toBeGreaterThan($result->allowableSpanDepthRatio)
+        ->and($result->utilization)->toBeGreaterThan(1)
+        ->and($result->status)->toBe(BeamDeflectionVerificationStatus::NOT_COMPLIANT);
 });

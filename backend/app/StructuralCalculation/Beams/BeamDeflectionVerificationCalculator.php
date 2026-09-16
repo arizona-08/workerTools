@@ -22,9 +22,6 @@ final class BeamDeflectionVerificationCalculator
         ReinforcementSteelProperties $steel,
         DesignCodeProfile $profile,
     ): BeamDeflectionVerificationResult {
-        if ($configuration->supportSystem === BeamSupportSystem::CANTILEVER) {
-            return $this->unsupportedForCantilever($configuration, $geometry, $candidate, $concrete);
-        }
         $this->ensureSupportedConfiguration($configuration, $candidate);
         $this->ensurePositiveFinite($geometry->effectiveSpan, BeamDeflectionVerificationRejectionReason::INVALID_EFFECTIVE_SPAN);
         $this->ensurePositiveFinite($geometry->width, BeamDeflectionVerificationRejectionReason::INVALID_TENSION_WIDTH);
@@ -83,37 +80,11 @@ final class BeamDeflectionVerificationCalculator
         );
     }
 
-    private function unsupportedForCantilever(BeamCalculationConfiguration $configuration, BeamGeometry $geometry, BeamReinforcementCandidateRecalculationResult $candidate, ConcreteProperties $concrete): BeamDeflectionVerificationResult
-    {
-        return new BeamDeflectionVerificationResult(
-            BeamDeflectionMethod::SIMPLIFIED_SPAN_DEPTH,
-            BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED,
-            $geometry->effectiveSpan,
-            $candidate->effectiveDepth->effectiveDepth,
-            null,
-            $concrete->fck,
-            null,
-            null,
-            null,
-            null,
-            null,
-            $configuration->supportSystem,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED,
-            ['CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE'],
-        );
-    }
-
     private function ensureSupportedConfiguration(BeamCalculationConfiguration $configuration, BeamReinforcementCandidateRecalculationResult $candidate): void
     {
         if ($configuration->materialType !== MaterialType::REINFORCED_CONCRETE
             || $configuration->sectionType !== BeamSectionType::RECTANGULAR
-            || $configuration->supportSystem !== BeamSupportSystem::SIMPLY_SUPPORTED
+            || ! in_array($configuration->supportSystem, [BeamSupportSystem::SIMPLY_SUPPORTED, BeamSupportSystem::CANTILEVER], true)
             || $candidate->status === BeamReinforcementCandidateRecalculationStatus::INVALID_SINGLY_REINFORCED_DOMAIN) {
             throw new BeamDeflectionVerificationException(BeamDeflectionVerificationRejectionReason::CALCULATION_METHOD_NOT_SUPPORTED);
         }

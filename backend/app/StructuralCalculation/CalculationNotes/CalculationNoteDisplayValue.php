@@ -99,6 +99,7 @@ final class CalculationNoteDisplayValue
             'PARTITION_DAMAGE_CHECK_NOT_MODELLED' => 'Vérification des dommages aux cloisons non modélisée',
             'UTILIZATION_UNAVAILABLE' => 'Taux d’utilisation indisponible',
             'CANTILEVER_FIXED_END_SCOPE' => 'Méthode non prise en charge à l’encastrement',
+            'EFFECTIVE_DEPTH_FROM_FIXED_END' => 'À une hauteur utile de l’encastrement',
             'CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED' => 'Section critique de cisaillement à l’encastrement non modélisée',
             'CANTILEVER_CRACK_VERIFICATION_REQUIRES_FIXED_END_STIRRUP_LAYOUT' => 'Vérification de fissuration nécessitant un ferraillage transversal à l’encastrement',
             'CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE' => 'Facteur de système non défini pour la console',

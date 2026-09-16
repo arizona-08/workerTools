@@ -161,7 +161,7 @@ it('keeps the technical values while exposing French labels for note assumptions
         ->and($document->assumptions->items[8]->displayValue)->toBe('Automatique');
 });
 
-it('maps a cantilever into the shared note with fixed-end actions, top reinforcement and visible limitations', function () {
+it('maps a cantilever into the shared note with fixed-end actions, top reinforcement and its shear control section', function () {
     $source = cantileverBeamCalculationNoteSource();
     [, $result] = $source;
     $document = beamCalculationNote($source);
@@ -182,10 +182,14 @@ it('maps a cantilever into the shared note with fixed-end actions, top reinforce
         ->and($document->reinforcement[0]->label)->toBe('Ferraillage longitudinal proposé — Partie supérieure')
         ->and($document->reinforcement[0]->details[0]->displayValue)->toBe('Partie supérieure')
         ->and($shear->status)->toBe($result->verifications->shearVerification->status)
-        ->and($shear->details[2]->value)->toBe('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
+        ->and($shear->details[0]->displayValue)->toBe('À une hauteur utile de l’encastrement')
+        ->and($shear->details[2]->label)->toBe('Effort tranchant VEd à l’encastrement')
         ->and($crack->status)->toBe($result->verifications->crackVerification->status)
+        ->and($crack->details[0]->value)->toBe($result->details->serviceability['crack']->serviceMoment)
+        ->and($crack->details[1]->displayValue)->toBe('Partie supérieure')
+        ->and($crack->details[3]->value)->toBe($result->summary->longitudinalReinforcement->providedArea)
         ->and($document->warnings)->toBe($result->details->warnings)
-        ->and($document->warnings)->toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED');
+        ->and($document->warnings)->not->toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED');
 });
 
 it('renders cantilever-specific labels and warnings through the common PDF template', function () {
@@ -199,7 +203,7 @@ it('renders cantilever-specific labels and warnings through the common PDF templ
         ->and($html)->toContain('Moment ELU MEd à l’encastrement')
         ->and($html)->toContain('Effort tranchant ELU VEd à l’encastrement')
         ->and($html)->toContain('Partie supérieure')
-        ->and($html)->toContain('Section critique de cisaillement à l’encastrement non modélisée');
+        ->and($html)->toContain('À une hauteur utile de l’encastrement');
 });
 
 it('renders French configuration labels in the beam PDF template', function () {

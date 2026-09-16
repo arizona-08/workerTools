@@ -35,7 +35,6 @@ final readonly class BeamCalculationOrchestrator
         private CantileverBeamBendingMomentCalculator $cantileverBendingMomentCalculator,
         private CantileverBeamShearForceCalculator $cantileverShearForceCalculator,
         private CantileverBeamShearVerificationScope $cantileverShearVerificationScope,
-        private CantileverBeamCrackVerificationScope $cantileverCrackVerificationScope,
         private NominalCoverCalculator $coverCalculator,
         private BeamEffectiveDepthCalculator $effectiveDepthCalculator,
         private BeamFlexuralDesignStrengthsCalculator $designStrengthsCalculator,
@@ -87,18 +86,24 @@ final readonly class BeamCalculationOrchestrator
         $moments = $this->cantileverBendingMomentCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
         $shears = $this->cantileverShearForceCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
         $flexure = $this->calculateFlexure($setup, $profile, $moments->ultimate);
-        $shearScope = $this->cantileverShearVerificationScope->assess($setup->configuration, $shears->ultimate, $flexure->selectedCandidate->originalCandidate);
+        $shearScope = $this->cantileverShearVerificationScope->assess($setup->configuration, $setup->geometry, $shears->ultimate, $flexure->selectedCandidate->effectiveDepth, $flexure->selectedCandidate->originalCandidate);
         $concrete = $this->concreteClasses->get($setup->materials->concreteClass);
         $steel = $this->steelGrades->get($setup->materials->steelGrade);
+        $concreteShear = $this->concreteShearCalculator->calculate($shearScope->criticalSectionDesignShearForce, $setup->configuration, $setup->geometry, $flexure->selectedCandidate->effectiveDepth, $concrete, $flexure->designStrengths->concrete, $flexure->selectedCandidate->providedArea, $profile);
+        $shearDesign = $this->shearReinforcementCalculator->calculate($concreteShear, $flexure->selectedCandidate->leverArm, $concrete, $steel, $profile, BeamShearDesignAssumptions::supported());
+        // §6.2.1(8) conserve le contrôle VRd,max au nu de l'appui : ne pas le réduire à VEd(d).
+        $maximumShear = $this->maximumShearCalculator->calculate($shearDesign, $concrete, $flexure->designStrengths->concrete, $profile, $shearScope->fixedEndDesignShearForce->maximumAbsoluteShear);
+        $stirrups = $this->stirrupProposalGenerator->generate($shearDesign, $maximumShear, $flexure->selectedCandidate->effectiveDepth, $flexure->cover, $profile);
+        $stirrup = $stirrups->recommendedCandidate ?? throw new LogicException('NO_VALID_STIRRUP_CANDIDATE');
         $stresses = $this->serviceStressCalculator->calculate($moments, $setup->geometry, $flexure->selectedCandidate->effectiveDepth, $concrete, $steel, $flexure->selectedCandidate->providedArea, $profile);
-        $crackScope = $this->cantileverCrackVerificationScope->assess($flexure->selectedCandidate->originalCandidate, $setup->configuration->tensionFace());
+        $cracks = $this->crackCalculator->calculate($setup->geometry, $flexure->selectedCandidate->effectiveDepth, $flexure->selectedCandidate->originalCandidate, null, $stresses, $concrete, $steel, $setup->materials->exposureClasses[0], $profile);
         $deflection = $this->deflectionCalculator->calculate($setup->configuration, $setup->geometry, $flexure->selectedCandidate, $concrete, $steel, $profile);
 
         $aggregation = $this->aggregationService->aggregate(
             $this->aggregationService->flexure($flexure->selectedCandidate),
-            $this->aggregationService->methodNotSupported('SHEAR', 'CANTILEVER_FIXED_END_SCOPE', [$shearScope->limitation], $shearScope->designShearForce->maximumAbsoluteShear),
+            $this->aggregationService->shear($maximumShear, $stirrups),
             $this->aggregationService->stress($stresses),
-            $this->aggregationService->methodNotSupported('CRACK', 'CANTILEVER_FIXED_END_SCOPE', [$crackScope->limitation]),
+            $this->aggregationService->crack($cracks),
             $this->aggregationService->deflection($deflection),
         );
         $governing = $this->governingResolver->resolve($aggregation);
@@ -121,8 +126,8 @@ final readonly class BeamCalculationOrchestrator
             ['bendingMoments' => $moments, 'shearForces' => $shears, 'criticalSectionLocation' => BeamShearCriticalSectionLocation::FIXED_END],
             ['designStrengths' => $flexure->designStrengths, 'initialEffectiveDepth' => $flexure->initialEffectiveDepth, 'reducedMoment' => $flexure->reducedMoment, 'neutralAxis' => $flexure->neutralAxis, 'leverArm' => $flexure->leverArm, 'domain' => $flexure->domain],
             ['targetArea' => $flexure->targetArea, 'generatedCandidates' => $flexure->generatedCandidates, 'geometryCandidates' => $flexure->geometryCandidates, 'selectedCandidate' => $flexure->selectedCandidate],
-            ['scope' => $shearScope],
-            ['stress' => $stresses, 'crack' => $crackScope, 'deflection' => $deflection, 'warnings' => [...$aggregation->warnings]],
+            ['scope' => $shearScope, 'concreteResistance' => $concreteShear, 'reinforcementDesign' => $shearDesign, 'maximumResistance' => $maximumShear, 'stirrups' => $stirrups, 'recommendedStirrup' => $stirrup],
+            ['stress' => $stresses, 'crack' => $cracks, 'deflection' => $deflection, 'warnings' => [...$aggregation->warnings]],
         );
 
         return new BeamCalculationResponse($summary, $aggregation, $details);

@@ -2,18 +2,18 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Trace le VEd et la limitation normative avant toute résistance de cisaillement. */
+/** Trace les efforts au nu de l'encastrement et à la section EC2 située à d. */
 final readonly class CantileverBeamShearVerificationScopeResult
 {
-    public const LIMITATION = 'CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED';
+    public const POSITION_UNIT = 'mm';
 
     public function __construct(
-        public BeamShearForce $designShearForce,
+        public BeamShearForce $fixedEndDesignShearForce,
         public BeamShearCriticalSectionLocation $criticalSectionLocation,
         public float $criticalSectionPosition,
+        public BeamShearForce $criticalSectionDesignShearForce,
+        public string $criticalSectionFormula,
         public BeamReinforcementPosition $longitudinalReinforcementPosition,
         public float $longitudinalReinforcementArea,
-        public BeamShearVerificationScopeStatus $status,
-        public string $limitation,
     ) {}
 }

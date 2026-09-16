@@ -18,7 +18,7 @@ final class BeamCrackVerificationCalculator
         BeamGeometry $geometry,
         BeamEffectiveDepthResult $effectiveDepth,
         BeamReinforcementProposalCandidate $longitudinalReinforcement,
-        BeamStirrupProposalResult $stirrupProposals,
+        ?BeamStirrupProposalResult $stirrupProposals,
         BeamServiceStressVerificationResult $serviceStresses,
         ConcreteProperties $concrete,
         ReinforcementSteelProperties $steel,
@@ -49,11 +49,10 @@ final class BeamCrackVerificationCalculator
         $this->ensurePositiveFinite($alpha ?? 0, BeamCrackVerificationRejectionReason::INVALID_MODULAR_RATIO);
         $this->ensureNonNegativeFinite($steelStress ?? -1, BeamCrackVerificationRejectionReason::INVALID_STEEL_STRESS);
 
-        $stirrup = $stirrupProposals->recommendedCandidate;
-        if ($stirrup === null) {
-            throw new BeamCrackVerificationException(BeamCrackVerificationRejectionReason::MISSING_RECOMMENDED_STIRRUP);
-        }
-        $this->ensurePositiveFinite($stirrup->barDiameter, BeamCrackVerificationRejectionReason::INVALID_TRANSVERSE_BAR_DIAMETER);
+        // Le diamètre transversal sert seulement à localiser le lit longitudinal.
+        // En son absence, la géométrie déjà utilisée pour d reste la source de vérité.
+        $transverseBarDiameter = $stirrupProposals?->recommendedCandidate?->barDiameter ?? $effectiveDepth->transverseBarDiameter;
+        $this->ensurePositiveFinite($transverseBarDiameter, BeamCrackVerificationRejectionReason::INVALID_TRANSVERSE_BAR_DIAMETER);
 
         $requirements = $profile->beamCrackWidthRequirements;
         $this->ensureRequirements($requirements);
@@ -63,7 +62,7 @@ final class BeamCrackVerificationCalculator
         }
         $this->ensurePositiveFinite($crackWidthLimit, BeamCrackVerificationRejectionReason::INVALID_CRACK_WIDTH_LIMIT);
 
-        $coverToLongitudinalBar = $effectiveDepth->nominalCover + $stirrup->barDiameter;
+        $coverToLongitudinalBar = $effectiveDepth->nominalCover + $transverseBarDiameter;
         $barDiameter = $longitudinalReinforcement->barDiameter;
         $barSpacing = ($geometry->width - 2 * ($coverToLongitudinalBar + $barDiameter / 2)) / ($longitudinalReinforcement->barCount - 1);
         $this->ensurePositiveFinite($barSpacing, BeamCrackVerificationRejectionReason::INVALID_BAR_LAYOUT);
@@ -82,7 +81,8 @@ final class BeamCrackVerificationCalculator
         $utilization = $crackWidth / $crackWidthLimit;
 
         return new BeamCrackVerificationResult(
-            'QUASI_PERMANENT', $loadDuration, $serviceStresses->sectionModel,
+            'QUASI_PERMANENT', $loadDuration, $serviceStresses->sectionModel, $serviceStresses->steelQuasiPermanent->moment,
+            $serviceStresses->tensionFace, $longitudinalReinforcement->position, $longitudinalReinforcement->providedArea, $transverseBarDiameter,
             $coverToLongitudinalBar, $barDiameter, $longitudinalReinforcement->barCount, $barSpacing, $clearBarSpacing,
             $direct->effectiveTensionHeightFromDepth, $direct->effectiveTensionHeightFromNeutralAxis, $direct->effectiveTensionHeightFromHalfDepth, $direct->effectiveTensionHeight,
             $direct->effectiveTensionArea, $direct->effectiveReinforcementRatio, $concrete->fctm, $alpha, $steelStress, $kt,

@@ -55,22 +55,38 @@ Le V1 fixe `NEd = 0 kN`, donc conserve explicitement `Ac = b × h` et
 les armatures `Asl` sont pertinentes et correctement ancrées au droit de la
 section étudiée; aucune vérification d'ancrage ou de position n'est réalisée.
 
-## Limitation console — BEAM-CANT-04
+## Section critique console — BEAM-CANT-04A
 
 Pour une console rectangulaire sous charge uniformément répartie, l'analyse
-statique fournit `|VEd|max = wEd × L` à l'encastrement (`x = 0`). Cette valeur
-est conservée telle quelle par `CantileverBeamShearVerificationScope`; le
-contrôle ne substitue jamais la formule de poutre simplement appuyée `wEd × L / 2`.
+statique fournit `|VEd,enc| = wEd × L` à l'encastrement (`x = 0`). Cette valeur
+reste exposée séparément : elle n'est jamais remplacée par la valeur de contrôle
+et la formule de poutre simplement appuyée `wEd × L / 2` n'est jamais utilisée.
 
-Le périmètre V1 des règles ci-dessus exclut les zones d'appui et ne documente
-ni section de contrôle ni règle d'ancrage applicable au voisinage de
-l'encastrement d'une console. Il serait donc incorrect d'évaluer `VRd,c`,
-`VRd,max` ou une proposition d'étriers au nu de l'encastrement par simple
-réutilisation. Le moteur retourne la limitation structurée
-`CANTILEVER_FIXED_END_SHEAR_VERIFICATION_NOT_SUPPORTED` sans conclure à la
-conformité. L'aire `Asl` et sa position `TOP` sont tout de même tracées, mais
-elles ne sont pas injectées dans `ρl` tant que cette section critique n'est pas
-normativement définie.
+EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §6.2.1(8) retient, pour les éléments
+soumis principalement à des charges uniformément réparties, une vérification à
+la distance `d` de la face de l'appui. Pour la console V1, la face de référence
+est celle de l'encastrement et la position est donc `x_shear = d`, mesurée vers
+l'extrémité libre. Le modèle UDL fournit analytiquement :
+
+```text
+VEd(x) = wEd × (L - x)
+VEd,control = wEd × (L - d)
+```
+
+Le moteur exige `0 < d < L`. Cette valeur est transmise telle quelle à la
+chaîne commune `VRd,c`, dimensionnement/proposition d'étriers et utilise
+l'armature longitudinale réelle de la console (`Asl = As,prov`, position
+`TOP`) pour `ρl`. Les hypothèses d'ancrage de ces armatures au droit de la
+section restent celles déjà documentées pour le moteur commun : leur contrôle
+explicite n'est pas encore implémenté.
+
+Conformément au même §6.2.1(8), les étriers éventuellement requis à `d` sont
+prolongés jusqu'à l'encastrement et `VRd,max` est vérifié avec `VEd,enc`, sans
+réduction. `VRd,c` et la demande d'étriers ne sont pas évalués au nu de
+l'encastrement. Le périmètre reste limité aux charges UDL, section constante,
+console rectangulaire, béton armé non précontraint et absence d'effort normal ;
+les charges ponctuelles/proches de l'appui, corbeaux et vérifications
+d'ancrage détaillées demeurent hors périmètre.
 
 ## Dimensionnement théorique des étriers — BEAM-SHEAR-02
 

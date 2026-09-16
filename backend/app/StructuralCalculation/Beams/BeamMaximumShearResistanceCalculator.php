@@ -17,8 +17,10 @@ final readonly class BeamMaximumShearResistanceCalculator
         ConcreteProperties $concrete,
         BeamFlexuralConcreteDesignStrength $concreteDesignStrength,
         DesignCodeProfile $profile,
+        ?float $designShearForce = null,
     ): BeamMaximumShearResistanceResult {
-        $this->ensureNonNegativeFinite($reinforcementDesign->designShearForce, BeamMaximumShearResistanceRejectionReason::INVALID_DESIGN_SHEAR_FORCE);
+        $designShearForce ??= $reinforcementDesign->designShearForce;
+        $this->ensureNonNegativeFinite($designShearForce, BeamMaximumShearResistanceRejectionReason::INVALID_DESIGN_SHEAR_FORCE);
         $this->ensurePositiveFinite($reinforcementDesign->webWidth, BeamMaximumShearResistanceRejectionReason::INVALID_WEB_WIDTH);
         $this->ensurePositiveFinite($reinforcementDesign->leverArm, BeamMaximumShearResistanceRejectionReason::INVALID_LEVER_ARM);
         $this->ensurePositiveFinite($concrete->fck, BeamMaximumShearResistanceRejectionReason::INVALID_CONCRETE_CHARACTERISTIC_STRENGTH);
@@ -36,11 +38,11 @@ final readonly class BeamMaximumShearResistanceCalculator
         $this->ensurePositiveFinite($maximumResistance, BeamMaximumShearResistanceRejectionReason::INVALID_MAXIMUM_SHEAR_RESISTANCE);
 
         return new BeamMaximumShearResistanceResult(
-            $reinforcementDesign->designShearForce, $reinforcementDesign->webWidth, $reinforcementDesign->leverArm,
+            $designShearForce, $reinforcementDesign->webWidth, $reinforcementDesign->leverArm,
             $concrete->fck, $concreteDesignStrength->fcd, $requirements->nonPrestressedAlphaCw, $reductionFactor,
             $reinforcementDesign->cotTheta, $tanTheta, $maximumResistance,
-            $reinforcementDesign->designShearForce / $maximumResistance,
-            $reinforcementDesign->designShearForce <= $maximumResistance
+            $designShearForce / $maximumResistance,
+            $designShearForce <= $maximumResistance
                 ? BeamMaximumShearResistanceStatus::MAXIMUM_SHEAR_RESISTANCE_OK
                 : BeamMaximumShearResistanceStatus::MAXIMUM_SHEAR_RESISTANCE_EXCEEDED,
         );

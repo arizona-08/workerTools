@@ -98,7 +98,7 @@ it('keeps the historical simply supported reference case stable through the comp
     assertReferenceClose($deflection->utilization, 0.20222029333527);
 });
 
-it('keeps the cantilever reference case traceable through actions, flexion, supported ELS and explicit limitations', function () {
+it('keeps the cantilever reference case traceable through actions, flexion, shear and explicit ELS limitations', function () {
     $setup = app(BeamCalculationInputFactory::class)->fromPayload(beamReferencePayload(BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR, 4000));
     $result = app(BeamCalculationOrchestrator::class)->calculate($setup);
     $actions = $result->details->combinations['characteristicActions'];
@@ -108,6 +108,7 @@ it('keeps the cantilever reference case traceable through actions, flexion, supp
     $shears = $result->details->internalForces['shearForces'];
     $selected = $result->details->reinforcement['selectedCandidate'];
     $scope = $result->details->shear['scope'];
+    $maximumShear = $result->details->shear['maximumResistance'];
     $stress = $result->details->serviceability['stress'];
     $crack = $result->details->serviceability['crack'];
     $deflection = $result->details->serviceability['deflection'];
@@ -147,11 +148,15 @@ it('keeps the cantilever reference case traceable through actions, flexion, supp
     assertReferenceClose($selected->providedArea, 615.7521601036);
     expect($selected->providedArea)->toBeGreaterThanOrEqual($selected->targetArea->targetArea);
 
-    assertReferenceClose($scope->designShearForce->maximumAbsoluteShear, 72.3);
+    assertReferenceClose($scope->fixedEndDesignShearForce->maximumAbsoluteShear, 72.3);
+    assertReferenceClose($scope->criticalSectionPosition, 565.0);
+    assertReferenceClose($scope->criticalSectionDesignShearForce->maximumAbsoluteShear, 62.087625);
     assertReferenceClose($scope->longitudinalReinforcementArea, 615.7521601036);
     expect($scope->longitudinalReinforcementPosition)->toBe(BeamReinforcementPosition::TOP)
-        ->and($result->verifications->shearVerification->status)->toBe(BeamVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
-        ->and($scope->limitation)->toBe('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED');
+        ->and($result->verifications->shearVerification->status)->toBe(BeamVerificationStatus::COMPLIANT);
+    assertReferenceClose($result->details->shear['concreteResistance']->designShearForce, 62.087625);
+    assertReferenceClose($result->details->shear['concreteResistance']->concreteShearResistance, 71.926296279318);
+    assertReferenceClose($maximumShear->designShearForce, 72.3);
 
     expect($result->verifications->stressVerification->status)->toBe(BeamVerificationStatus::COMPLIANT)
         ->and($stress->tensionFace->value)->toBe('TOP')
@@ -159,12 +164,21 @@ it('keeps the cantilever reference case traceable through actions, flexion, supp
     assertReferenceClose($stress->steelCharacteristic->stress, 319.03308960606);
     expect($crack->tensionFace->value)->toBe('TOP')
         ->and($crack->longitudinalReinforcementPosition)->toBe(BeamReinforcementPosition::TOP)
-        ->and($crack->longitudinalReinforcementArea)->toBe($selected->providedArea)
-        ->and($crack->longitudinalBarDiameter)->toBe(14.0)
-        ->and($result->verifications->crackVerification->status)->toBe(BeamVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
-        ->and($result->verifications->deflectionVerification->status)->toBe(BeamVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
-        ->and($deflection->utilization)->toBeNull()
-        ->and($result->summary->status)->toBe(BeamVerificationStatus::NOT_CHECKED);
+        ->and($crack->providedLongitudinalReinforcementArea)->toBe($selected->providedArea)
+        ->and($crack->barDiameter)->toBe(14.0)
+        ->and($result->verifications->crackVerification->status)->toBe(BeamVerificationStatus::COMPLIANT)
+        ->and($result->verifications->deflectionVerification->status)->toBe(BeamVerificationStatus::COMPLIANT)
+        ->and($deflection->structuralFactor)->toBe(0.4)
+        ->and($deflection->utilization)->toBeLessThan(1)
+        ->and($result->summary->status)->toBe(BeamVerificationStatus::COMPLIANT);
+    assertReferenceClose($crack->serviceMoment, -84.4);
+    assertReferenceClose($crack->coverToLongitudinalBar, 28.0);
+    assertReferenceClose($crack->effectiveReinforcementRatio, 0.023457225146804);
+    assertReferenceClose($crack->maximumCrackSpacing, 196.66127622108);
+    assertReferenceClose($crack->strainDifference, 0.0010121280261388);
+    assertReferenceClose($crack->crackWidth, 0.19904638931959);
+    assertReferenceClose($crack->crackWidthLimit, 0.4);
+    assertReferenceClose($crack->utilization, 0.49761597329897);
 
     expect($result->summary->module->value)->toBe('BEAM')
         ->and($result->summary->submodule)->toBe(BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR)
