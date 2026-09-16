@@ -37,7 +37,7 @@
     </app-result-accordion-item>
 
     <app-result-accordion-item title="4. Armatures" contentId="beam-details-reinforcement">
-      <app-detail-value-list [values]="details().reinforcement" />
+      <app-reinforcement-details [details]="details().reinforcement" />
       @if (reinforcementFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="reinforcementFormulaSteps()" /> }
     </app-result-accordion-item>
 

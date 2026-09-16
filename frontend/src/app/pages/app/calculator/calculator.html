@@ -25,6 +25,17 @@
         @case ('Poutre') { <app-beam-form (formChanged)="clearCalculationResult()" /> }
         @case ('Dalle') { <app-slab-form (formChanged)="clearCalculationResult()" /> }
       }
+      <div class="mt-8 flex justify-end border-t border-zinc-200 pt-6">
+        <button
+          type="button"
+          data-testid="bottom-calculate"
+          [disabled]="isCalculating()"
+          (click)="selectedModule() === 'Poutre' ? calculateBeam() : calculateSlab()"
+          class="w-full rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
+        >
+          @if (isCalculating()) { Calcul en cours… } @else { Calculer la structure }
+        </button>
+      </div>
     </section>
 
     <aside class="min-w-0 rounded-xl border border-zinc-200 bg-white p-6" aria-labelledby="result-title" aria-live="polite">

@@ -79,7 +79,8 @@ describe('Calculator', () => {
     form.permanentLoadsForm.setValue({ includeSelfWeight: true, additionalPermanentLoad: 5 });
     form.variableLoadForm.setValue({ category: 'A', characteristicLoad: 3.5 });
 
-    component.calculateBeam();
+    const bottomCalculate = fixture.nativeElement.querySelector('[data-testid="bottom-calculate"]') as HTMLButtonElement;
+    bottomCalculate.click();
     expect(component.isCalculating()).toBe(true);
     const request = http.expectOne('/api/beam/calculations');
     expect(request.request.method).toBe('POST');

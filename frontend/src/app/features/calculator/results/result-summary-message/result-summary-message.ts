@@ -33,7 +33,7 @@ export class ResultSummaryMessage {
         };
       case 'NOT_COMPLIANT':
         return {
-          message: 'La section ne satisfait pas toutes les vérifications réalisées dans le périmètre actuel.',
+          message: this.notCompliantMessage(),
           tone: 'NOT_COMPLIANT',
         };
       case 'NOT_CHECKED':
@@ -94,4 +94,25 @@ export class ResultSummaryMessage {
       ? `Vérification la plus sollicitée : ${governingVerification}.`
       : `Vérification la plus sollicitée : ${governingVerification} — ${percentage} %.`;
   });
+
+  private notCompliantMessage(): string {
+    switch (this.governingVerificationType()) {
+      case 'FLEXURE':
+        return 'La vérification de flexion n’est pas satisfaite : le moment solliciteur est trop important pour la section ou les armatures retenues.';
+      case 'SHEAR':
+        return 'La vérification au cisaillement n’est pas satisfaite : l’effort tranchant est trop important pour la section ou les étriers retenus.';
+      case 'STRESS':
+        return 'La vérification des contraintes en service n’est pas satisfaite : au moins une contrainte admissible est dépassée.';
+      case 'CRACK':
+        return 'La vérification de fissuration n’est pas satisfaite : l’ouverture de fissure calculée dépasse la limite applicable.';
+      case 'DEFLECTION':
+        return 'La vérification de déformation n’est pas satisfaite : le rapport portée sur hauteur utile dépasse la limite applicable.';
+      case 'MAIN_REINFORCEMENT':
+        return 'Les armatures principales retenues ne satisfont pas la vérification de la dalle.';
+      case 'SECONDARY_REINFORCEMENT':
+        return 'Les armatures secondaires retenues ne satisfont pas la vérification de la dalle.';
+      case null:
+        return 'La section ne satisfait pas toutes les vérifications réalisées dans le périmètre actuel.';
+    }
+  }
 }

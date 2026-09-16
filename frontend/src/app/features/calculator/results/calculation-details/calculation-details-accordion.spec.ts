@@ -57,7 +57,7 @@ describe('CalculationDetailsAccordion', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Proposé');
+    expect(text).toContain('Ferraillage proposé');
     expect(text).toContain('4 HA12');
     expect(text).toContain('452,39');
     expect(text).toContain('0,24');
@@ -84,9 +84,41 @@ describe('CalculationDetailsAccordion', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Fourni');
+    expect(text).toContain('Ferraillage fourni');
     expect(text).toContain('3 HA16');
-    expect(text).not.toContain('Proposé');
+    expect(text).not.toContain('Ferraillage proposé');
+  });
+
+  it('presents generated and geometry candidates as readable reinforcement tables rather than objects', () => {
+    fixture.componentRef.setInput('details', {
+      ...referenceDetails,
+      reinforcement: {
+        requiredArea: 413.46,
+        targetArea: { targetArea: 413.46 },
+        longitudinalReinforcement: { source: 'PROPOSED', barCount: 4, barDiameter: 12, providedArea: 452.3893421169302 },
+        generatedCandidates: {
+          candidateCount: 2,
+          candidates: [
+            { barCount: 3, barDiameter: 14, providedArea: 461.8141200776996, targetArea: 413.46, excessArea: 48.3541200776996, utilizationRatio: 0.895296 },
+            { barCount: 4, barDiameter: 12, providedArea: 452.3893421169302, targetArea: 413.46, excessArea: 38.9293421169302, utilizationRatio: 0.913947 },
+          ],
+        },
+        geometryCandidates: {
+          acceptedCandidates: [{ candidate: { barCount: 4, barDiameter: 12, providedArea: 452.3893421169302, targetArea: 413.46, excessArea: 38.9293421169302, utilizationRatio: 0.913947 }, requiredWidth: 84, remainingWidth: 160, minimumClearSpacing: 20 }],
+          rejectedCandidates: [{ candidate: { barCount: 8, barDiameter: 16, providedArea: 1608.495438637974, targetArea: 413.46, excessArea: 1195.035438637974, utilizationRatio: 0.257 }, requiredWidth: 268, remainingWidth: -24, rejectionReason: 'INSUFFICIENT_HORIZONTAL_SPACE' }],
+        },
+      },
+    });
+    fixture.detectChanges();
+    fixture.nativeElement.querySelectorAll('button')[3].click();
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Propositions générées (2)');
+    expect(text).toContain('3 HA14');
+    expect(text).toContain('4 HA12');
+    expect(text).toContain('Largeur disponible insuffisante');
+    expect(text).not.toContain('[object Object]');
   });
 
   it('adds formula cards to an existing accordion only when structured backend steps are present', () => {
