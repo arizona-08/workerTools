@@ -15,6 +15,7 @@ describe('BeamCalculationService', () => {
       elementType: 'BEAM',
       materialType: 'REINFORCED_CONCRETE',
       sectionType: 'RECTANGULAR',
+      submodule: 'BEAM_SIMPLE_RECTANGULAR',
       supportSystem: 'SIMPLY_SUPPORTED',
       loadModel: 'UNIFORMLY_DISTRIBUTED',
       designCodeProfile: 'NF_EN_1992_1_1_2005_FR',
@@ -79,5 +80,21 @@ describe('BeamCalculationService', () => {
     request.flush(new Blob(['%PDF-test'], { type: 'application/pdf' }), {
       headers: { 'content-type': 'application/pdf', 'content-disposition': 'attachment; filename="note-calcul-poutre.pdf"' },
     });
+  });
+
+  it('uses the same export endpoint and preserves the cantilever identifiers', () => {
+    const cantileverPayload: BeamCalculationPayload = {
+      ...payload,
+      configuration: { ...payload.configuration, submodule: 'BEAM_CANTILEVER_RECTANGULAR', supportSystem: 'CANTILEVER' },
+    };
+
+    service.exportPdf(cantileverPayload).subscribe();
+
+    const request = http.expectOne('/api/beam/calculations/pdf');
+    expect(request.request.body.configuration).toMatchObject({
+      submodule: 'BEAM_CANTILEVER_RECTANGULAR',
+      supportSystem: 'CANTILEVER',
+    });
+    request.flush(new Blob(['%PDF-test'], { type: 'application/pdf' }));
   });
 });

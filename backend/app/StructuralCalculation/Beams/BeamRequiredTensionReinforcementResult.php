@@ -24,5 +24,6 @@ final readonly class BeamRequiredTensionReinforcementResult
         public float $leverArm,
         public float $steelLeverArmProduct,
         public float $requiredReinforcementArea,
+        public float $signedDesignMoment = 0.0,
     ) {}
 }

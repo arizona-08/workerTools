@@ -15,23 +15,25 @@ final readonly class BeamReducedMomentCalculator
         BeamEffectiveDepthResult $effectiveDepth,
         BeamFlexuralConcreteDesignStrength $concreteDesignStrength,
     ): BeamReducedMomentResult {
-        $this->ensureNonNegativeFinite($ultimateMoment->maximumMoment, BeamReducedMomentRejectionReason::INVALID_DESIGN_MOMENT);
+        $designMomentMagnitude = $ultimateMoment->magnitude();
+        $this->ensureNonNegativeFinite($designMomentMagnitude, BeamReducedMomentRejectionReason::INVALID_DESIGN_MOMENT);
         $this->ensurePositiveFinite($geometry->width, BeamReducedMomentRejectionReason::INVALID_SECTION_WIDTH);
         $this->ensurePositiveFinite($effectiveDepth->effectiveDepth, BeamReducedMomentRejectionReason::INVALID_EFFECTIVE_DEPTH);
         $this->ensurePositiveFinite($concreteDesignStrength->fcd, BeamReducedMomentRejectionReason::INVALID_CONCRETE_DESIGN_STRENGTH);
 
-        $designMomentInNewtonMillimetres = $this->momentConverter->kilonewtonMetresToNewtonMillimetres($ultimateMoment->maximumMoment);
+        $designMomentInNewtonMillimetres = $this->momentConverter->kilonewtonMetresToNewtonMillimetres($designMomentMagnitude);
         $normalizationTerm = $geometry->width * $effectiveDepth->effectiveDepth ** 2 * $concreteDesignStrength->fcd;
         $this->ensurePositiveFinite($normalizationTerm, BeamReducedMomentRejectionReason::INVALID_NORMALIZATION_TERM);
 
         return new BeamReducedMomentResult(
-            designMoment: $ultimateMoment->maximumMoment,
+            designMoment: $designMomentMagnitude,
             designMomentInNewtonMillimetres: $designMomentInNewtonMillimetres,
             sectionWidth: $geometry->width,
             effectiveDepth: $effectiveDepth->effectiveDepth,
             concreteDesignStrength: $concreteDesignStrength->fcd,
             normalizationTerm: $normalizationTerm,
             reducedDesignMoment: $designMomentInNewtonMillimetres / $normalizationTerm,
+            signedDesignMoment: $ultimateMoment->maximumMoment,
         );
     }
 

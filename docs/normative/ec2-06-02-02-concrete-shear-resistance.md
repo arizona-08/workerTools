@@ -55,6 +55,39 @@ Le V1 fixe `NEd = 0 kN`, donc conserve explicitement `Ac = b × h` et
 les armatures `Asl` sont pertinentes et correctement ancrées au droit de la
 section étudiée; aucune vérification d'ancrage ou de position n'est réalisée.
 
+## Section critique console — BEAM-CANT-04A
+
+Pour une console rectangulaire sous charge uniformément répartie, l'analyse
+statique fournit `|VEd,enc| = wEd × L` à l'encastrement (`x = 0`). Cette valeur
+reste exposée séparément : elle n'est jamais remplacée par la valeur de contrôle
+et la formule de poutre simplement appuyée `wEd × L / 2` n'est jamais utilisée.
+
+EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §6.2.1(8) retient, pour les éléments
+soumis principalement à des charges uniformément réparties, une vérification à
+la distance `d` de la face de l'appui. Pour la console V1, la face de référence
+est celle de l'encastrement et la position est donc `x_shear = d`, mesurée vers
+l'extrémité libre. Le modèle UDL fournit analytiquement :
+
+```text
+VEd(x) = wEd × (L - x)
+VEd,control = wEd × (L - d)
+```
+
+Le moteur exige `0 < d < L`. Cette valeur est transmise telle quelle à la
+chaîne commune `VRd,c`, dimensionnement/proposition d'étriers et utilise
+l'armature longitudinale réelle de la console (`Asl = As,prov`, position
+`TOP`) pour `ρl`. Les hypothèses d'ancrage de ces armatures au droit de la
+section restent celles déjà documentées pour le moteur commun : leur contrôle
+explicite n'est pas encore implémenté.
+
+Conformément au même §6.2.1(8), les étriers éventuellement requis à `d` sont
+prolongés jusqu'à l'encastrement et `VRd,max` est vérifié avec `VEd,enc`, sans
+réduction. `VRd,c` et la demande d'étriers ne sont pas évalués au nu de
+l'encastrement. Le périmètre reste limité aux charges UDL, section constante,
+console rectangulaire, béton armé non précontraint et absence d'effort normal ;
+les charges ponctuelles/proches de l'appui, corbeaux et vérifications
+d'ancrage détaillées demeurent hors périmètre.
+
 ## Dimensionnement théorique des étriers — BEAM-SHEAR-02
 
 Pour les étriers verticaux V1, `α = 90°`, donc `sin α = 1` et `cot α = 0`.

@@ -16,4 +16,10 @@ final readonly class BeamBendingMoment
         public FundamentalUltimateCombinationExpression|ServiceabilityCombinationExpression $combinationReference,
         public string $formula,
     ) {}
+
+    /** Magnitude utilisée par les équations de résistance, sans effacer le signe de MEd. */
+    public function magnitude(): float
+    {
+        return abs($this->maximumMoment);
+    }
 }

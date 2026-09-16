@@ -25,9 +25,23 @@ par la formule de fissuration est donc celui jusqu'à la surface de la barre
 longitudinale : `c = c_nom + φ_st`. Le centre de cette barre est à
 `c + φ/2`; aucun `φ/2` n'est ajouté à `c`.
 
-Le diamètre réel de l'étrier recommandé par BEAM-SHEAR-04 est obligatoire :
-le calcul refuse l'absence de proposition recommandée. Pour un lit unique de
-`n` barres régulières, `s_bar = [b - 2(c_nom + φ_st + φ/2)]/(n-1)`.
+Lorsqu'une proposition d'étrier réelle est disponible, son diamètre définit
+`φ_st`. Son absence ne bloque pas la vérification : le moteur utilise alors
+`BeamEffectiveDepthResult.transverseBarDiameter`, soit le diamètre transversal
+déjà retenu pour positionner le même lit longitudinal lors du calcul de `d`.
+Cette donnée est une hypothèse de géométrie, pas une armature exigée par la
+formule de fissuration. Pour un lit unique de `n` barres régulières,
+`s_bar = [b - 2(c_nom + φ_st + φ/2)]/(n-1)`.
+
+## Console — BEAM-CANT-05A
+
+La méthode reste la même pour la console rectangulaire V1 en flexion simple.
+Sous charge verticale descendante, `M_ELS,qp` est négatif mais les contraintes
+de fissuration utilisent sa magnitude ; la localisation physique est conservée
+explicitement : `tensionFace = TOP`, `reinforcementPosition = TOP`. Le lit
+réel sélectionné (`As,prov`, `φ`, nombre de barres, `c_nom` et `d`) est passé au
+calculateur commun. Aucun second modèle de fissuration, aucune limite `wk` et
+aucun coefficient ne sont introduits pour la console.
 
 ## Calcul direct
 

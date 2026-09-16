@@ -122,7 +122,6 @@ it('rejects impossible reduced-moment inputs', function (
 
     throw new RuntimeException('Expected invalid reduced-moment input to be rejected.');
 })->with([
-    'negative design moment' => [reducedMomentInput(-1), new BeamGeometry(6500, 300, 600), reducedMomentDepth(), reducedMomentConcrete(), BeamReducedMomentRejectionReason::INVALID_DESIGN_MOMENT],
     'non-positive width' => [reducedMomentInput(), new BeamGeometry(6500, 0, 600), reducedMomentDepth(), reducedMomentConcrete(), BeamReducedMomentRejectionReason::INVALID_SECTION_WIDTH],
     'non-positive effective depth' => [reducedMomentInput(), new BeamGeometry(6500, 300, 600), reducedMomentDepth(0), reducedMomentConcrete(), BeamReducedMomentRejectionReason::INVALID_EFFECTIVE_DEPTH],
     'non-positive fcd' => [reducedMomentInput(), new BeamGeometry(6500, 300, 600), reducedMomentDepth(), reducedMomentConcrete(0), BeamReducedMomentRejectionReason::INVALID_CONCRETE_DESIGN_STRENGTH],

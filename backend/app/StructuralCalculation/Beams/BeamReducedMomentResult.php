@@ -25,5 +25,6 @@ final readonly class BeamReducedMomentResult
         public float $concreteDesignStrength,
         public float $normalizationTerm,
         public float $reducedDesignMoment,
+        public float $signedDesignMoment = 0.0,
     ) {}
 }

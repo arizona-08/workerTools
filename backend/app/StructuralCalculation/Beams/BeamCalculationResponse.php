@@ -18,9 +18,11 @@ final readonly class BeamCalculationResponse implements JsonSerializable
     public function jsonSerialize(): array
     {
         return self::normalize([
+            'status' => $this->verifications->overallStatus,
             'summary' => $this->summary,
             'verifications' => $this->verifications,
             'details' => $this->details,
+            'warnings' => $this->verifications->warnings,
         ]);
     }
 

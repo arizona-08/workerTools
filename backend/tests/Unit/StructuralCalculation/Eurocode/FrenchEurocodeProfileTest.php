@@ -1,5 +1,6 @@
 <?php
 
+use App\StructuralCalculation\Beams\BeamSupportSystem;
 use App\StructuralCalculation\Eurocode\Concrete\ConcreteDesignStrengthCalculator;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 use App\StructuralCalculation\Eurocode\Profiles\FrenchEurocodeProfileRepository;
@@ -36,6 +37,7 @@ it('provides the versioned French profile and its material safety factors', func
         ->and($profile->beamCrackWidthRequirements->crackSpacingCoefficient4)->toBe(0.425)
         ->and($profile->beamCrackWidthRequirements->longTermKt)->toBe(0.4)
         ->and($profile->beamDeflectionRequirements->baseRatioConstant)->toBe(11.0)
+        ->and($profile->beamDeflectionRequirements->structuralFactorFor(BeamSupportSystem::CANTILEVER))->toBe(0.4)
         ->and($profile->beamDeflectionRequirements->referenceReinforcementRatioFactor)->toBe(0.001)
         ->and($profile->beamDeflectionRequirements->referenceSteelStrength)->toBe(500.0)
         ->and($profile->beamServiceStressRequirements->concreteCharacteristicStressLimitFactor)->toBe(0.60)

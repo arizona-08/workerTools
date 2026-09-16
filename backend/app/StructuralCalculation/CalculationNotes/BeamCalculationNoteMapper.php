@@ -8,7 +8,9 @@ use App\StructuralCalculation\Beams\BeamCharacteristicActionsResult;
 use App\StructuralCalculation\Beams\BeamEffectiveDepthResult;
 use App\StructuralCalculation\Beams\BeamLongitudinalReinforcementSource;
 use App\StructuralCalculation\Beams\BeamReinforcementCandidateRecalculationResult;
+use App\StructuralCalculation\Beams\BeamReinforcementPosition;
 use App\StructuralCalculation\Beams\BeamStirrupProposalCandidate;
+use App\StructuralCalculation\Beams\BeamSubmodule;
 use App\StructuralCalculation\Beams\BeamVerificationComponent;
 use App\StructuralCalculation\Eurocode\Cover\CoverCalculationResult;
 use DateTimeImmutable;
@@ -31,7 +33,7 @@ final class BeamCalculationNoteMapper
 
         return new CalculationNoteDocument(
             new CalculationNoteMetadata(
-                'Note de calcul — Poutre en béton armé',
+                'Note de calcul — '.$this->submoduleLabel($input->configuration->submodule),
                 $input->configuration->elementType,
                 $generatedAt,
                 $input->configuration->designCodeProfile->value,
@@ -41,9 +43,9 @@ final class BeamCalculationNoteMapper
             $this->materials($input, $flexure, $selected),
             $this->loads($input, $details->combinations['characteristicActions']),
             $this->combinations($details->combinations),
-            $this->internalForces($details->internalForces),
+            $this->internalForces($details->internalForces, $input->configuration->submodule),
             $this->verifications($result, $flexure, $shear, $serviceability),
-            $this->reinforcement($result, $selected, $shear['recommendedStirrup']),
+            $this->reinforcement($result, $selected, $shear['recommendedStirrup'] ?? null),
             new CalculationNoteFinalStatus(
                 $result->summary->status,
                 $result->summary->governingVerificationType,
@@ -59,10 +61,12 @@ final class BeamCalculationNoteMapper
     {
         return new CalculationNoteSection('assumptions', 'Hypothèses et paramètres', [
             $this->value('calculationMode', 'Mode de calcul', $input->configuration->calculationMode->value),
+            $this->value('submodule', 'Type de poutre', $input->configuration->submodule->value),
             $this->value('materialType', 'Matériau', $input->configuration->materialType->value),
             $this->value('sectionType', 'Section', $input->configuration->sectionType->value),
             $this->value('supportSystem', 'Système statique', $input->configuration->supportSystem->value),
             $this->value('loadModel', 'Modèle de charge', $input->configuration->loadModel->value),
+            $this->value('structuralHypotheses', 'Hypothèses structurales', $this->structuralHypotheses($input->configuration->submodule)),
             $this->value('designSituation', 'Situation de calcul', $input->configuration->designSituation->value),
             $this->value('coverMode', 'Mode d’enrobage', $cover->coverMode->value),
         ]);
@@ -140,14 +144,17 @@ final class BeamCalculationNoteMapper
     }
 
     /** @param array<string, mixed> $internalForces */
-    private function internalForces(array $internalForces): CalculationNoteSection
+    private function internalForces(array $internalForces, BeamSubmodule $submodule): CalculationNoteSection
     {
         $moments = $internalForces['bendingMoments'];
         $shears = $internalForces['shearForces'];
+        $atFixedEnd = $submodule === BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR;
+        $momentLabel = $atFixedEnd ? 'Moment ELU MEd à l’encastrement' : 'Moment ELU MEd';
+        $shearLabel = $atFixedEnd ? 'Effort tranchant ELU VEd à l’encastrement' : 'Effort tranchant ELU VEd';
 
         return new CalculationNoteSection('internalForces', 'Sollicitations', [
-            $this->value('med', 'Moment ELU MEd', $moments->ultimate->maximumMoment, 'kN·m'),
-            $this->value('ved', 'Effort tranchant ELU VEd', $shears->ultimate->maximumAbsoluteShear, 'kN'),
+            $this->value('med', $momentLabel, $moments->ultimate->maximumMoment, 'kN·m'),
+            $this->value('ved', $shearLabel, $shears->ultimate->maximumAbsoluteShear, 'kN'),
             $this->value('mCharacteristic', 'Moment ELS caractéristique', $moments->characteristic->maximumMoment, 'kN·m'),
             $this->value('mFrequent', 'Moment ELS fréquent', $moments->frequent->maximumMoment, 'kN·m'),
             $this->value('mQuasiPermanent', 'Moment ELS quasi-permanent', $moments->quasiPermanent->maximumMoment, 'kN·m'),
@@ -155,8 +162,8 @@ final class BeamCalculationNoteMapper
             $this->value('vFrequent', 'Effort tranchant ELS fréquent', $shears->frequent->maximumAbsoluteShear, 'kN'),
             $this->value('vQuasiPermanent', 'Effort tranchant ELS quasi-permanent', $shears->quasiPermanent->maximumAbsoluteShear, 'kN'),
         ], [
-            new CalculationNoteStep('Moment fléchissant', $moments->ultimate->formula, result: $moments->ultimate->maximumMoment),
-            new CalculationNoteStep('Effort tranchant', $shears->ultimate->formula, result: $shears->ultimate->maximumAbsoluteShear),
+            new CalculationNoteStep($atFixedEnd ? 'Moment fléchissant à l’encastrement' : 'Moment fléchissant', $moments->ultimate->formula, result: $moments->ultimate->maximumMoment),
+            new CalculationNoteStep($atFixedEnd ? 'Effort tranchant à l’encastrement' : 'Effort tranchant', $shears->ultimate->formula, result: $shears->ultimate->maximumAbsoluteShear),
         ]);
     }
 
@@ -180,27 +187,14 @@ final class BeamCalculationNoteMapper
                 $this->value('asMinimum', 'Armature minimale As,min', $selected->minimumArea->requiredMinimum, 'mm²'),
                 $this->value('asProvided', 'Armature fournie As,prov', $selected->providedArea, 'mm²'),
             ]),
-            $this->verification($result->verifications->shearVerification, 'Cisaillement', 'kN', [
-                $this->value('ved', 'Effort tranchant VEd', $shear['concreteResistance']->designShearForce, 'kN'),
-                $this->value('vrdc', 'Résistance béton VRd,c', $shear['concreteResistance']->concreteShearResistance, 'kN'),
-                $this->value('aswPerLengthRequired', 'Asw/s requis', $shear['reinforcementDesign']->requiredShearReinforcementPerLength, 'mm²/mm'),
-                $this->value('aswPerLengthMinimum', 'Asw/s minimal', $shear['reinforcementDesign']->minimumShearReinforcementPerLength, 'mm²/mm'),
-                $this->value('vrds', 'Résistance des étriers VRd,s', $shear['recommendedStirrup']?->providedShearResistance, 'kN'),
-                $this->value('vrdmax', 'Résistance maximale VRd,max', $shear['maximumResistance']->maximumShearResistance, 'kN'),
-            ]),
+            $this->verification($result->verifications->shearVerification, 'Cisaillement', 'kN', $this->shearDetails($shear)),
             $this->verification($result->verifications->stressVerification, 'ELS — contraintes', 'MPa', [
                 $this->value('sectionModel', 'Modèle de section', $stress->sectionModel),
                 $this->value('governingCheck', 'Contrôle gouvernant', $stress->governingStressCheck),
                 $this->value('concreteCharacteristic', 'Contrainte béton ELS caractéristique', $stress->concreteCharacteristic->stress, 'MPa'),
                 $this->value('steelCharacteristic', 'Contrainte acier ELS caractéristique', $stress->steelCharacteristic->stress, 'MPa'),
             ]),
-            $this->verification($result->verifications->crackVerification, 'ELS — fissuration', 'mm', [
-                $this->value('wk', 'Ouverture de fissure wk', $crack->crackWidth, 'mm'),
-                $this->value('wkMax', 'Limite wk,max', $crack->crackWidthLimit, 'mm'),
-                $this->value('loadCombination', 'Combinaison', $crack->loadCombination),
-                $this->value('method', 'Méthode', $crack->sectionModel),
-                $this->value('srMax', 'Espacement maximal des fissures sr,max', $crack->maximumCrackSpacing, 'mm'),
-            ]),
+            $this->verification($result->verifications->crackVerification, 'ELS — fissuration', 'mm', $this->crackDetails($crack)),
             $this->verification($result->verifications->deflectionVerification, 'ELS — flèche simplifiée', null, [
                 $this->value('method', 'Méthode', $deflection->method->value),
                 $this->value('actualSpanDepthRatio', 'Rapport l/d réel', $deflection->actualSpanDepthRatio),
@@ -216,15 +210,18 @@ final class BeamCalculationNoteMapper
         $longitudinalLabel = $summary->source === BeamLongitudinalReinforcementSource::PROVIDED
             ? 'Ferraillage longitudinal fourni'
             : 'Ferraillage longitudinal proposé';
+        $position = $summary->position;
+        $positionLabel = $position === BeamReinforcementPosition::TOP ? 'Partie supérieure' : 'Partie inférieure';
         $reinforcement = [new CalculationNoteReinforcement(
             'LONGITUDINAL',
-            $longitudinalLabel,
+            $longitudinalLabel.' — '.$positionLabel,
             null,
             $summary->barDiameter,
             $summary->barCount,
             providedArea: $summary->providedArea,
             requiredArea: $selected->requiredArea->requiredReinforcementArea,
             unit: 'mm²',
+            details: [$this->value('position', 'Position des armatures principales', $position->value)],
         )];
 
         if ($stirrup !== null) {
@@ -263,10 +260,15 @@ final class BeamCalculationNoteMapper
     /** @return list<CalculationNoteValue> */
     private function summary(BeamCalculationResponse $result): array
     {
+        $atFixedEnd = $result->summary->submodule === BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR;
+
         return [
+            $this->value('submodule', 'Type de poutre', $result->summary->submodule->value),
+            $this->value('supportSystem', 'Système statique', $result->summary->supportSystem->value),
             $this->value('utilization', 'Taux d’utilisation gouvernant', $result->summary->utilization),
             $this->value('governingVerification', 'Vérification gouvernante', $result->summary->governingVerificationType),
-            $this->value('med', 'Moment ELU MEd', $result->summary->designBendingMoment, 'kN·m'),
+            $this->value('med', $atFixedEnd ? 'Moment ELU MEd à l’encastrement' : 'Moment ELU MEd', $result->summary->designBendingMoment, 'kN·m'),
+            $this->value('ved', $atFixedEnd ? 'Effort tranchant ELU VEd à l’encastrement' : 'Effort tranchant ELU VEd', $result->summary->designShearForce, 'kN'),
             $this->value('effectiveDepth', 'Hauteur utile finale d', $result->summary->effectiveDepth, 'mm'),
             $this->value('asRequired', 'Armature requise As,req', $result->summary->requiredLongitudinalReinforcementArea, 'mm²'),
             $this->value('asProvided', 'Armature fournie As,prov', $result->summary->longitudinalReinforcement->providedArea, 'mm²'),
@@ -276,5 +278,66 @@ final class BeamCalculationNoteMapper
     private function value(string $key, string $label, string|int|float|bool|null $value, ?string $unit = null): CalculationNoteValue
     {
         return new CalculationNoteValue($key, $label, $value, $unit, CalculationNoteDisplayValue::french($value));
+    }
+
+    /** @param array<string, mixed> $shear @return list<CalculationNoteValue> */
+    private function shearDetails(array $shear): array
+    {
+        if (isset($shear['scope'])) {
+            $scope = $shear['scope'];
+
+            return [
+                $this->value('criticalSectionLocation', 'Section critique', $scope->criticalSectionLocation->value),
+                $this->value('criticalSectionPosition', 'Distance à l’encastrement', $scope->criticalSectionPosition, 'mm'),
+                $this->value('fixedEndVed', 'Effort tranchant VEd à l’encastrement', $scope->fixedEndDesignShearForce->maximumAbsoluteShear, 'kN'),
+                $this->value('controlVed', 'Effort tranchant VEd à la section critique', $scope->criticalSectionDesignShearForce->maximumAbsoluteShear, 'kN'),
+                $this->value('controlFormula', 'Formule de VEd à la section critique', $scope->criticalSectionFormula),
+                $this->value('vrdc', 'Résistance béton VRd,c', $shear['concreteResistance']->concreteShearResistance, 'kN'),
+                $this->value('vrdmax', 'Résistance maximale VRd,max à l’encastrement', $shear['maximumResistance']->maximumShearResistance, 'kN'),
+                $this->value('stirrup', 'Étrier recommandé', $shear['recommendedStirrup']?->providedShearResistance, 'kN'),
+            ];
+        }
+
+        return [
+            $this->value('ved', 'Effort tranchant VEd', $shear['concreteResistance']->designShearForce, 'kN'),
+            $this->value('vrdc', 'Résistance béton VRd,c', $shear['concreteResistance']->concreteShearResistance, 'kN'),
+            $this->value('aswPerLengthRequired', 'Asw/s requis', $shear['reinforcementDesign']->requiredShearReinforcementPerLength, 'mm²/mm'),
+            $this->value('aswPerLengthMinimum', 'Asw/s minimal', $shear['reinforcementDesign']->minimumShearReinforcementPerLength, 'mm²/mm'),
+            $this->value('vrds', 'Résistance des étriers VRd,s', $shear['recommendedStirrup']?->providedShearResistance, 'kN'),
+            $this->value('vrdmax', 'Résistance maximale VRd,max', $shear['maximumResistance']->maximumShearResistance, 'kN'),
+        ];
+    }
+
+    /** @return list<CalculationNoteValue> */
+    private function crackDetails(object $crack): array
+    {
+        return [
+            $this->value('serviceMoment', 'Moment ELS quasi-permanent utilisé', $crack->serviceMoment, 'kN·m'),
+            $this->value('tensionFace', 'Face tendue', $crack->tensionFace->value),
+            $this->value('position', 'Position des armatures principales', $crack->longitudinalReinforcementPosition->value),
+            $this->value('asProvided', 'Armature fournie As,prov', $crack->providedLongitudinalReinforcementArea, 'mm²'),
+            $this->value('barDiameter', 'Diamètre des armatures principales', $crack->barDiameter, 'mm'),
+            $this->value('transverseBarDiameter', 'Diamètre transversal utilisé pour la géométrie', $crack->transverseBarDiameter, 'mm'),
+            $this->value('coverToLongitudinalBar', 'Enrobage jusqu’aux armatures longitudinales', $crack->coverToLongitudinalBar, 'mm'),
+            $this->value('wk', 'Ouverture de fissure wk', $crack->crackWidth, 'mm'),
+            $this->value('wkMax', 'Limite wk,max', $crack->crackWidthLimit, 'mm'),
+            $this->value('loadCombination', 'Combinaison', $crack->loadCombination),
+            $this->value('method', 'Méthode', $crack->sectionModel),
+            $this->value('srMax', 'Espacement maximal des fissures sr,max', $crack->maximumCrackSpacing, 'mm'),
+        ];
+    }
+
+    private function submoduleLabel(BeamSubmodule $submodule): string
+    {
+        return $submodule === BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR
+            ? 'Poutre rectangulaire en console'
+            : 'Poutre rectangulaire simplement appuyée';
+    }
+
+    private function structuralHypotheses(BeamSubmodule $submodule): string
+    {
+        return $submodule === BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR
+            ? 'Section rectangulaire constante ; encastrement à une extrémité ; extrémité opposée libre ; charge uniformément répartie.'
+            : 'Section rectangulaire constante ; poutre simplement appuyée ; charge uniformément répartie.';
     }
 }

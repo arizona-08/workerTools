@@ -10,6 +10,7 @@ use App\StructuralCalculation\Beams\BeamServiceStressCheckStatus;
 use App\StructuralCalculation\Beams\BeamServiceStressVerificationCalculator;
 use App\StructuralCalculation\Beams\BeamServiceStressVerificationException;
 use App\StructuralCalculation\Beams\BeamSupportSystem;
+use App\StructuralCalculation\Beams\BeamTensionFace;
 use App\StructuralCalculation\Beams\LongitudinalBarDiameterSource;
 use App\StructuralCalculation\Eurocode\Profiles\FrenchEurocodeProfileRepository;
 use App\StructuralCalculation\Eurocode\Profiles\FundamentalUltimateCombinationExpression;
@@ -72,6 +73,30 @@ it('reports local concrete and steel stress exceedance and can remain explicitly
         ->and($r->concreteCharacteristic->status)->toBe(BeamServiceStressCheckStatus::NOT_COMPLIANT)
         ->and($r->steelCharacteristic->status)->toBe(BeamServiceStressCheckStatus::NOT_COMPLIANT)
         ->and(beamServiceStressVerificationCalculator()->notChecked()->status)->toBe(BeamServiceStressCheckStatus::NOT_CHECKED);
+});
+
+it('reuses the cracked-section stress engine for signed cantilever moments and top tension steel', function () {
+    $context = serviceStressContext();
+    $reference = FundamentalUltimateCombinationExpression::EN1990_6_10;
+    $cantileverMoments = new BeamBendingMomentResult(
+        4,
+        BeamSupportSystem::CANTILEVER,
+        BeamLoadModel::UNIFORMLY_DISTRIBUTED,
+        .5,
+        0,
+        serviceMoment(0, $reference),
+        serviceMoment(-68.65625, ServiceabilityCombinationExpression::EN1990_6_14),
+        serviceMoment(-60, ServiceabilityCombinationExpression::EN1990_6_15),
+        serviceMoment(-55.7171875, ServiceabilityCombinationExpression::EN1990_6_16),
+    );
+    $topDepth = new BeamEffectiveDepthResult(BeamCalculationMode::DESIGN, 600, 40, 8, 12, LongitudinalBarDiameterSource::CANDIDATE, 54, 546, BeamTensionFace::TOP);
+
+    $result = beamServiceStressVerificationCalculator()->calculate($cantileverMoments, $context['geometry'], $topDepth, $context['concrete'], $context['steel'], 4 * M_PI * 12 ** 2 / 4, $context['profile']);
+
+    expect($result->tensionFace)->toBe(BeamTensionFace::TOP)
+        ->and(abs($result->concreteCharacteristic->stress - 9.735994346529))->toBeLessThan(1e-12)
+        ->and($result->concreteCharacteristic->moment)->toBe(-68.65625)
+        ->and($result->status)->toBe(BeamServiceStressCheckStatus::COMPLIANT);
 });
 
 it('rejects invalid section data and unsupported compressed reinforcement explicitly', function () {

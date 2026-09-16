@@ -12,7 +12,7 @@ final readonly class BeamReinforcementCandidatesGenerator
         private BeamReinforcementProposalConfiguration $configuration,
     ) {}
 
-    public function generate(BeamRequiredReinforcementAreaResult $target): BeamReinforcementCandidatesResult
+    public function generate(BeamRequiredReinforcementAreaResult $target, BeamReinforcementPosition $position = BeamReinforcementPosition::BOTTOM): BeamReinforcementCandidatesResult
     {
         $this->ensureNonNegativeFinite($target->targetArea, BeamReinforcementCandidatesRejectionReason::INVALID_TARGET_AREA);
         $this->ensureConfiguration();
@@ -21,7 +21,7 @@ final readonly class BeamReinforcementCandidatesGenerator
         $candidates = [];
         foreach ($catalogue as $diameter) {
             for ($barCount = $this->configuration->minimumTensionBarCount; $barCount <= $this->configuration->maximumTensionBarCount; $barCount++) {
-                $reinforcement = new BeamLongitudinalReinforcement($barCount, $diameter);
+                $reinforcement = new BeamLongitudinalReinforcement($barCount, $diameter, position: $position);
                 if ($reinforcement->providedSteelArea < $target->targetArea) {
                     continue;
                 }
@@ -34,6 +34,7 @@ final readonly class BeamReinforcementCandidatesGenerator
                     targetArea: $target->targetArea,
                     excessArea: $reinforcement->providedSteelArea - $target->targetArea,
                     utilizationRatio: $target->targetArea / $reinforcement->providedSteelArea,
+                    position: $position,
                 );
             }
         }

@@ -8,6 +8,7 @@ import { Calculator } from './calculator';
 import { BeamForm } from '../../../features/calculator/forms/beam-form/beam-form';
 import { SlabForm } from '../../../features/calculator/forms/slab-form/slab-form';
 import { PdfDownloadService } from '../../../features/calculator/pdf-download.service';
+import { BeamMaterialCatalogService } from '../../../features/calculator/forms/beam-form/beam-material-catalog.service';
 
 describe('Calculator', () => {
   let component: Calculator;
@@ -25,7 +26,7 @@ describe('Calculator', () => {
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
     fixture.detectChanges();
   });
@@ -36,11 +37,39 @@ describe('Calculator', () => {
     expect(component).toBeTruthy();
   });
 
+  it('invalidates a displayed Beam result when the selected submodule changes without calling the backend', () => {
+    TestBed.inject(BeamMaterialCatalogService).setCatalog({
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'],
+      steelGrades: ['B500B'],
+      reinforcementBarDiameters: [12, 16],
+      exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      beamSubmodules: [
+        { id: 'BEAM_SIMPLE_RECTANGULAR', label: 'Poutre rectangulaire simplement appuyée', status: 'AVAILABLE', supportSystem: 'SIMPLY_SUPPORTED' },
+        { id: 'BEAM_CANTILEVER_RECTANGULAR', label: 'Poutre rectangulaire en console', status: 'AVAILABLE', supportSystem: 'CANTILEVER' },
+      ],
+    });
+    component.calculationResult.set({
+      summary: { utilization: 0.9, status: 'COMPLIANT', governingVerificationType: 'FLEXURE', designBendingMoment: 1, effectiveDepth: 1, requiredLongitudinalReinforcementArea: 1, longitudinalReinforcement: null },
+      verifications: {}, details: { overallStatus: 'COMPLIANT', ulsStatus: 'COMPLIANT', slsStatus: 'COMPLIANT', governingVerification: null, assumptions: {}, combinations: {}, internalForces: {}, flexure: {}, reinforcement: {}, shear: {}, serviceability: {}, warnings: [] },
+    });
+    fixture.detectChanges();
+
+    const form = fixture.debugElement.query(By.directive(BeamForm)).componentInstance as BeamForm;
+    form.selectSubmodule('BEAM_CANTILEVER_RECTANGULAR');
+    fixture.detectChanges();
+
+    expect(component.calculationResult()).toBeNull();
+    expect(component.lastSuccessfulBeamInput()).toBeNull();
+    expect(component.isBeamCalculationAvailable()).toBe(true);
+    expect((fixture.nativeElement.querySelector('[data-testid="bottom-calculate"]') as HTMLButtonElement).disabled).toBe(false);
+    http.expectNone('/api/beam/calculations');
+  });
+
   it('selects one module at a time', () => {
     component.handleModuleChange('Dalle');
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
 
     expect(component.selectedModule()).toBe('Dalle');
@@ -60,7 +89,7 @@ describe('Calculator', () => {
     component.handleModuleChange('Dalle');
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
     expect(component.calculationResult()).toBeNull();
     expect(fixture.debugElement.query(By.directive(SlabForm))).toBeTruthy();
@@ -70,7 +99,7 @@ describe('Calculator', () => {
     fixture.detectChanges();
     expect(fixture.debugElement.query(By.directive(BeamForm))).toBeTruthy();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
     http.expectNone('/api/beam/calculations');
   });
@@ -196,7 +225,7 @@ describe('Calculator', () => {
     component.handleModuleChange('Dalle');
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [12, 16], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
     const form = fixture.debugElement.query(By.directive(SlabForm)).componentInstance as SlabForm;
     form.geometryForm.setValue({ effectiveSpan: 5, thickness: 20 });

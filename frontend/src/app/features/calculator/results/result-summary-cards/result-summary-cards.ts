@@ -28,14 +28,21 @@ export class ResultSummaryCards {
   readonly cards = computed<readonly ResultMetricCardPresentation[]>(() => {
     const summary = this.summary();
     const reinforcement = summary.longitudinalReinforcement;
+    const isCantilever = summary.supportSystem === 'CANTILEVER';
 
     return [
       {
-        label: 'Moment de calcul',
+        label: isCantilever ? 'Moment à l’encastrement' : 'Moment de calcul',
         value: this.formatNumber(summary.designBendingMoment, 2),
         unit: summary.designBendingMoment === null ? undefined : 'kN·m',
         symbol: 'MEd',
       },
+      ...(isCantilever ? [{
+        label: 'Effort tranchant à l’encastrement',
+        value: this.formatNumber(summary.designShearForce ?? null, 2),
+        unit: summary.designShearForce === null || summary.designShearForce === undefined ? undefined : 'kN',
+        symbol: 'VEd',
+      }] : []),
       {
         label: 'Hauteur utile',
         value: this.formatNumber(summary.effectiveDepth, 0),
@@ -58,7 +65,7 @@ export class ResultSummaryCards {
     }
 
     return {
-      label: reinforcement.source === 'PROPOSED' ? 'Ferraillage proposé' : 'Ferraillage fourni',
+      label: `${reinforcement.source === 'PROPOSED' ? 'Ferraillage proposé' : 'Ferraillage fourni'} — ${reinforcement.position === 'TOP' ? 'partie supérieure' : 'partie inférieure'}`,
       value: `${reinforcement.barCount} HA${reinforcement.barDiameter}`,
       secondaryValue: `As = ${this.formatNumber(reinforcement.providedArea, 2)} mm²`,
     };

@@ -18,5 +18,6 @@ it('turns beam and slab rejection codes into actionable user messages', function
     'bar spacing' => ['LONGITUDINAL_SPACING_EXCEEDED', 'Les armatures ne peuvent pas être disposées dans la section en respectant les espacements requis.'],
     'provided reinforcement' => ['INSUFFICIENT_LONGITUDINAL_REINFORCEMENT', 'Les armatures fournies sont insuffisantes pour cette configuration.'],
     'unsupported method' => ['CALCULATION_METHOD_NOT_SUPPORTED', 'Cette configuration nécessite une méthode de calcul qui n’est pas encore prise en charge par WorkerTools.'],
+    'cantilever fixed end shear verification unsupported' => ['CANTILEVER_FIXED_END_SHEAR_VERIFICATION_NOT_SUPPORTED', 'La vérification du cisaillement au voisinage de l’encastrement de la console n’est pas encore prise en charge.'],
     'fallback' => ['UNEXPECTED_DOMAIN_FAILURE', 'Cette configuration ne peut pas être calculée dans le périmètre actuel. Vérifiez les données saisies et les hypothèses du calcul.'],
 ]);

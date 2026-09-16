@@ -13,6 +13,7 @@ final readonly class BeamLongitudinalReinforcement
         public int $tensionBarCount,
         public float $tensionBarDiameter,
         public int $tensionRebarLayers = 1,
+        public BeamReinforcementPosition $position = BeamReinforcementPosition::BOTTOM,
     ) {
         $this->providedSteelArea = $tensionBarCount * (new ReinforcementBarAreaCalculator)->calculate($tensionBarDiameter);
     }

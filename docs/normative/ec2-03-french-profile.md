@@ -46,7 +46,8 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | coefficient compression 7.16b | 1/12 | EC2 §7.4.2, conservé dans le profil ; `ρ' = 0` dans le V1 simplement armé |
 | facteur de référence `ρ0` | 0,001 | `ρ0 = sqrt(fck) × 10^-3`, EC2 §7.4.2 |
 | référence correction acier | 500 MPa | coefficient de l'expression simplifiée `500/fyk × As_prov/As_req` |
-| `K` simplement appuyé | 1,00 | seul facteur structural supporté pour BEAM-SLS-03 |
+| `K` simplement appuyé | 1,00 | EC2 §7.4.2, tableau 7.4N |
+| `K` console | 0,40 | EC2 §7.4.2, tableau 7.4N ; appliqué à la même méthode 7.16a/b avec la longueur de console et le lit TOP réel |
 | coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | `CRd,c` cisaillement | 0,12 | `0,18 / γc` avec `γc = 1,50`, valeur recommandée §6.2.2 retenue pour le V1 faute de divergence française accessible |
@@ -94,6 +95,7 @@ variables accompagnatrices ne sont pas implémentés dans ce profil V1.
 - EN 1992-1-1:2004, §7.2 (limitation des contraintes en service) ;
 - EN 1992-1-1:2004, §7.3.2 et §7.3.4 (aire efficace tendue et calcul direct de `wk`) ;
 - EN 1992-1-1:2004, §7.4.2, équations 7.16a et 7.16b (dispense de calcul explicite de flèche) ;
+- EN 1992-1-1:2004, §7.4.2, tableau 7.4N (`K = 0,4` pour les consoles) ;
 - NF EN 1992-1-1:2005 et NF EN 1992-1-1/NA:2016-03-24, qui retient la
   valeur recommandée pour `alphaCc` ;
 - NF EN 1992-1-1/NA/A1:2026-04-14, dont le contenu doit être consulté avant
@@ -147,11 +149,12 @@ variables accompagnatrices ne sont pas implémentés dans ce profil V1.
   éventuelle divergence de NF EN 1992-1-1/NA:2016 ou A1:2026 nécessite le
   texte normatif français exploitable.
 - Les paramètres BEAM-SLS-03 de la méthode `SIMPLIFIED_SPAN_DEPTH` sont
-  centralisés dans `BeamDeflectionRequirements`. Le modèle est limité à la
-  poutre rectangulaire simplement appuyée et aux sections simplement armées;
-  aucun facteur pour systèmes continus, consoles, dalles, cloisons fragiles ou
-  acier comprimé n'est interpolé. La même réserve nationale 2016/A1:2026 reste
-  applicable faute de texte français exploitable établissant une divergence.
+  centralisés dans `BeamDeflectionRequirements`. Le modèle couvre la poutre
+  rectangulaire simplement appuyée (`K = 1,0`) et la console rectangulaire
+  (`K = 0,4`) en section simplement armée. Les systèmes continus, dalles,
+  cloisons fragiles et acier comprimé ne sont pas interpolés. La même réserve
+  nationale 2016/A1:2026 reste applicable faute de texte français exploitable
+  établissant une divergence.
 - Pour SLAB-09, `SlabReinforcementRequirements` centralise les dispositions
   générales d'EN 1992-1-1:2004 §9.3.1.1 : armature transverse secondaire au
   moins égale à 20 % de l'armature principale, et espacement général limité à

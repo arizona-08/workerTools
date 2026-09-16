@@ -59,6 +59,22 @@ describe('ResultSummaryCards', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Ferraillage proposé');
   });
 
+  it('states that cantilever longitudinal reinforcement is positioned at the top', () => {
+    fixture.componentRef.setInput('summary', {
+      ...referenceSummary,
+      submodule: 'BEAM_CANTILEVER_RECTANGULAR',
+      supportSystem: 'CANTILEVER',
+      designShearForce: 42.75,
+      longitudinalReinforcement: { ...referenceSummary.longitudinalReinforcement!, position: 'TOP' },
+    });
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('partie supérieure');
+    expect(fixture.nativeElement.textContent).toContain('Moment à l’encastrement');
+    expect(fixture.nativeElement.textContent).toContain('Effort tranchant à l’encastrement');
+    expect(fixture.nativeElement.textContent).toContain('42,75');
+  });
+
   it('keeps missing values explicit rather than replacing them with zero', () => {
     fixture.componentRef.setInput('summary', {
       designBendingMoment: null,

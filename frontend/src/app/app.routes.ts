@@ -1,9 +1,6 @@
 import { Routes } from '@angular/router';
 import { PublicLayout } from './layouts/public-layout/public-layout';
-import { AuthLayout } from './layouts/auth-layout/auth-layout';
 import { MainAppLayout } from './layouts/main-app-layout/main-app-layout';
-import { Login } from './pages/app/auth/login/login';
-import { Register } from './pages/app/auth/register/register';
 import { Dashboard } from './pages/app/dashboard/dashboard';
 import { Calculator } from './pages/app/calculator/calculator';
 
@@ -14,27 +11,29 @@ export const routes: Routes = [
     component: PublicLayout,
   },
 
-  // Pages Auth
+  // L'authentification est prête mais volontairement indisponible dans le V1 public.
+  // Les composants et services sont conservés pour sa réactivation ultérieure.
   {
     path: 'auth',
-    component: AuthLayout,
     children: [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'login',
+        redirectTo: '/app/dashboard',
       },
       {
         path: 'login',
-        component: Login,
-        title: 'Connexion'
+        redirectTo: '/app/dashboard',
       },
       {
         path: 'register',
-        component: Register,
-        title: 'Inscription'
-      }
-    ]
+        redirectTo: '/app/dashboard',
+      },
+      {
+        path: '**',
+        redirectTo: '/app/dashboard',
+      },
+    ],
   },
 
   // Pages Application

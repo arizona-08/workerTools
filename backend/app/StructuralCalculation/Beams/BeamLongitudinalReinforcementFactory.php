@@ -14,6 +14,7 @@ final readonly class BeamLongitudinalReinforcementFactory
         mixed $tensionBarCount = null,
         mixed $tensionBarDiameter = null,
         mixed $tensionRebarLayers = 1,
+        BeamReinforcementPosition $position = BeamReinforcementPosition::BOTTOM,
     ): ?BeamLongitudinalReinforcement {
         if ($mode === BeamCalculationMode::DESIGN) {
             if ($tensionBarCount !== null || $tensionBarDiameter !== null || $tensionRebarLayers !== 1) {
@@ -38,6 +39,6 @@ final readonly class BeamLongitudinalReinforcementFactory
             throw new BeamLongitudinalReinforcementException(BeamLongitudinalReinforcementRejectionReason::UNSUPPORTED_TENSION_REBAR_LAYERS);
         }
 
-        return new BeamLongitudinalReinforcement((int) $tensionBarCount, (float) $tensionBarDiameter);
+        return new BeamLongitudinalReinforcement((int) $tensionBarCount, (float) $tensionBarDiameter, position: $position);
     }
 }

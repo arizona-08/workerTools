@@ -13,6 +13,7 @@ final class BeamEffectiveDepthCalculator
         CoverCalculationResult $cover,
         BeamFlexuralDetailingAssumptions $detailing,
         ?BeamLongitudinalReinforcement $reinforcement = null,
+        BeamTensionFace $tensionFace = BeamTensionFace::BOTTOM,
     ): BeamEffectiveDepthResult {
         $this->ensurePositiveFinite($geometry->height, BeamEffectiveDepthRejectionReason::INVALID_OVERALL_DEPTH);
         $this->ensureCover($cover);
@@ -35,6 +36,7 @@ final class BeamEffectiveDepthCalculator
             longitudinalBarDiameterSource: $diameterSource,
             tensionSteelCentroidOffset: $centroidOffset,
             effectiveDepth: $effectiveDepth,
+            tensionFace: $tensionFace,
         );
     }
 
@@ -44,6 +46,7 @@ final class BeamEffectiveDepthCalculator
         CoverCalculationResult $cover,
         BeamFlexuralDetailingAssumptions $detailing,
         float $candidateDiameter,
+        BeamTensionFace $tensionFace = BeamTensionFace::BOTTOM,
     ): BeamEffectiveDepthResult {
         $this->ensurePositiveFinite($geometry->height, BeamEffectiveDepthRejectionReason::INVALID_OVERALL_DEPTH);
         $this->ensureCover($cover);
@@ -65,6 +68,7 @@ final class BeamEffectiveDepthCalculator
             longitudinalBarDiameterSource: LongitudinalBarDiameterSource::CANDIDATE,
             tensionSteelCentroidOffset: $centroidOffset,
             effectiveDepth: $effectiveDepth,
+            tensionFace: $tensionFace,
         );
     }
 

@@ -19,6 +19,7 @@ final class CalculationFailureMessage
     private function forReason(string $reason): string
     {
         return match (true) {
+            $reason === 'CANTILEVER_FIXED_END_SHEAR_VERIFICATION_NOT_SUPPORTED' => 'La vérification du cisaillement au voisinage de l’encastrement de la console n’est pas encore prise en charge.',
             $reason === 'NO_VALID_LONGITUDINAL_REINFORCEMENT_CANDIDATE' => 'Aucune disposition d’armatures longitudinales compatible avec cette section et les armatures requises n’a été trouvée.',
             $reason === 'NO_VALID_STIRRUP_CANDIDATE' => 'Aucune disposition d’étriers compatible avec cette section et l’effort tranchant n’a été trouvée.',
             $reason === 'MAXIMUM_SHEAR_RESISTANCE_EXCEEDED', $reason === 'SHEAR_RESISTANCE_INSUFFICIENT' => 'L’effort tranchant est trop important pour cette section dans le périmètre de calcul actuel.',

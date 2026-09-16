@@ -17,5 +17,6 @@ final readonly class BeamReinforcementProposalCandidate
         public float $targetArea,
         public float $excessArea,
         public float $utilizationRatio,
+        public BeamReinforcementPosition $position = BeamReinforcementPosition::BOTTOM,
     ) {}
 }

@@ -37,6 +37,18 @@ describe('CalculationDetailsAccordion', () => {
     expect(fixture.nativeElement.textContent).toContain('Méthode simplifiée de déformation.');
   });
 
+  it('makes cantilever method limitations explicit in French', () => {
+    fixture.componentRef.setInput('details', {
+      ...referenceDetails,
+      warnings: ['CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED'],
+    });
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('La section critique de cisaillement à l’encastrement n’est pas encore modélisée.');
+    expect(text).not.toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED');
+  });
+
   it('opens an accordion through its native button and displays backend detail values without recomputing them', () => {
     const actionsButton = fixture.nativeElement.querySelectorAll('button')[1] as HTMLButtonElement;
     actionsButton.click();

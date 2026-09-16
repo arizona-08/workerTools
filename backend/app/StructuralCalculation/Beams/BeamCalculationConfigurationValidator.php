@@ -18,7 +18,8 @@ final readonly class BeamCalculationConfigurationValidator
         $this->ensure($configuration->elementType === ElementType::BEAM, BeamConfigurationRejectionReason::UNSUPPORTED_ELEMENT_TYPE);
         $this->ensure($configuration->materialType === MaterialType::REINFORCED_CONCRETE, BeamConfigurationRejectionReason::UNSUPPORTED_MATERIAL_TYPE);
         $this->ensure($configuration->sectionType === BeamSectionType::RECTANGULAR, BeamConfigurationRejectionReason::UNSUPPORTED_SECTION_TYPE);
-        $this->ensure($configuration->supportSystem === BeamSupportSystem::SIMPLY_SUPPORTED, BeamConfigurationRejectionReason::UNSUPPORTED_SUPPORT_SYSTEM);
+        $this->ensure(in_array($configuration->supportSystem, [BeamSupportSystem::SIMPLY_SUPPORTED, BeamSupportSystem::CANTILEVER], true), BeamConfigurationRejectionReason::UNSUPPORTED_SUPPORT_SYSTEM);
+        $this->ensure($configuration->supportSystem === $configuration->submodule->supportSystem(), BeamConfigurationRejectionReason::INCONSISTENT_BEAM_SUBMODULE_SUPPORT_SYSTEM);
         $this->ensure($configuration->loadModel === BeamLoadModel::UNIFORMLY_DISTRIBUTED, BeamConfigurationRejectionReason::UNSUPPORTED_LOAD_MODEL);
         $this->ensure($configuration->designSituation === DesignSituation::PERSISTENT_TRANSIENT, BeamConfigurationRejectionReason::UNSUPPORTED_DESIGN_SITUATION);
         $this->ensure(

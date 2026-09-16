@@ -84,7 +84,7 @@ final class BeamDeflectionVerificationCalculator
     {
         if ($configuration->materialType !== MaterialType::REINFORCED_CONCRETE
             || $configuration->sectionType !== BeamSectionType::RECTANGULAR
-            || $configuration->supportSystem !== BeamSupportSystem::SIMPLY_SUPPORTED
+            || ! in_array($configuration->supportSystem, [BeamSupportSystem::SIMPLY_SUPPORTED, BeamSupportSystem::CANTILEVER], true)
             || $candidate->status === BeamReinforcementCandidateRecalculationStatus::INVALID_SINGLY_REINFORCED_DOMAIN) {
             throw new BeamDeflectionVerificationException(BeamDeflectionVerificationRejectionReason::CALCULATION_METHOD_NOT_SUPPORTED);
         }

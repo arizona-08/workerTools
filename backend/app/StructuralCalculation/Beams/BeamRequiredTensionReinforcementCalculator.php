@@ -14,11 +14,12 @@ final readonly class BeamRequiredTensionReinforcementCalculator
         BeamFlexuralSteelDesignStrength $steelDesignStrength,
         BeamLeverArmResult $leverArm,
     ): BeamRequiredTensionReinforcementResult {
-        $this->ensureNonNegativeFinite($ultimateMoment->maximumMoment, BeamRequiredTensionReinforcementRejectionReason::INVALID_DESIGN_MOMENT);
+        $designMomentMagnitude = $ultimateMoment->magnitude();
+        $this->ensureNonNegativeFinite($designMomentMagnitude, BeamRequiredTensionReinforcementRejectionReason::INVALID_DESIGN_MOMENT);
         $this->ensurePositiveFinite($steelDesignStrength->fyd, BeamRequiredTensionReinforcementRejectionReason::INVALID_STEEL_DESIGN_STRENGTH);
         $this->ensurePositiveFinite($leverArm->leverArm, BeamRequiredTensionReinforcementRejectionReason::INVALID_LEVER_ARM);
 
-        $designMomentInNewtonMillimetres = $this->momentConverter->kilonewtonMetresToNewtonMillimetres($ultimateMoment->maximumMoment);
+        $designMomentInNewtonMillimetres = $this->momentConverter->kilonewtonMetresToNewtonMillimetres($designMomentMagnitude);
         $steelLeverArmProduct = $steelDesignStrength->fyd * $leverArm->leverArm;
         $this->ensurePositiveFinite($steelLeverArmProduct, BeamRequiredTensionReinforcementRejectionReason::INVALID_STEEL_LEVER_ARM_PRODUCT);
 
@@ -26,12 +27,13 @@ final readonly class BeamRequiredTensionReinforcementCalculator
         $this->ensureNonNegativeFinite($requiredReinforcementArea, BeamRequiredTensionReinforcementRejectionReason::INVALID_REQUIRED_REINFORCEMENT_AREA);
 
         return new BeamRequiredTensionReinforcementResult(
-            designMoment: $ultimateMoment->maximumMoment,
+            designMoment: $designMomentMagnitude,
             designMomentInNewtonMillimetres: $designMomentInNewtonMillimetres,
             steelDesignStrength: $steelDesignStrength->fyd,
             leverArm: $leverArm->leverArm,
             steelLeverArmProduct: $steelLeverArmProduct,
             requiredReinforcementArea: $requiredReinforcementArea,
+            signedDesignMoment: $ultimateMoment->maximumMoment,
         );
     }
 

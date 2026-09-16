@@ -16,7 +16,7 @@ describe('SlabForm', () => {
     http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
     http.expectOne('/api/beam/material-catalog').flush({
-      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [8, 10], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      concreteClasses: ['C20/25', 'C25/30', 'C30/37'], steelGrades: ['B500B'], reinforcementBarDiameters: [8, 10], exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }], beamSubmodules: [],
     });
     fixture.detectChanges();
   });

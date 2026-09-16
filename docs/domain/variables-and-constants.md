@@ -119,7 +119,10 @@ d'une valeur métier reconnue mais non supportée.
 | `elementType` | `ElementType::BEAM` | FIXED_SCOPE | élément configuré ; enum partagé avec le module Dalle | — |
 | `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_SCOPE | matériau structurel du V1 ; enum partagé avec le module Dalle, sans béton précontraint, acier, bois ou béton non armé | — |
 | `sectionType` | `RECTANGULAR` supporté ; `T_SECTION`, `L_SECTION`, `VARIABLE`, `CIRCULAR` reconnus mais refusés | FIXED_SCOPE | type de section. La valeur détermine plus tard les champs de géométrie, sans les créer ici | — |
-| `supportSystem` | `SIMPLY_SUPPORTED` supporté ; `CONTINUOUS`, `CANTILEVER`, `FIXED_ENDED`, `MULTI_SPAN` refusés | FIXED_SCOPE | système statique ; aucun calcul d'effort n'est effectué | — |
+| `BeamSubmodule` / `submodule` | `BEAM_SIMPLE_RECTANGULAR`, `BEAM_CANTILEVER_RECTANGULAR` | USER / DERIVED | identifie le cas de calcul Poutre, distinct de `elementType = BEAM`. Le cas simple reste le défaut des anciennes requêtes sans sous-module ; la console porte une analyse statique et une chaîne de flexion longitudinale avant les vérifications ultérieures. | — |
+| `BeamSubmoduleStatus` / `status` | `AVAILABLE`, `COMING_SOON`, `UNAVAILABLE` | PRODUCT | disponibilité produit du sous-module. `AVAILABLE` est utilisable lorsque le routage et le moteur associés existent ; `COMING_SOON` et `UNAVAILABLE` sont connus mais non utilisables. Ce statut ne contient aucune règle de calcul. | — |
+| `BeamSubmoduleCatalog` | exactement `BEAM_SIMPLE_RECTANGULAR` et `BEAM_CANTILEVER_RECTANGULAR`, tous deux `AVAILABLE` | PRODUCT | catalogue backend exposé avec `id`, `label`, `status`, `supportSystem` par `/api/beam/material-catalog`. Il réutilise le mapping `BeamSubmodule → BeamSupportSystem`; aucune formule, donnée normative ou logique de calcul n'y est stockée. | — |
+| `supportSystem` / `BeamSupportSystem` | `SIMPLY_SUPPORTED`, `CANTILEVER` ; autres systèmes conceptuellement reconnus mais refusés | DERIVED | système structural explicite, distinct du sous-module. Les associations valides sont `BEAM_SIMPLE_RECTANGULAR → SIMPLY_SUPPORTED` et `BEAM_CANTILEVER_RECTANGULAR → CANTILEVER`. Seule la première est calculable actuellement ; aucune formule de console n'est introduite par BEAM-SUB-01. | — |
 | `loadModel` | `UNIFORMLY_DISTRIBUTED` supporté ; `POINT_LOAD`, `TRIANGULAR`, `APPLIED_MOMENT` refusés | FIXED_SCOPE | modèle de chargement qui déterminera ultérieurement les données à saisir | — |
 | `designCodeProfile` | `NF_EN_1992_1_1_2005_FR` | PROFILE | référence au profil `FrenchEurocodeProfileRepository`, sans duplication de `γ`, `α` ou `ψ` | — |
 | `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_SCOPE | situation persistante/transitoire du V1 ; enum partagé avec le module Dalle, accidentelle et sismique absentes | — |
@@ -128,6 +131,127 @@ d'une valeur métier reconnue mais non supportée.
 Référence de contexte : EN 1990 pour la situation de projet et EN 1992-1-1
 pour le calcul des structures en béton. Ces normes ne sont pas encore évaluées
 par BEAM-01 ; elles sont seulement référencées par la configuration.
+
+## Routage des analyses Poutre BEAM-SUB-04
+
+`BeamCalculationOrchestrator` est le point de routage unique : il conserve un
+seul pipeline Beam et délègue uniquement l'analyse structurelle dépendante du
+sous-module.
+
+```text
+BEAM
+├── BEAM_SIMPLE_RECTANGULAR
+│   └── pipeline Simply Supported existant
+└── BEAM_CANTILEVER_RECTANGULAR
+    └── analyse statique, flexion longitudinale et cisaillement à la section EC2 située à d de l'encastrement
+```
+
+Les matériaux, actions, combinaisons, flexion, ferraillage, cisaillement, ELS,
+conformité et résultats restent des services communs. Aucune formule de console
+ni position d'armature de console n'est introduite par ce routage. Une requête
+sans `submodule` reste associée à `BEAM_SIMPLE_RECTANGULAR` pour compatibilité.
+
+## Configuration Poutre console BEAM-CANT-01
+
+`BEAM_CANTILEVER_RECTANGULAR` réutilise le même `BeamCalculationInput` que la
+poutre simplement appuyée. Il impose la correspondance centrale
+`submodule → supportSystem` : une console doit donc avoir
+`supportSystem = CANTILEVER`; la combinaison avec `SIMPLY_SUPPORTED` est
+refusée. Le profil normatif, les matériaux, actions permanentes et variables,
+combinaisons et unités restent communs.
+
+| Concept | Origine | Signification et limite |
+|---|---|---|
+| `L` / `geometry.effectiveSpan` | USER | pour une console, distance efficace entre l'encastrement et l'extrémité libre utilisée par le futur modèle analytique ; saisie UI en `m`, valeur interne en `mm` |
+| section | FIXED_SCOPE | rectangulaire et constante sur toute la longueur ; sections T, L, circulaires ou variables absentes |
+| charges | USER / PROFILE | poids propre optionnel, charge permanente additionnelle et une charge variable principale de catégorie A, uniformément répartis sur toute la console |
+| système structural | DERIVED | une console avec un encastrement et une extrémité libre ; aucune charge ponctuelle, triangulaire, partielle ou moment appliqué |
+
+Le mode `DESIGN` ou `VERIFICATION` et les validations communes de géométrie,
+matériaux et charges restent portés par le formulaire partagé. La flexion et la
+proposition longitudinale sont communes depuis BEAM-CANT-03. Le cisaillement
+ELU est vérifié depuis BEAM-CANT-04A ; les contrôles ELS de fissuration et de
+déformation simplifiée réutilisent les moteurs communs.
+
+## Analyse structurale Poutre console BEAM-CANT-02
+
+`CantileverBeamBendingMomentCalculator` et
+`CantileverBeamShearForceCalculator` reçoivent exclusivement les charges
+linéiques issues des combinaisons communes. Ils ne calculent ni `γ`, ni `ψ`, ni
+combinaison d'action. Le chargement est uniformément réparti sur toute la
+longueur `L` et les maximums sont à l'encastrement (`x = 0`).
+
+| Grandeur | Formule | Unité | Combinaisons |
+|---|---|---|---|
+| `MEd`, `MCharacteristic`, `MFrequent`, `MQuasiPermanent` | `Menc = -w × L² / 2` | kN·m | ELU, ELS caractéristique, fréquente, quasi-permanente |
+| `VEd`, `VCharacteristic`, `VFrequent`, `VQuasiPermanent` | `Venc = w × L` | kN | ELU, ELS caractéristique, fréquente, quasi-permanente |
+
+Le moment d'encastrement est conservé signé (négatif sous charges gravitaires
+vers le bas). Les équations de résistance emploient sa magnitude `|MEd|`, sans
+perdre le moment signé qui détermine la face tendue. Les vérifications ELS non
+couvertes restent explicitement `CALCULATION_METHOD_NOT_SUPPORTED`.
+
+## Cisaillement console BEAM-CANT-04A
+
+| Nom | Valeur / origine | Rôle et limite | Unité |
+|---|---|---|---|
+| `fixedEndDesignShearForce` | `VEd,enc` | DERIVED | effort maximal conservé à l'encastrement : `wEd × L` | kN |
+| `criticalSectionPosition` | `x_shear = d` | DERIVED | distance de la section EC2 depuis la face de l'encastrement, égale à la hauteur utile réelle | mm |
+| `criticalSectionDesignShearForce` | `VEd,control` | DERIVED | effort de contrôle UDL : `wEd × (L - d)` ; ne remplace pas `VEd,enc` | kN |
+| `BeamShearCriticalSectionLocation::EFFECTIVE_DEPTH_FROM_FIXED_END` | — | DERIVED | identifie explicitement la section de contrôle à une hauteur utile de l'encastrement | — |
+| `CantileverBeamShearVerificationScopeResult` | — | DERIVED | conserve les deux efforts, la position/formule et `Asl` réellement sélectionnée en `TOP` | unités explicites |
+
+EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §6.2.1(8), applicable au chargement
+uniformément réparti V1, place le contrôle à `d` de la face d'appui. WorkerTools
+calcule donc `VEd(d) = wEd × (L - d)` avec `0 < d < L`, puis réutilise sans
+dupliquer les calculateurs `VRd,c`, `Asw/s`, proposition d'étriers et
+`VRd,max`. Les étriers requis à `d` sont prolongés jusqu'à l'encastrement ; le
+contrôle `VRd,max` conserve `VEd,enc = wEd × L`. L'ancrage des armatures TOP,
+les charges non UDL, corbeaux et autres régions de discontinuité restent hors
+du domaine couvert.
+
+## ELS console BEAM-CANT-05
+
+| Concept | Origine | Comportement console |
+|---|---|---|
+| `MCharacteristic`, `MFrequent`, `MQuasiPermanent` | BEAM-CANT-02 / DERIVED | moments ELS signés à l'encastrement ; la section fissurée utilise leur magnitude et conserve le signe dans la trace |
+| `BeamServiceStressVerificationResult.tensionFace` | DERIVED | `TOP` pour la console ; la géométrie utile est mesurée depuis la face comprimée inférieure jusqu'aux aciers tendus supérieurs |
+| Contraintes ELS | BEAM-SLS-01 commun | applicables à la section rectangulaire fissurée symétrique : même moteur, `d` et `As_prov` réels de la proposition TOP |
+| `BeamCrackVerificationResult.serviceMoment` | `M_ELS,qp` | DERIVED | moment quasi-permanent réutilisé depuis les contraintes ELS ; le signe est conservé, sa magnitude sert aux contraintes de fissuration | kN·m |
+| `BeamCrackVerificationResult.tensionFace` / `longitudinalReinforcementPosition` | — | DERIVED | `TOP` pour la console chargée vers le bas ; rend la face et le lit réellement employés vérifiables | — |
+| `providedLongitudinalReinforcementArea`, `barDiameter`, `barCount` | `As,prov`, `φ`, `n` | DERIVED | ferraillage longitudinal principal réel sélectionné par la flexion ; aucune nappe inférieure ni aire théorique n'est substituée | mm², mm, — |
+| `coverToLongitudinalBar` | `c` | DERIVED | `c_nom + φ_st`, jusqu'à la surface des barres tendues ; `φ_st` vient de l'étrier proposé s'il existe, sinon du diamètre transversal déjà porté par `d` | mm |
+| `effectiveReinforcementRatio`, `maximumCrackSpacing`, `strainDifference` | `ρp,eff`, `sr,max`, `εsm - εcm` | DERIVED | intermédiaires de la méthode directe EC2 §7.3.4, tracés sans calcul frontend | —, mm, — |
+| `crackWidth`, `crackWidthLimit`, `utilization` | `wk`, `wk,max`, `wk/wk,max` | DERIVED / PROFILE | résultat, limite du profil et taux de fissuration ; XC1 seulement dans le V1 | mm, mm, — |
+| Fissuration directe | BEAM-CANT-05A / DERIVED | réutilise le calculateur commun avec le lit TOP réel, sans dépendance artificielle à une proposition d'étriers | — |
+| `L` / `effectiveSpan` | `l_eff` | USER → DERIVED | longueur efficace de la console, entre encastrement et extrémité libre ; elle est utilisée directement, sans doublement artificiel | mm |
+| `d` / `effectiveDepth` | `d` | DERIVED | hauteur utile issue du lit longitudinal principal réel `TOP`, déjà déterminée par BEAM-CANT-03 ; aucune seconde profondeur utile n'est créée | mm |
+| `structuralFactor` | `K` | PROFILE | facteur structural EC2 §7.4.2, tableau 7.4N : `CANTILEVER → 0,4`, distinct de `SIMPLY_SUPPORTED → 1,0` | sans dimension |
+| `actualSpanDepthRatio` | `L/d` | DERIVED | rapport réel de la console, calculé avec `L` et le `d` TOP réutilisés | sans dimension |
+| `allowableSpanDepthRatio` | `(L/d)_adm` | DERIVED | limite de la méthode commune, obtenue par les expressions 7.16a/b et le facteur `K` du profil | sans dimension |
+| `utilization` | `(L/d)/(L/d)_adm` | DERIVED | taux de vérification ; `≤ 1` est conforme pour cette méthode simplifiée | sans dimension |
+
+Les limites de fissuration restent celles du profil (`XC1 → 0,4 mm` seulement)
+et ne sont pas étendues. Une proposition d'étriers peut préciser la géométrie
+du lit, mais n'est plus une condition de disponibilité de `wk`. La déformation
+console emploie la dispense simplifiée `L/d` uniquement : aucune flèche en mm,
+aucun fluage, retrait, acier comprimé ou contrôle de cloisons fragiles n'est
+ajouté.
+
+## Face tendue et position des armatures Poutre BEAM-CANT-03
+
+| Nom | Valeurs | Origine | Rôle |
+|---|---|---|---|
+| `BeamTensionFace` / `tensionFace` | `TOP`, `BOTTOM` | DERIVED | face où sont les armatures longitudinales tendues ; `BEAM_SIMPLE_RECTANGULAR → BOTTOM`, `BEAM_CANTILEVER_RECTANGULAR → TOP` |
+| `BeamReinforcementPosition` / `position` | `TOP`, `BOTTOM` | DERIVED | position explicite du lit principal sur chaque candidat et dans le résumé de ferraillage ; elle ne doit pas être déduite par l'UI depuis le sous-module |
+| `BeamBendingMoment.maximumMoment` | `MEd` signé | DERIVED | moment structural signé ; une console chargée vers le bas produit un moment négatif à l'encastrement |
+| `BeamBendingMoment.magnitude()` | `|MEd|` | DERIVED | magnitude transmise aux équations communes de résistance `μEd` et `As_req` |
+
+Pour une section rectangulaire symétrique, avec mêmes enrobages et un seul lit,
+la valeur numérique de `d` est identique en face supérieure ou inférieure. Le
+résultat `BeamEffectiveDepthResult` conserve néanmoins la `tensionFace`. Le
+mode VERIFICATION interprète l'armature fournie sur la face imposée par le
+sous-module ; aucune cage multi-lit n'est introduite.
 
 ## Configuration Dalle SLAB-01
 
@@ -558,11 +682,12 @@ EC2 n'est produit.
 | `BeamLongitudinalReinforcement.tensionBarDiameter` | `φ_long` | entrée validée / USER | diamètre réellement fourni en mode VERIFICATION ; un unique lit est requis | mm |
 | `LongitudinalBarDiameterSource` | — | DERIVED | `CONFIG` en DESIGN, `USER` en VERIFICATION ; trace la provenance du diamètre utilisé | — |
 | `tensionSteelCentroidOffset` | `a_s` | valeur dérivée / DERIVED | distance entre la face tendue et le centre du lit tendu : `c_nom + φ_st + φ_long / 2` | mm |
-| `effectiveDepth` | `d` | valeur dérivée / DERIVED | distance entre la fibre comprimée supérieure et le centre du lit tendu : `h - c_nom - φ_st - φ_long / 2` | mm |
+| `effectiveDepth` | `d` | valeur dérivée / DERIVED | distance entre la fibre comprimée (opposée à `tensionFace`) et le centre du lit tendu : `h - c_nom - φ_st - φ_long / 2` | mm |
 | `BeamEffectiveDepthResult` | — | résultat traçable / DERIVED | conserve mode, `h`, `c_nom`, diamètres, source, `a_s`, `d` et formule, sans calcul de résistance | mm |
 
-Sous le moment positif de travée V1, la compression est en face supérieure et
-la traction en face inférieure : `d` est donc mesuré depuis la face supérieure.
+Sous le moment positif de travée, la compression est en face supérieure et la
+traction en face inférieure ; sous le moment négatif de console, ces faces sont
+inversées. `d` est toujours mesuré depuis la fibre comprimée.
 Le calculateur exige `h > 0`, `c_nom ≥ 0`, des diamètres positifs et `d > 0`.
 Il est limité à un seul lit de barres longitudinales tendues. DESIGN utilise
 l'hypothèse configurable `φ_long,design`; VERIFICATION utilise le diamètre
@@ -593,7 +718,7 @@ EC2-03 existants.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamBendingMoment.maximumMoment` | `MEd` | résultat BEAM-CALC-05 / DERIVED | moment ELU positif en travée, réutilisé sans recalcul | kN·m |
+| `BeamBendingMoment.maximumMoment` | `MEd` signé | résultat BEAM-CALC-05 / BEAM-CANT-02 / DERIVED | moment ELU signé, réutilisé sans recalcul | kN·m |
 | `MomentConverter::NEWTON_MILLIMETRES_PER_KILONEWTON_METRE` | `10⁶` | conversion d'unité / CONFIG | facteur nommé de conversion `1 kN·m = 1 000 000 N·mm` | N·mm / kN·m |
 | `designMomentInNewtonMillimetres` | `MEd_Nmm` | conversion d'unité / DERIVED | `MEd × 10⁶`, employé pour homogénéiser les unités de section | N·mm |
 | `sectionWidth` | `b` | entrée validée / USER | largeur `BeamGeometry.width`, sans substitution par une autre dimension | mm |
@@ -603,8 +728,9 @@ EC2-03 existants.
 | `reducedDesignMoment` | `μEd` | valeur dérivée / DERIVED | moment réduit `MEd_Nmm / (b × d² × fcd)` | sans dimension |
 | `BeamReducedMomentResult` | — | résultat traçable / DERIVED | conserve toutes les entrées normalisées et `μEd`, sans limite ni statut de domaine | unités explicites |
 
-`BeamReducedMomentCalculator` accepte `MEd ≥ 0`, `b > 0`, `d > 0` et
-`fcd > 0`; un moment négatif n'est pas converti en valeur absolue. Cette étape
+`BeamReducedMomentCalculator` accepte un `MEd` fini, `b > 0`, `d > 0` et
+`fcd > 0`; il conserve `signedDesignMoment` et utilise `|MEd|` pour la
+résistance. Cette étape
 n'emploie ni `λ`, ni `η`, ni axe neutre `x`, rapport `x/d`, bras de levier `z`,
 armature ou résistance de section. Toute limite de `μEd` reste future.
 
@@ -651,13 +777,13 @@ n'est produit.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamBendingMoment.maximumMoment` | `MEd` | résultat BEAM-CALC-05 / DERIVED | moment ELU repris sans recalcul ; doit être positif ou nul | kN·m |
+| `BeamBendingMoment.maximumMoment` | `MEd` signé | résultat de sollicitations / DERIVED | moment ELU repris sans recalcul ; sa magnitude est utilisée pour l'équilibre | kN·m |
 | `designMomentInNewtonMillimetres` | `MEd_Nmm` | conversion / DERIVED | `MEd × 10⁶`, obtenu uniquement via `MomentConverter` | N·mm |
 | `BeamFlexuralSteelDesignStrength.fyd` | `fyd` | résultat BEAM-FLEX-02 / DERIVED | résistance de calcul de l'acier, numériquement en `N/mm²`; strictement positive | MPa (`N/mm²`) |
 | `BeamLeverArmResult.leverArm` | `z` | résultat BEAM-FLEX-05 / DERIVED | bras de levier interne, strictement positif | mm |
 | `steelLeverArmProduct` | `fyd × z` | valeur dérivée / DERIVED | terme d'équilibre acier–bras de levier | N/mm |
 | `requiredReinforcementArea` | `As_req` | valeur dérivée / DERIVED | aire théorique d'armatures longitudinales tendues : `MEd_Nmm / (fyd × z)` | mm² |
-| `BeamRequiredTensionReinforcementResult` | — | résultat traçable / DERIVED | conserve `MEd`, `MEd_Nmm`, `fyd`, `z`, leur produit et `As_req` | unités explicites |
+| `BeamRequiredTensionReinforcementResult` | — | résultat traçable / DERIVED | conserve `signedDesignMoment`, `|MEd|`, `MEd_Nmm`, `fyd`, `z`, leur produit et `As_req` | unités explicites |
 
 `As_req` est l'aire requise par le seul équilibre ELU de flexion. Elle vaut
 `0 mm²` si `MEd = 0` et ne comprend ni armature minimale réglementaire
@@ -927,7 +1053,7 @@ coefficients homonymes du cisaillement et de l'espacement.
 | `reinforcementRatio` | `ρ` | valeur dérivée / DERIVED | `As_req / (b × d)`, avec `As_req` recalculé pour le candidat réel. `As_prov` ne doit jamais le remplacer. | sans dimension |
 | `referenceReinforcementRatio` | `ρ0` | valeur dérivée / DERIVED | `sqrt(fck) × 10^-3`, avec `fck` en MPa. | sans dimension |
 | `compressionReinforcementRatio` | `ρ'` | hypothèse V1 / FIXED_SCOPE | vaut explicitement `0` : seules les sections simplement armées sont supportées. | sans dimension |
-| `structuralFactor` | `K` | paramètre national / PROFILE | facteur lié au système statique ; seul `SIMPLY_SUPPORTED → 1,0` est supporté. | sans dimension |
+| `structuralFactor` | `K` | paramètre normatif / PROFILE | facteur lié au système statique : `SIMPLY_SUPPORTED → 1,0` et `CANTILEVER → 0,4` (EC2 §7.4.2, tableau 7.4N). | sans dimension |
 | `baseAllowableSpanDepthRatio` | `(l/d)_0` | valeur dérivée / DERIVED | rapport limite EC2 §7.4.2, obtenu par 7.16a si `ρ ≤ ρ0` ou 7.16b si `ρ > ρ0`. `K` est inclus. | sans dimension |
 | `steelStressCorrectionFactor` | — | valeur dérivée / DERIVED | correction simplifiée : `(500 / fyk) × (As_prov / As_req)`. Le `500 MPa` est centralisé dans le profil. | sans dimension |
 | `allowableSpanDepthRatio` | `l/d_adm` | valeur dérivée / DERIVED | `baseAllowableSpanDepthRatio × steelStressCorrectionFactor`; aucun facteur supplémentaire n'est inventé. | sans dimension |
