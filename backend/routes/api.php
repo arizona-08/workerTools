@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\BeamCalculationController;
+use App\Http\Controllers\BeamCalculationNoteController;
 use App\Http\Controllers\BeamMaterialCatalogController;
 use App\Http\Controllers\SlabCalculationController;
+use App\Http\Controllers\SlabCalculationNoteController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +16,9 @@ Route::get('/', function () {
 
 Route::get('/beam/material-catalog', BeamMaterialCatalogController::class);
 Route::post('/beam/calculations', BeamCalculationController::class);
+Route::post('/beam/calculations/pdf', BeamCalculationNoteController::class);
 Route::post('/slab/calculations', SlabCalculationController::class);
+Route::post('/slab/calculations/pdf', SlabCalculationNoteController::class);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

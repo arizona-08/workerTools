@@ -1146,3 +1146,82 @@ La priorité est commune : `NOT_COMPLIANT`, puis `NOT_CHECKED` ou
 `COMPLIANT`. `NOT_APPLICABLE` est neutre. Les contrôles sans utilisation
 fiable, notamment les propositions de ferraillage, ne participent pas au choix
 gouvernant.
+# Modèle de note de calcul
+
+## `CalculationNoteDocument`
+
+- Symbole : —
+- Type : DTO PHP immuable
+- Signification : projection commune de données de calcul vers une future note de calcul.
+- Origine : `DERIVED` (future projection de résultats déjà calculés)
+- Utilisé pour : rendu PDF futur, sans effectuer de calcul.
+- Dépend de : métadonnées, sections structurées, vérifications, ferraillage, statut final, avertissements et limitations.
+- Remarque : PDF-02 le rend en PDF sans modifier les valeurs. Les mappers
+  Beam/Slab restent hors périmètre (PDF-03 / PDF-04).
+
+## `CalculationNoteValue`
+
+- Type : DTO PHP immuable
+- Signification : valeur affichable avec `value`, `unit`, `displayValue` optionnel et `source` optionnelle.
+- Origine : `DERIVED`
+- Unité : explicite et séparée de la valeur ; aucune concaténation irréversible n’est imposée.
+- Remarque : `null` reste `null` lorsqu’une donnée n’est pas disponible.
+
+## `RenderedCalculationNote`
+
+- Symbole : —
+- Type : DTO PHP immuable
+- Signification : résultat technique en mémoire du rendu d’un
+  `CalculationNoteDocument`.
+- Origine : `DERIVED`
+- Contient : les octets PDF, le type MIME `application/pdf` et un nom de
+  fichier par défaut.
+- Utilisé pour : futur endpoint de téléchargement ; aucune persistance ou
+  réponse HTTP n’est ajoutée par PDF-02.
+- Dépend de : données déjà présentes dans `CalculationNoteDocument`.
+- Remarque : le renderer ne recalcule ni statut, ni taux d’utilisation, ni
+  valeur normative.
+
+## `BeamCalculationNoteMapper`
+
+- Symbole : —
+- Type : service de projection PHP
+- Signification : convertit les entrées et sorties déjà calculées du module
+  Poutre en `CalculationNoteDocument` pour la note PDF.
+- Origine : `DERIVED`
+- Entrées : `BeamCalculationSetup`, `BeamCalculationResponse` et date de
+  génération injectée.
+- Utilisé pour : note de calcul Poutre PDF-03, avant le renderer commun PDF-02.
+- Dépend de : `summary`, `verifications`, `details` et entrées Poutre réelles.
+- Remarque : ne relance ni calcul de résistance, ni combinaison, ni sélection
+  gouvernante. `Ecm` n'est pas affiché car il n'est pas exposé par le résultat
+  Beam actuel ; aucune valeur n'est reconstruite depuis un repository.
+
+## `SlabCalculationNoteMapper`
+
+- Symbole : —
+- Type : service de projection PHP
+- Signification : convertit le calcul Dalle déjà finalisé en
+  `CalculationNoteDocument` partagé avec la note Poutre.
+- Origine : `DERIVED`
+- Entrées : `SlabCalculationInput`, `SlabCalculationResult` et date de
+  génération injectée.
+- Utilisé pour : note PDF de dalle unidirectionnelle, via le renderer PDF-02.
+- Dépend de : configuration, géométrie, actions caractéristiques, résultats de
+  flexion, propositions d'armatures, ELS, résumé et avertissements Dalle.
+- Remarque : la bande de calcul provient du résultat existant (`1 m`) et les
+  aires d'armatures restent en `mm²/m`. Aucune formule ou statut n'est déduit
+  par le mapper.
+
+## `SlabCalculationDetails.characteristicActions`
+
+- Type : `SlabCharacteristicActions`
+- Signification : projection des charges surfaciques déjà déterminées avant les
+  combinaisons (`gk,self`, finitions, cloisons, autres charges permanentes,
+  `Gk,total`, `Qk`).
+- Origine : `DERIVED`
+- Unité : `kN/m²`
+- Utilisé pour : réponse structurée et note PDF Dalle.
+- Dépend de : géométrie, poids volumique de béton armé et charges utilisateur.
+- Remarque : ajouté au contrat final pour PDF-04 ; aucune formule ni règle
+  normative nouvelle n'est introduite.

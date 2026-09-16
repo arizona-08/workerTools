@@ -14,6 +14,7 @@ final readonly class SlabCalculationDetails
         public BeamVerificationStatus $slsStatus,
         public ?BeamVerificationComponent $governingVerification,
         public array $assumptions,
+        public SlabCharacteristicActions $characteristicActions,
         public array $combinations,
         public array $internalForces,
         public array $flexure,

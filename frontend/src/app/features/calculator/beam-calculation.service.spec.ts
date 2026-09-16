@@ -65,4 +65,19 @@ describe('BeamCalculationService', () => {
     const request = http.expectOne('/api/beam/calculations');
     request.flush({ message: 'Configuration non prise en charge.' }, { status: 422, statusText: 'Unprocessable Entity' });
   });
+
+  it('posts the original input to the PDF endpoint and requests a Blob response', () => {
+    service.exportPdf(payload).subscribe((response) => {
+      expect(response.body).toBeInstanceOf(Blob);
+      expect(response.headers.get('content-disposition')).toContain('note-calcul-poutre.pdf');
+    });
+
+    const request = http.expectOne('/api/beam/calculations/pdf');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['%PDF-test'], { type: 'application/pdf' }), {
+      headers: { 'content-type': 'application/pdf', 'content-disposition': 'attachment; filename="note-calcul-poutre.pdf"' },
+    });
+  });
 });

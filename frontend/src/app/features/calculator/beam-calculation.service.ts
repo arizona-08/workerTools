@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -24,5 +24,9 @@ export class BeamCalculationService {
 
   calculate(payload: BeamCalculationPayload): Observable<BeamCalculationResponse> {
     return this.http.post<BeamCalculationResponse>('/api/beam/calculations', payload);
+  }
+
+  exportPdf(payload: BeamCalculationPayload): Observable<HttpResponse<Blob>> {
+    return this.http.post('/api/beam/calculations/pdf', payload, { observe: 'response', responseType: 'blob' });
   }
 }
