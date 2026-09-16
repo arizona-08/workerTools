@@ -13,7 +13,11 @@ final class BeamResultSummaryBuilder
         BeamRequiredTensionReinforcementResult $requiredReinforcement,
         BeamReinforcementProposalCandidate $longitudinalReinforcement,
         BeamCalculationMode $mode,
+        ?BeamCalculationConfiguration $configuration = null,
+        ?BeamShearForce $designShearForce = null,
     ): BeamResultSummary {
+        $configuration ??= BeamCalculationConfiguration::supported();
+
         return new BeamResultSummary(
             $governing->governingVerification?->utilization,
             $governing->governingVerification?->identifier,
@@ -25,8 +29,14 @@ final class BeamResultSummaryBuilder
                 $longitudinalReinforcement->barCount,
                 $longitudinalReinforcement->barDiameter,
                 $longitudinalReinforcement->providedArea,
+                $longitudinalReinforcement->position,
             ),
             $aggregation->overallStatus,
+            $configuration->elementType,
+            $configuration->submodule,
+            $configuration->supportSystem,
+            $designShearForce?->maximumAbsoluteShear,
+            $configuration->supportSystem === BeamSupportSystem::CANTILEVER ? BeamShearCriticalSectionLocation::FIXED_END : null,
         );
     }
 }

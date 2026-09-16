@@ -54,6 +54,17 @@ function compliantBeamCalculationNoteSource(): array
     return [$setup, app(BeamCalculationOrchestrator::class)->calculate($setup)];
 }
 
+/** @return array{0: BeamCalculationSetup, 1: BeamCalculationResponse} */
+function cantileverBeamCalculationNoteSource(): array
+{
+    $payload = beamCalculationNotePayload();
+    $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
+    $payload['configuration']['supportSystem'] = 'CANTILEVER';
+    $setup = app(BeamCalculationInputFactory::class)->fromPayload($payload);
+
+    return [$setup, app(BeamCalculationOrchestrator::class)->calculate($setup)];
+}
+
 function beamCalculationNote(array $source): CalculationNoteDocument
 {
     return app(BeamCalculationNoteMapper::class)->map(
@@ -68,7 +79,7 @@ it('maps the real beam pipeline into the common document without recalculating v
     [$setup, $result] = $source;
     $document = beamCalculationNote($source);
 
-    expect($document->metadata->title)->toBe('Note de calcul — Poutre en béton armé')
+    expect($document->metadata->title)->toBe('Note de calcul — Poutre rectangulaire simplement appuyée')
         ->and($document->metadata->calculationType)->toBe($setup->configuration->elementType)
         ->and($document->metadata->designCodeProfile)->toBe($setup->configuration->designCodeProfile->value)
         ->and($document->geometry->items[0]->value)->toBe(6500.0)
@@ -85,8 +96,8 @@ it('maps the real beam pipeline into the common document without recalculating v
         ->and($document->combinations?->items[0]->value)->toBe($result->details->combinations['ultimate']->designLineLoad)
         ->and($document->internalForces?->items[0]->value)->toBe($result->details->internalForces['bendingMoments']->ultimate->maximumMoment)
         ->and($document->internalForces?->items[1]->value)->toBe($result->details->internalForces['shearForces']->ultimate->maximumAbsoluteShear)
-        ->and($document->finalStatus->summary[2]->value)->toBe($result->summary->designBendingMoment)
-        ->and($document->finalStatus->summary[4]->value)->toBe($result->summary->requiredLongitudinalReinforcementArea);
+        ->and($document->finalStatus->summary[4]->value)->toBe($result->summary->designBendingMoment)
+        ->and($document->finalStatus->summary[7]->value)->toBe($result->summary->requiredLongitudinalReinforcementArea);
 });
 
 it('transfers individual verification and final statuses exactly as produced by Beam', function () {
@@ -126,12 +137,12 @@ it('distinguishes proposed reinforcement from supplied verification reinforcemen
     $verification = beamCalculationNote(beamCalculationNoteSource('VERIFICATION'));
 
     expect($design->assumptions->items[0]->value)->toBe(BeamCalculationMode::DESIGN->value)
-        ->and($design->reinforcement[0]->label)->toBe('Ferraillage longitudinal proposé')
+        ->and($design->reinforcement[0]->label)->toBe('Ferraillage longitudinal proposé — Partie inférieure')
         ->and($design->reinforcement[0]->designation)->toBeNull()
         ->and($design->reinforcement[0]->count)->toBe(2)
         ->and($design->reinforcement[0]->diameter)->toBe(16.0)
         ->and($verification->assumptions->items[0]->value)->toBe(BeamCalculationMode::VERIFICATION->value)
-        ->and($verification->reinforcement[0]->label)->toBe('Ferraillage longitudinal fourni')
+        ->and($verification->reinforcement[0]->label)->toBe('Ferraillage longitudinal fourni — Partie inférieure')
         ->and($verification->reinforcement[0]->count)->toBe(4)
         ->and($verification->reinforcement[0]->diameter)->toBe(12.0);
 });
@@ -141,12 +152,54 @@ it('keeps the technical values while exposing French labels for note assumptions
 
     expect($document->assumptions->items[0]->value)->toBe('DESIGN')
         ->and($document->assumptions->items[0]->displayValue)->toBe('Dimensionnement')
-        ->and($document->assumptions->items[1]->displayValue)->toBe('Béton armé')
-        ->and($document->assumptions->items[2]->displayValue)->toBe('Rectangulaire')
-        ->and($document->assumptions->items[3]->displayValue)->toBe('Simplement appuyée')
-        ->and($document->assumptions->items[4]->displayValue)->toBe('Uniformément répartie')
-        ->and($document->assumptions->items[5]->displayValue)->toBe('Persistante / transitoire')
-        ->and($document->assumptions->items[6]->displayValue)->toBe('Automatique');
+        ->and($document->assumptions->items[1]->displayValue)->toBe('Poutre rectangulaire simplement appuyée')
+        ->and($document->assumptions->items[2]->displayValue)->toBe('Béton armé')
+        ->and($document->assumptions->items[3]->displayValue)->toBe('Rectangulaire')
+        ->and($document->assumptions->items[4]->displayValue)->toBe('Simplement appuyée')
+        ->and($document->assumptions->items[5]->displayValue)->toBe('Uniformément répartie')
+        ->and($document->assumptions->items[7]->displayValue)->toBe('Persistante / transitoire')
+        ->and($document->assumptions->items[8]->displayValue)->toBe('Automatique');
+});
+
+it('maps a cantilever into the shared note with fixed-end actions, top reinforcement and visible limitations', function () {
+    $source = cantileverBeamCalculationNoteSource();
+    [, $result] = $source;
+    $document = beamCalculationNote($source);
+    $shear = collect($document->verifications)->firstWhere('type', 'SHEAR');
+    $crack = collect($document->verifications)->firstWhere('type', 'CRACK');
+
+    expect($document->metadata->title)->toBe('Note de calcul — Poutre rectangulaire en console')
+        ->and($document->assumptions->items[1]->value)->toBe('BEAM_CANTILEVER_RECTANGULAR')
+        ->and($document->assumptions->items[1]->displayValue)->toBe('Poutre rectangulaire en console')
+        ->and($document->assumptions->items[4]->value)->toBe('CANTILEVER')
+        ->and($document->assumptions->items[4]->displayValue)->toBe('Console')
+        ->and($document->assumptions->items[6]->value)->toContain('encastrement à une extrémité')
+        ->and($document->internalForces?->items[0]->label)->toBe('Moment ELU MEd à l’encastrement')
+        ->and($document->internalForces?->items[0]->value)->toBe($result->summary->designBendingMoment)
+        ->and($document->internalForces?->items[0]->value)->toBeLessThan(0)
+        ->and($document->internalForces?->items[1]->label)->toBe('Effort tranchant ELU VEd à l’encastrement')
+        ->and($document->internalForces?->items[1]->value)->toBe($result->summary->designShearForce)
+        ->and($document->reinforcement[0]->label)->toBe('Ferraillage longitudinal proposé — Partie supérieure')
+        ->and($document->reinforcement[0]->details[0]->displayValue)->toBe('Partie supérieure')
+        ->and($shear->status)->toBe($result->verifications->shearVerification->status)
+        ->and($shear->details[2]->value)->toBe('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
+        ->and($crack->status)->toBe($result->verifications->crackVerification->status)
+        ->and($document->warnings)->toBe($result->details->warnings)
+        ->and($document->warnings)->toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED');
+});
+
+it('renders cantilever-specific labels and warnings through the common PDF template', function () {
+    $html = view('pdf.calculation-note', [
+        'document' => beamCalculationNote(cantileverBeamCalculationNoteSource()),
+        'presentation' => app(CalculationNotePdfPresentation::class),
+    ])->render();
+
+    expect($html)->toContain('Poutre rectangulaire en console')
+        ->and($html)->toContain('Console')
+        ->and($html)->toContain('Moment ELU MEd à l’encastrement')
+        ->and($html)->toContain('Effort tranchant ELU VEd à l’encastrement')
+        ->and($html)->toContain('Partie supérieure')
+        ->and($html)->toContain('Section critique de cisaillement à l’encastrement non modélisée');
 });
 
 it('renders French configuration labels in the beam PDF template', function () {

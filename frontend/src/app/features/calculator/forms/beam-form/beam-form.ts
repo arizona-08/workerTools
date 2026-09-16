@@ -1,6 +1,6 @@
-import { Component, EventEmitter, Output, effect, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, computed, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { BeamCalculationConfigurationView, BeamCalculationMode, SUPPORTED_BEAM_CALCULATION_CONFIGURATION } from './beam-calculation-configuration';
+import { BeamCalculationConfigurationView, BeamCalculationMode, BeamSubmodule, SUPPORTED_BEAM_CALCULATION_CONFIGURATION } from './beam-calculation-configuration';
 import { BeamCalculationPayload, BeamGeometryPayload, BeamMaterialsPayload, BeamPermanentLoadsPayload, BeamVariableLoadPayload, buildBeamGeometryPayload } from './beam-geometry';
 import { BeamLongitudinalReinforcementPayload, calculateProvidedSteelArea } from './beam-longitudinal-reinforcement';
 import { BeamMaterialCatalogService } from './beam-material-catalog.service';
@@ -19,6 +19,9 @@ export class BeamForm {
   readonly materialCatalog = inject(BeamMaterialCatalogService);
   readonly configuration: BeamCalculationConfigurationView = { ...SUPPORTED_BEAM_CALCULATION_CONFIGURATION };
   readonly calculationMode = signal<BeamCalculationMode>(this.configuration.calculationMode);
+  readonly selectedSubmodule = signal<BeamSubmodule>(SUPPORTED_BEAM_CALCULATION_CONFIGURATION.submodule!);
+  readonly submodules = computed(() => this.materialCatalog.catalog()?.beamSubmodules ?? []);
+  readonly activeSubmodule = computed(() => this.submodules().find(({ id }) => id === this.selectedSubmodule()) ?? null);
   readonly geometryForm = new FormGroup({
     effectiveSpan: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
     width: new FormControl<number | null>(null, [Validators.required, positiveFiniteNumberValidator]),
@@ -59,6 +62,26 @@ export class BeamForm {
     this.calculationMode.set(mode);
     this.configuration.calculationMode = mode;
     this.formChanged.emit();
+  }
+
+  selectSubmodule(submodule: BeamSubmodule): void {
+    const selected = this.submodules().find(({ id }) => id === submodule);
+    if (selected === undefined || selected.status !== 'AVAILABLE' || this.selectedSubmodule() === submodule) {
+      return;
+    }
+
+    this.selectedSubmodule.set(selected.id);
+    this.configuration.submodule = selected.id;
+    this.configuration.supportSystem = selected.supportSystem;
+    this.formChanged.emit();
+  }
+
+  isCurrentSubmoduleCalculable(): boolean {
+    return this.selectedSubmodule() === 'BEAM_SIMPLE_RECTANGULAR' || this.activeSubmodule()?.status === 'AVAILABLE';
+  }
+
+  submoduleCalculationMessage(): string | null {
+    return this.isCurrentSubmoduleCalculable() ? null : 'Le sous-module sélectionné n’est pas disponible pour le calcul.';
   }
 
   geometryPayload(): BeamGeometryPayload | null {

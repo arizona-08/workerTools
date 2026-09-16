@@ -36,6 +36,20 @@ it('allows a guest to generate a downloadable PDF note from beam inputs', functi
     expect($response->getContent())->toStartWith('%PDF');
 });
 
+it('allows a guest to generate the same PDF note for a cantilever beam', function () {
+    $payload = calculationNoteBeamPayload();
+    $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
+    $payload['configuration']['supportSystem'] = 'CANTILEVER';
+
+    $response = $this->postJson('/api/beam/calculations/pdf', $payload);
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertHeader('content-disposition', 'attachment; filename="note-calcul-poutre.pdf"');
+
+    expect($response->getContent())->toStartWith('%PDF');
+});
+
 it('allows a guest to generate a downloadable PDF note from slab inputs', function () {
     $response = $this->postJson('/api/slab/calculations/pdf', calculationNoteSlabPayload());
 

@@ -16,6 +16,10 @@ describe('BeamForm', () => {
       steelGrades: ['B500B'],
       reinforcementBarDiameters: [8, 10, 12, 14, 16, 20, 25, 32],
       exposureClasses: [{ code: 'XC1', label: 'Sec ou humide en permanence' }],
+      beamSubmodules: [
+        { id: 'BEAM_SIMPLE_RECTANGULAR', label: 'Poutre rectangulaire simplement appuyée', status: 'AVAILABLE', supportSystem: 'SIMPLY_SUPPORTED' },
+        { id: 'BEAM_CANTILEVER_RECTANGULAR', label: 'Poutre rectangulaire en console', status: 'AVAILABLE', supportSystem: 'CANTILEVER' },
+      ],
     });
 
     fixture = TestBed.createComponent(BeamForm);
@@ -23,11 +27,72 @@ describe('BeamForm', () => {
     await fixture.whenStable();
   });
 
-  it('presents the fixed V1 beam configuration without editable alternatives', () => {
+  it('presents the simple rectangular beam configuration by default', () => {
     expect(component.configuration.sectionType).toBe('RECTANGULAR');
+    expect(component.configuration.submodule).toBe('BEAM_SIMPLE_RECTANGULAR');
     expect(component.configuration.supportSystem).toBe('SIMPLY_SUPPORTED');
     expect(component.configuration.materialType).toBe('REINFORCED_CONCRETE');
     expect(fixture.nativeElement.textContent).toContain('Poutre en béton armé');
+  });
+
+  it('displays the two backend-catalogued Beam submodules with an accessible active state', () => {
+    const options: NodeListOf<HTMLButtonElement> = fixture.nativeElement.querySelectorAll('[role="radio"]');
+
+    expect(options).toHaveLength(2);
+    expect(options[0].textContent).toContain('Poutre rectangulaire simplement appuyée');
+    expect(options[1].textContent).toContain('Poutre rectangulaire en console');
+    expect(options[0].getAttribute('aria-checked')).toBe('true');
+    expect(options[1].getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('switches locally to the cantilever hypotheses while preserving common form values', () => {
+    component.geometryForm.setValue({ effectiveSpan: 6.5, width: 30, height: 60 });
+    component.permanentLoadsForm.setValue({ includeSelfWeight: false, additionalPermanentLoad: 5 });
+
+    (fixture.nativeElement.querySelectorAll('[role="radio"]')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(component.configuration.submodule).toBe('BEAM_CANTILEVER_RECTANGULAR');
+    expect(component.configuration.supportSystem).toBe('CANTILEVER');
+    expect(component.geometryForm.getRawValue()).toEqual({ effectiveSpan: 6.5, width: 30, height: 60 });
+    expect(component.permanentLoadsForm.getRawValue()).toEqual({ includeSelfWeight: false, additionalPermanentLoad: 5 });
+    expect(component.isCurrentSubmoduleCalculable()).toBe(true);
+    expect(component.submoduleCalculationMessage()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Console');
+    expect(fixture.nativeElement.querySelector('[data-testid="cantilever-hypotheses"]').textContent).toContain('encastrée à une extrémité');
+    expect(fixture.nativeElement.textContent).toContain('Longueur efficace de la console (L)');
+    expect(fixture.nativeElement.querySelectorAll('[role="radio"]')[1].getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('keeps the common Beam values and sends the coherent cantilever configuration', () => {
+    component.geometryForm.setValue({ effectiveSpan: 4, width: 25, height: 45 });
+    component.materialsForm.setValue({ concreteClass: 'C25/30', steelGrade: 'B500B', exposureClass: 'XC1' });
+    component.permanentLoadsForm.setValue({ includeSelfWeight: false, additionalPermanentLoad: 2.5 });
+    component.variableLoadForm.setValue({ category: 'A', characteristicLoad: 1.25 });
+    component.selectSubmodule('BEAM_CANTILEVER_RECTANGULAR');
+
+    expect(component.payload()).toMatchObject({
+      configuration: { submodule: 'BEAM_CANTILEVER_RECTANGULAR', supportSystem: 'CANTILEVER' },
+      geometry: { effectiveSpan: 4000, width: 250, height: 450, unit: 'mm' },
+      materials: { concreteClass: 'C25/30', steelGrade: 'B500B', exposureClasses: ['XC1'] },
+      loads: {
+        permanent: { includeSelfWeight: false, additionalPermanentLoad: 2.5, unit: 'kN/m' },
+        variable: { category: 'A', characteristicLoad: 1.25, unit: 'kN/m' },
+      },
+    });
+  });
+
+  it('returns locally to the simple rectangular Beam and restores its hypotheses', () => {
+    (fixture.nativeElement.querySelectorAll('[role="radio"]')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelectorAll('[role="radio"]')[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(component.configuration.submodule).toBe('BEAM_SIMPLE_RECTANGULAR');
+    expect(component.configuration.supportSystem).toBe('SIMPLY_SUPPORTED');
+    expect(component.isCurrentSubmoduleCalculable()).toBe(true);
+    expect(component.submoduleCalculationMessage()).toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Simplement appuyée');
   });
 
   it('displays the three geometry inputs with their explicit UI units', () => {

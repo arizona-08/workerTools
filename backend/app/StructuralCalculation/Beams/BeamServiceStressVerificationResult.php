@@ -19,5 +19,6 @@ final readonly class BeamServiceStressVerificationResult
         public BeamServiceStressCheck $steelQuasiPermanent,
         public BeamServiceStressCheck $frequent,
         public ?string $governingStressCheck,
+        public BeamTensionFace $tensionFace = BeamTensionFace::BOTTOM,
     ) {}
 }

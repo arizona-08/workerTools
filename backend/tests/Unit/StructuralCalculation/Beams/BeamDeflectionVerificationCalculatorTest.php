@@ -122,3 +122,14 @@ it('refuses insufficient or unsupported candidates rather than reporting complia
     expect(fn () => calculateDeflection(deflectionCandidate(), deflectionConfiguration(BeamSupportSystem::CONTINUOUS)))
         ->toThrow(BeamDeflectionVerificationException::class, 'CALCULATION_METHOD_NOT_SUPPORTED');
 });
+
+it('returns a structured unsupported result for a cantilever without a profile factor', function () {
+    $result = calculateDeflection(deflectionCandidate(), deflectionConfiguration(BeamSupportSystem::CANTILEVER));
+
+    expect($result->structuralSystem)->toBe(BeamSupportSystem::CANTILEVER)
+        ->and($result->applicabilityStatus)->toBe(BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
+        ->and($result->status)->toBe(BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED)
+        ->and($result->structuralFactor)->toBeNull()
+        ->and($result->utilization)->toBeNull()
+        ->and($result->warnings)->toContain('CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE');
+});

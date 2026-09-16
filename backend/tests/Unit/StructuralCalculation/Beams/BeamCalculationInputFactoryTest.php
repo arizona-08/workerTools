@@ -13,6 +13,8 @@ use App\StructuralCalculation\Beams\BeamMaterialsException;
 use App\StructuralCalculation\Beams\BeamMaterialsRejectionReason;
 use App\StructuralCalculation\Beams\BeamPermanentLoadsException;
 use App\StructuralCalculation\Beams\BeamPermanentLoadsRejectionReason;
+use App\StructuralCalculation\Beams\BeamSubmodule;
+use App\StructuralCalculation\Beams\BeamSupportSystem;
 use App\StructuralCalculation\Beams\BeamVariableLoadException;
 use App\StructuralCalculation\Beams\BeamVariableLoadRejectionReason;
 
@@ -54,6 +56,7 @@ it('assembles complete valid design and verification payloads', function (string
     $setup = beamCalculationInputFactory()->fromPayload(validBeamPayload($mode));
 
     expect($setup->configuration->calculationMode->value)->toBe($mode)
+        ->and($setup->configuration->submodule)->toBe(BeamSubmodule::BEAM_SIMPLE_RECTANGULAR)
         ->and($setup->geometry->effectiveSpan)->toBe(6500.0)
         ->and($setup->materials->concreteClass->value)->toBe('C30/37')
         ->and($setup->permanentLoads->additionalPermanentLoad)->toBe(5.0)
@@ -66,6 +69,28 @@ it('assembles complete valid design and verification payloads', function (string
             ->and($setup->longitudinalReinforcement->providedSteelArea)->toBeLessThan(804.3);
     }
 })->with(['DESIGN', 'VERIFICATION']);
+
+it('assembles the cantilever configuration with the shared geometry, material and load inputs', function () {
+    $payload = validBeamPayload();
+    $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
+    $payload['configuration']['supportSystem'] = 'CANTILEVER';
+    $payload['geometry'] = ['effectiveSpan' => 4000, 'width' => 250, 'height' => 450, 'unit' => 'mm'];
+    $payload['loads'] = [
+        'permanent' => ['includeSelfWeight' => false, 'additionalPermanentLoad' => 2.5, 'unit' => 'kN/m'],
+        'variable' => ['category' => 'A', 'characteristicLoad' => 1.25, 'unit' => 'kN/m'],
+    ];
+
+    $setup = beamCalculationInputFactory()->fromPayload($payload);
+
+    expect($setup->configuration->submodule)->toBe(BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR)
+        ->and($setup->configuration->supportSystem)->toBe(BeamSupportSystem::CANTILEVER)
+        ->and($setup->geometry->effectiveSpan)->toBe(4000.0)
+        ->and($setup->geometry->width)->toBe(250.0)
+        ->and($setup->geometry->height)->toBe(450.0)
+        ->and($setup->permanentLoads->includeSelfWeight)->toBeFalse()
+        ->and($setup->permanentLoads->additionalPermanentLoad)->toBe(2.5)
+        ->and($setup->variableLoad->characteristicLoad)->toBe(1.25);
+});
 
 it('rejects invalid complete-input cases with their domain errors', function (Closure $change, string $exceptionClass, string $reason) {
     $payload = validBeamPayload('VERIFICATION');
@@ -88,6 +113,12 @@ it('rejects invalid complete-input cases with their domain errors', function (Cl
     'unknown mode' => [function (array &$payload): void {
         $payload['configuration']['calculationMode'] = 'UNKNOWN';
     }, BeamConfigurationException::class, BeamConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE->value],
+    'unknown Beam submodule' => [function (array &$payload): void {
+        $payload['configuration']['submodule'] = 'BEAM_UNKNOWN';
+    }, BeamConfigurationException::class, BeamConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE->value],
+    'cantilever with simply supported system' => [function (array &$payload): void {
+        $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
+    }, BeamConfigurationException::class, BeamConfigurationRejectionReason::INCONSISTENT_BEAM_SUBMODULE_SUPPORT_SYSTEM->value],
     'invalid geometry' => [function (array &$payload): void {
         $payload['geometry']['height'] = 0;
     }, BeamGeometryException::class, BeamGeometryRejectionReason::INVALID_HEIGHT->value],

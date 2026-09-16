@@ -19,6 +19,7 @@ final readonly class BeamCalculationConfiguration
         public BeamLoadModel $loadModel,
         public DesignCodeProfileIdentifier $designCodeProfile,
         public DesignSituation $designSituation,
+        public BeamSubmodule $submodule = BeamSubmodule::BEAM_SIMPLE_RECTANGULAR,
     ) {}
 
     public static function supported(): self
@@ -32,6 +33,12 @@ final readonly class BeamCalculationConfiguration
             loadModel: BeamLoadModel::UNIFORMLY_DISTRIBUTED,
             designCodeProfile: DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR,
             designSituation: DesignSituation::PERSISTENT_TRANSIENT,
+            submodule: BeamSubmodule::BEAM_SIMPLE_RECTANGULAR,
         );
+    }
+
+    public function tensionFace(): BeamTensionFace
+    {
+        return $this->submodule->tensionFace();
     }
 }

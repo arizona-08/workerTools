@@ -42,9 +42,9 @@ final readonly class BeamServiceStressVerificationCalculator
         $this->ensurePositiveFinite($steel->es, BeamServiceStressVerificationRejectionReason::INVALID_STEEL_MODULUS);
         $this->ensurePositiveFinite($concrete->fck, BeamServiceStressVerificationRejectionReason::INVALID_CONCRETE_STRENGTH);
         $this->ensurePositiveFinite($steel->fyk, BeamServiceStressVerificationRejectionReason::INVALID_STEEL_STRENGTH);
-        $this->ensureNonNegativeFinite($moments->characteristic->maximumMoment);
-        $this->ensureNonNegativeFinite($moments->frequent->maximumMoment);
-        $this->ensureNonNegativeFinite($moments->quasiPermanent->maximumMoment);
+        $this->ensureNonNegativeFinite($moments->characteristic->magnitude());
+        $this->ensureNonNegativeFinite($moments->frequent->magnitude());
+        $this->ensureNonNegativeFinite($moments->quasiPermanent->magnitude());
 
         try {
             $section = $this->crackedSection->calculate($geometry->width, $depth->effectiveDepth, $tensionArea, $concrete->ecm, $steel->es);
@@ -59,10 +59,10 @@ final readonly class BeamServiceStressVerificationCalculator
         $this->ensurePositiveFinite($requirements->concreteCharacteristicStressLimitFactor, BeamServiceStressVerificationRejectionReason::INVALID_STRESS_LIMIT_FACTOR);
         $this->ensurePositiveFinite($requirements->concreteQuasiPermanentStressLimitFactor, BeamServiceStressVerificationRejectionReason::INVALID_STRESS_LIMIT_FACTOR);
         $this->ensurePositiveFinite($requirements->reinforcementCharacteristicStressLimitFactor, BeamServiceStressVerificationRejectionReason::INVALID_STRESS_LIMIT_FACTOR);
-        $concreteChar = $this->check('CONCRETE_CHARACTERISTIC_STRESS', $moments->characteristic->maximumMoment, $section, $depth->effectiveDepth, $requirements->concreteCharacteristicStressLimitFactor * $concrete->fck, false, 'CHARACTERISTIC');
-        $steelChar = $this->check('STEEL_CHARACTERISTIC_STRESS', $moments->characteristic->maximumMoment, $section, $depth->effectiveDepth, $requirements->reinforcementCharacteristicStressLimitFactor * $steel->fyk, true, 'CHARACTERISTIC');
-        $concreteQp = $this->check('CONCRETE_QUASI_PERMANENT_STRESS', $moments->quasiPermanent->maximumMoment, $section, $depth->effectiveDepth, $requirements->concreteQuasiPermanentStressLimitFactor * $concrete->fck, false, 'QUASI_PERMANENT');
-        $steelQp = $this->check('STEEL_QUASI_PERMANENT_STRESS', $moments->quasiPermanent->maximumMoment, $section, $depth->effectiveDepth, null, true, 'QUASI_PERMANENT');
+        $concreteChar = $this->check('CONCRETE_CHARACTERISTIC_STRESS', $moments->characteristic, $section, $depth->effectiveDepth, $requirements->concreteCharacteristicStressLimitFactor * $concrete->fck, false, 'CHARACTERISTIC');
+        $steelChar = $this->check('STEEL_CHARACTERISTIC_STRESS', $moments->characteristic, $section, $depth->effectiveDepth, $requirements->reinforcementCharacteristicStressLimitFactor * $steel->fyk, true, 'CHARACTERISTIC');
+        $concreteQp = $this->check('CONCRETE_QUASI_PERMANENT_STRESS', $moments->quasiPermanent, $section, $depth->effectiveDepth, $requirements->concreteQuasiPermanentStressLimitFactor * $concrete->fck, false, 'QUASI_PERMANENT');
+        $steelQp = $this->check('STEEL_QUASI_PERMANENT_STRESS', $moments->quasiPermanent, $section, $depth->effectiveDepth, null, true, 'QUASI_PERMANENT');
         $frequent = new BeamServiceStressCheck('FREQUENT_STRESS', null, null, null, BeamServiceStressCheckStatus::NOT_APPLICABLE, 'FREQUENT', null, 'NOT_APPLICABLE_IN_BEAM_SLS_01');
         $checks = [$concreteChar, $steelChar, $concreteQp];
         $failed = array_filter($checks, fn ($check) => $check->status === BeamServiceStressCheckStatus::NOT_COMPLIANT);
@@ -80,6 +80,7 @@ final readonly class BeamServiceStressVerificationCalculator
             $steelQp,
             $frequent,
             $governing->name,
+            $depth->tensionFace,
         );
     }
 
@@ -102,9 +103,10 @@ final readonly class BeamServiceStressVerificationCalculator
         );
     }
 
-    private function check(string $name, float $moment, CrackedElasticSectionResult $section, float $d, ?float $limit, bool $steel, string $combination): BeamServiceStressCheck
+    private function check(string $name, BeamBendingMoment $moment, CrackedElasticSectionResult $section, float $d, ?float $limit, bool $steel, string $combination): BeamServiceStressCheck
     {
-        $stress = $steel ? $this->crackedSection->steelStress($moment, $d, $section) : $this->momentConverter->kilonewtonMetresToNewtonMillimetres($moment) * $section->neutralAxisDepth / $section->secondMomentOfArea;
+        $magnitude = $moment->magnitude();
+        $stress = $steel ? $this->crackedSection->steelStress($magnitude, $d, $section) : $this->momentConverter->kilonewtonMetresToNewtonMillimetres($magnitude) * $section->neutralAxisDepth / $section->secondMomentOfArea;
 
         return new BeamServiceStressCheck(
             $name,
@@ -113,7 +115,7 @@ final readonly class BeamServiceStressVerificationCalculator
             $limit === null ? null : $stress / $limit,
             $limit === null ? BeamServiceStressCheckStatus::NOT_APPLICABLE : ($stress <= $limit ? BeamServiceStressCheckStatus::COMPLIANT : BeamServiceStressCheckStatus::NOT_COMPLIANT),
             $combination,
-            $moment,
+            $moment->maximumMoment,
             BeamServiceStressVerificationResult::SECTION_MODEL,
         );
     }

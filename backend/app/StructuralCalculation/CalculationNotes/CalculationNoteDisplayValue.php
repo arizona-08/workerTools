@@ -19,6 +19,12 @@ final class CalculationNoteDisplayValue
             'REINFORCED_CONCRETE' => 'Béton armé',
             'RECTANGULAR' => 'Rectangulaire',
             'SIMPLY_SUPPORTED' => 'Simplement appuyée',
+            'CANTILEVER' => 'Console',
+            'BEAM_SIMPLE_RECTANGULAR' => 'Poutre rectangulaire simplement appuyée',
+            'BEAM_CANTILEVER_RECTANGULAR' => 'Poutre rectangulaire en console',
+            'TOP' => 'Partie supérieure',
+            'BOTTOM' => 'Partie inférieure',
+            'FIXED_END' => 'Encastrement',
             'UNIFORMLY_DISTRIBUTED' => 'Uniformément répartie',
             'PERSISTENT_TRANSIENT' => 'Persistante / transitoire',
             'AUTO' => 'Automatique',
@@ -92,6 +98,10 @@ final class CalculationNoteDisplayValue
             'LONG_TERM_EFFECTS_NOT_EXPLICITLY_MODELLED' => 'Effets de long terme non modélisés explicitement',
             'PARTITION_DAMAGE_CHECK_NOT_MODELLED' => 'Vérification des dommages aux cloisons non modélisée',
             'UTILIZATION_UNAVAILABLE' => 'Taux d’utilisation indisponible',
+            'CANTILEVER_FIXED_END_SCOPE' => 'Méthode non prise en charge à l’encastrement',
+            'CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED' => 'Section critique de cisaillement à l’encastrement non modélisée',
+            'CANTILEVER_CRACK_VERIFICATION_REQUIRES_FIXED_END_STIRRUP_LAYOUT' => 'Vérification de fissuration nécessitant un ferraillage transversal à l’encastrement',
+            'CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE' => 'Facteur de système non défini pour la console',
             'A' => 'Catégorie A',
         ];
 

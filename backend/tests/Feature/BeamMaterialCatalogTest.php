@@ -8,5 +8,9 @@ test('the beam material catalog exposes identifiers without mechanical propertie
         ->assertJsonPath('steelGrades', ['B500B'])
         ->assertJsonPath('reinforcementBarDiameters', [8, 10, 12, 14, 16, 20, 25, 32])
         ->assertJsonPath('exposureClasses', [['code' => 'XC1', 'label' => 'Sec ou humide en permanence']])
+        ->assertJsonPath('beamSubmodules', [
+            ['id' => 'BEAM_SIMPLE_RECTANGULAR', 'label' => 'Poutre rectangulaire simplement appuyée', 'status' => 'AVAILABLE', 'supportSystem' => 'SIMPLY_SUPPORTED'],
+            ['id' => 'BEAM_CANTILEVER_RECTANGULAR', 'label' => 'Poutre rectangulaire en console', 'status' => 'AVAILABLE', 'supportSystem' => 'CANTILEVER'],
+        ])
         ->assertJsonMissing(['fck', 'fcm', 'fctm', 'ecm', 'fyk', 'es', 'fcd', 'fyd']);
 });

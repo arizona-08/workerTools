@@ -49,6 +49,50 @@ it('allows a guest to orchestrate the complete design calculation and exposes it
         ->and($response->json('summary.utilization'))->toBeLessThan(1.45);
 });
 
+it('routes the explicit simply supported submodule through the unchanged analysis pipeline', function () {
+    $historical = $this->postJson('/api/beam/calculations', beamCalculationPayload());
+    $payload = beamCalculationPayload();
+    $payload['configuration']['submodule'] = 'BEAM_SIMPLE_RECTANGULAR';
+
+    $explicit = $this->postJson('/api/beam/calculations', $payload);
+
+    $explicit->assertOk()
+        ->assertJsonPath('details.internalForces.bendingMoments.ultimate.maximumMoment', $historical->json('details.internalForces.bendingMoments.ultimate.maximumMoment'))
+        ->assertJsonPath('details.internalForces.shearForces.ultimate.maximumAbsoluteShear', $historical->json('details.internalForces.shearForces.ultimate.maximumAbsoluteShear'))
+        ->assertJsonPath('summary.utilization', $historical->json('summary.utilization'));
+});
+
+it('returns the common Beam result contract for a cantilever while preserving unsupported verification methods', function () {
+    $payload = beamCalculationPayload();
+    $payload['configuration']['submodule'] = 'BEAM_CANTILEVER_RECTANGULAR';
+    $payload['configuration']['supportSystem'] = 'CANTILEVER';
+
+    $response = $this->postJson('/api/beam/calculations', $payload)
+        ->assertOk()
+        ->assertJsonStructure(['summary', 'verifications', 'details', 'warnings'])
+        ->assertJsonPath('summary.module', 'BEAM')
+        ->assertJsonPath('summary.submodule', 'BEAM_CANTILEVER_RECTANGULAR')
+        ->assertJsonPath('summary.supportSystem', 'CANTILEVER')
+        ->assertJsonPath('summary.criticalSectionLocation', 'FIXED_END')
+        ->assertJsonPath('summary.longitudinalReinforcement.position', 'TOP')
+        ->assertJsonPath('verifications.shearVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
+        ->assertJsonPath('verifications.crackVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
+        ->assertJsonPath('verifications.deflectionVerification.status', 'CALCULATION_METHOD_NOT_SUPPORTED')
+        ->assertJsonPath('details.assumptions.configuration.supportSystem', 'CANTILEVER')
+        ->assertJsonPath('details.assumptions.tensionFace', 'TOP')
+        ->assertJsonPath('details.internalForces.criticalSectionLocation', 'FIXED_END')
+        ->assertJsonPath('details.reinforcement.longitudinalReinforcement.position', 'TOP')
+        ->assertJsonPath('details.shear.scope.limitation', 'CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
+        ->assertJsonPath('details.serviceability.crack.status', 'CALCULATION_METHOD_NOT_SUPPORTED');
+
+    expect($response->json('summary.designBendingMoment'))->toBeLessThan(0)
+        ->and($response->json('summary.designShearForce'))->toBeGreaterThan(0)
+        ->and($response->json('summary.status'))->toBe($response->json('verifications.overallStatus'))
+        ->and($response->json('warnings'))->toContain('CANTILEVER_FIXED_END_CRITICAL_SECTION_NOT_MODELLED')
+        ->and($response->json('warnings'))->toContain('CANTILEVER_CRACK_VERIFICATION_REQUIRES_FIXED_END_STIRRUP_LAYOUT')
+        ->and($response->json('warnings'))->toContain('CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE');
+});
+
 it('uses supplied longitudinal reinforcement in verification mode', function () {
     $response = $this->postJson('/api/beam/calculations', beamCalculationPayload('VERIFICATION'));
 
@@ -66,6 +110,15 @@ it('returns a validation response for unsupported beam configuration', function 
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Cette configuration ou ce matériau n’est pas pris en charge par le calculateur actuel.')
         ->assertJsonPath('reason', 'UNSUPPORTED_SUPPORT_SYSTEM');
+});
+
+it('returns a validation response for an unknown Beam submodule', function () {
+    $payload = beamCalculationPayload();
+    $payload['configuration']['submodule'] = 'BEAM_UNKNOWN';
+
+    $this->postJson('/api/beam/calculations', $payload)
+        ->assertUnprocessable()
+        ->assertJsonPath('reason', 'INVALID_CONFIGURATION_VALUE');
 });
 
 it('rejects an exposure class known by the domain but unsupported by the complete beam calculation', function () {

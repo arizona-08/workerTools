@@ -5,7 +5,7 @@
       <h1 class="mt-1 text-2xl font-semibold tracking-tight text-zinc-950">Calcul de structure</h1>
       <p class="mt-2 text-sm text-zinc-600">Sélectionnez un module pour préparer votre calcul.</p>
     </div>
-    <button type="button" [disabled]="isCalculating()" (click)="selectedModule() === 'Poutre' ? calculateBeam() : calculateSlab()" class="rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55">
+    <button type="button" [disabled]="isCalculating() || (selectedModule() === 'Poutre' && !isBeamCalculationAvailable())" (click)="selectedModule() === 'Poutre' ? calculateBeam() : calculateSlab()" class="rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55">
       @if (isCalculating()) { Calcul en cours… } @else { Calculer la structure }
     </button>
   </header>
@@ -29,7 +29,7 @@
         <button
           type="button"
           data-testid="bottom-calculate"
-          [disabled]="isCalculating()"
+          [disabled]="isCalculating() || (selectedModule() === 'Poutre' && !isBeamCalculationAvailable())"
           (click)="selectedModule() === 'Poutre' ? calculateBeam() : calculateSlab()"
           class="w-full rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55 sm:w-auto"
         >
@@ -41,7 +41,7 @@
     <aside class="min-w-0 rounded-xl border border-zinc-200 bg-white p-6" aria-labelledby="result-title" aria-live="polite">
       <p class="text-sm font-medium text-violet-700">Résultat</p>
       @if (calculationResult(); as result) {
-        <h2 id="result-title" class="mt-1 text-lg font-semibold text-zinc-950">Conformité du calcul</h2>
+        <h2 id="result-title" class="mt-1 text-lg font-semibold text-zinc-950">{{ result.summary.submodule === 'BEAM_CANTILEVER_RECTANGULAR' ? 'Poutre rectangulaire en console' : 'Conformité du calcul' }}</h2>
         <app-result-compliance-indicator [utilization]="result.summary.utilization" [status]="result.summary.status" [governingVerificationType]="result.summary.governingVerificationType" />
         <app-result-summary-message [utilization]="result.summary.utilization" [status]="result.summary.status" [governingVerificationType]="result.summary.governingVerificationType" />
         <div class="mt-5"><app-result-summary-cards [summary]="result.summary" /></div>

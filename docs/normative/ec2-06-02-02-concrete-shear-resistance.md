@@ -55,6 +55,23 @@ Le V1 fixe `NEd = 0 kN`, donc conserve explicitement `Ac = b × h` et
 les armatures `Asl` sont pertinentes et correctement ancrées au droit de la
 section étudiée; aucune vérification d'ancrage ou de position n'est réalisée.
 
+## Limitation console — BEAM-CANT-04
+
+Pour une console rectangulaire sous charge uniformément répartie, l'analyse
+statique fournit `|VEd|max = wEd × L` à l'encastrement (`x = 0`). Cette valeur
+est conservée telle quelle par `CantileverBeamShearVerificationScope`; le
+contrôle ne substitue jamais la formule de poutre simplement appuyée `wEd × L / 2`.
+
+Le périmètre V1 des règles ci-dessus exclut les zones d'appui et ne documente
+ni section de contrôle ni règle d'ancrage applicable au voisinage de
+l'encastrement d'une console. Il serait donc incorrect d'évaluer `VRd,c`,
+`VRd,max` ou une proposition d'étriers au nu de l'encastrement par simple
+réutilisation. Le moteur retourne la limitation structurée
+`CANTILEVER_FIXED_END_SHEAR_VERIFICATION_NOT_SUPPORTED` sans conclure à la
+conformité. L'aire `Asl` et sa position `TOP` sont tout de même tracées, mais
+elles ne sont pas injectées dans `ρl` tant que cette section critique n'est pas
+normativement définie.
+
 ## Dimensionnement théorique des étriers — BEAM-SHEAR-02
 
 Pour les étriers verticaux V1, `α = 90°`, donc `sin α = 1` et `cot α = 0`.

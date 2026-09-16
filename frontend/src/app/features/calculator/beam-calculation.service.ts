@@ -8,6 +8,8 @@ import { BeamResultSummary } from './results/result-summary-cards/beam-result-su
 import { VerificationStatus, VerificationType } from './results/result-compliance-indicator/result-compliance-indicator';
 
 export interface BeamCalculationResponse {
+  status?: VerificationStatus;
+  warnings?: readonly string[];
   summary: BeamResultSummary & {
     utilization: number | null;
     status: VerificationStatus;

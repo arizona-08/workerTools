@@ -64,7 +64,7 @@ final readonly class BeamReinforcementCandidateRecalculator
         BeamEffectiveDepthResult $initialDepth,
         BeamRequiredTensionReinforcementResult $initialRequiredArea,
     ): BeamReinforcementCandidateRecalculationResult {
-        $effectiveDepth = $this->effectiveDepthCalculator->calculateForCandidate($geometry, $cover, $detailing, $candidate->barDiameter);
+        $effectiveDepth = $this->effectiveDepthCalculator->calculateForCandidate($geometry, $cover, $detailing, $candidate->barDiameter, $candidate->position === BeamReinforcementPosition::TOP ? BeamTensionFace::TOP : BeamTensionFace::BOTTOM);
         $reducedMoment = $this->reducedMomentCalculator->calculate($ultimateMoment, $geometry, $effectiveDepth, $strengths->concrete);
         $neutralAxis = $this->neutralAxisCalculator->calculate($reducedMoment, $effectiveDepth, $strengths->concrete);
         $leverArm = $this->leverArmCalculator->calculate($effectiveDepth, $neutralAxis);

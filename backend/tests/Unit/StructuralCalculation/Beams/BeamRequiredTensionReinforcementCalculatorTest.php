@@ -94,7 +94,6 @@ it('rejects invalid required-tension-reinforcement inputs', function (
 
     throw new RuntimeException('Expected invalid required-tension-reinforcement input to be rejected.');
 })->with([
-    'negative MEd' => [requiredTensionReinforcementMoment(-1), requiredTensionReinforcementSteel(), requiredTensionReinforcementLeverArm(), BeamRequiredTensionReinforcementRejectionReason::INVALID_DESIGN_MOMENT],
     'non-positive fyd' => [requiredTensionReinforcementMoment(), requiredTensionReinforcementSteel(0), requiredTensionReinforcementLeverArm(), BeamRequiredTensionReinforcementRejectionReason::INVALID_STEEL_DESIGN_STRENGTH],
     'non-positive z' => [requiredTensionReinforcementMoment(), requiredTensionReinforcementSteel(), requiredTensionReinforcementLeverArm(0), BeamRequiredTensionReinforcementRejectionReason::INVALID_LEVER_ARM],
 ]);

@@ -2,6 +2,8 @@
 
 namespace App\StructuralCalculation\Beams;
 
+use App\StructuralCalculation\ElementType;
+
 /** Projection compacte de résultats existants, destinée aux cartes frontend. */
 final readonly class BeamResultSummary
 {
@@ -13,5 +15,10 @@ final readonly class BeamResultSummary
         public float $requiredLongitudinalReinforcementArea,
         public BeamResultSummaryReinforcement $longitudinalReinforcement,
         public BeamVerificationStatus $status,
+        public ElementType $module = ElementType::BEAM,
+        public BeamSubmodule $submodule = BeamSubmodule::BEAM_SIMPLE_RECTANGULAR,
+        public BeamSupportSystem $supportSystem = BeamSupportSystem::SIMPLY_SUPPORTED,
+        public ?float $designShearForce = null,
+        public ?BeamShearCriticalSectionLocation $criticalSectionLocation = null,
     ) {}
 }

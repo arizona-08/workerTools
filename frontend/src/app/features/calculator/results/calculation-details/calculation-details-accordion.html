@@ -12,7 +12,7 @@
       <div>
         <p>Informations et limites du calcul</p>
         <ul>
-          @for (warning of details().warnings; track warning) { <li>{{ warning }}</li> }
+          @for (warning of details().warnings; track warning) { <li>{{ warningLabel(warning) }}</li> }
         </ul>
       </div>
     </aside>

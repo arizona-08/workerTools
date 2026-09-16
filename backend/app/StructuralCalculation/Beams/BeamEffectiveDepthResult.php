@@ -18,5 +18,6 @@ final readonly class BeamEffectiveDepthResult
         public LongitudinalBarDiameterSource $longitudinalBarDiameterSource,
         public float $tensionSteelCentroidOffset,
         public float $effectiveDepth,
+        public BeamTensionFace $tensionFace = BeamTensionFace::BOTTOM,
     ) {}
 }

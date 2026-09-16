@@ -23,7 +23,7 @@ final readonly class BeamCalculationInputFactory
     {
         $this->assertOnlyKeys($payload, ['configuration', 'geometry', 'materials', 'loads', 'reinforcement']);
         $configurationValues = $this->section($payload, 'configuration', BeamCalculationInputRejectionReason::MISSING_CONFIGURATION, BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE);
-        $this->assertOnlyKeys($configurationValues, ['calculationMode', 'elementType', 'materialType', 'sectionType', 'supportSystem', 'loadModel', 'designCodeProfile', 'designSituation']);
+        $this->assertOnlyKeys($configurationValues, ['calculationMode', 'elementType', 'materialType', 'sectionType', 'supportSystem', 'loadModel', 'designCodeProfile', 'designSituation', 'submodule']);
         $configuration = $this->configurationFactory->fromValues(
             $this->string($configurationValues, 'calculationMode', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
             $this->string($configurationValues, 'elementType', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
@@ -33,6 +33,7 @@ final readonly class BeamCalculationInputFactory
             $this->string($configurationValues, 'loadModel', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
             $this->string($configurationValues, 'designCodeProfile', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
             $this->string($configurationValues, 'designSituation', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
+            $this->optionalString($configurationValues, 'submodule', BeamCalculationInputRejectionReason::INVALID_CONFIGURATION_STRUCTURE),
         );
         $this->configurationValidator->validate($configuration);
 
@@ -56,23 +57,25 @@ final readonly class BeamCalculationInputFactory
         $this->assertUnit($variableValues, 'unit', 'kN/m', BeamCalculationInputRejectionReason::INVALID_VARIABLE_LOAD_UNIT);
         $variableLoad = $this->variableLoadFactory->fromValues($variableValues['category'] ?? null, $variableValues['characteristicLoad'] ?? null);
 
-        $reinforcement = $this->reinforcement($payload, $configuration->calculationMode);
+        $reinforcement = $this->reinforcement($payload, $configuration);
 
         return new BeamCalculationSetup($configuration, $geometry, $materials, $permanentLoads, $variableLoad, $reinforcement);
     }
 
     /** @param array<string, mixed> $payload */
-    private function reinforcement(array $payload, BeamCalculationMode $mode): ?BeamLongitudinalReinforcement
+    private function reinforcement(array $payload, BeamCalculationConfiguration $configuration): ?BeamLongitudinalReinforcement
     {
+        $mode = $configuration->calculationMode;
+        $position = $configuration->tensionFace()->reinforcementPosition();
         if (! array_key_exists('reinforcement', $payload)) {
             if ($mode === BeamCalculationMode::VERIFICATION) {
                 throw new BeamCalculationInputException(BeamCalculationInputRejectionReason::MISSING_REINFORCEMENT);
             }
 
-            return $this->reinforcementFactory->fromValues($mode);
+            return $this->reinforcementFactory->fromValues($mode, position: $position);
         }
         if ($mode === BeamCalculationMode::DESIGN) {
-            return $this->reinforcementFactory->fromValues($mode, 1, 8);
+            return $this->reinforcementFactory->fromValues($mode, 1, 8, position: $position);
         }
 
         $reinforcementValues = $this->section($payload, 'reinforcement', BeamCalculationInputRejectionReason::MISSING_REINFORCEMENT, BeamCalculationInputRejectionReason::INVALID_REINFORCEMENT_STRUCTURE);
@@ -83,7 +86,7 @@ final readonly class BeamCalculationInputFactory
         $this->assertOnlyKeys($tensionValues, ['barCount', 'barDiameter', 'diameterUnit']);
         $this->assertUnit($tensionValues, 'diameterUnit', 'mm', BeamCalculationInputRejectionReason::INVALID_REINFORCEMENT_DIAMETER_UNIT);
 
-        return $this->reinforcementFactory->fromValues($mode, $tensionValues['barCount'] ?? null, $tensionValues['barDiameter'] ?? null);
+        return $this->reinforcementFactory->fromValues($mode, $tensionValues['barCount'] ?? null, $tensionValues['barDiameter'] ?? null, position: $position);
     }
 
     /** @param array<string, mixed> $payload @return array<string, mixed> */
@@ -111,6 +114,19 @@ final readonly class BeamCalculationInputFactory
     private function string(array $values, string $key, BeamCalculationInputRejectionReason $reason): string
     {
         if (! isset($values[$key]) || ! is_string($values[$key])) {
+            throw new BeamCalculationInputException($reason);
+        }
+
+        return $values[$key];
+    }
+
+    /** @param array<string, mixed> $values */
+    private function optionalString(array $values, string $key, BeamCalculationInputRejectionReason $reason): ?string
+    {
+        if (! array_key_exists($key, $values)) {
+            return null;
+        }
+        if (! is_string($values[$key])) {
             throw new BeamCalculationInputException($reason);
         }
 

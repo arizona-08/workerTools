@@ -1,9 +1,51 @@
 <section aria-labelledby="beam-form-title">
   <p class="text-sm font-medium text-violet-700">Configuration du calcul</p>
   <h2 id="beam-form-title" class="mt-1 text-lg font-semibold text-zinc-950">Poutre en béton armé</h2>
-  <p class="mt-2 text-sm leading-6 text-zinc-600">Section rectangulaire · Simplement appuyée</p>
+  <p class="mt-2 text-sm leading-6 text-zinc-600">Section rectangulaire · {{ activeSubmodule()?.supportSystem === 'CANTILEVER' ? 'Console' : 'Simplement appuyée' }}</p>
 
-  <fieldset class="mt-5" aria-describedby="calculation-mode-help">
+  <fieldset class="mt-5" aria-describedby="beam-submodule-help">
+    <legend class="text-sm font-medium text-zinc-900">Type de poutre</legend>
+    <p id="beam-submodule-help" class="mt-1 text-sm text-zinc-600">Choisissez le système structural de la poutre.</p>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Sous-module Poutre">
+      @for (submodule of submodules(); track submodule.id) {
+        <button
+          type="button"
+          role="radio"
+          [attr.aria-checked]="selectedSubmodule() === submodule.id"
+          [attr.aria-describedby]="submodule.status === 'AVAILABLE' ? null : 'beam-submodule-help'"
+          [disabled]="submodule.status !== 'AVAILABLE'"
+          (click)="selectSubmodule(submodule.id)"
+          class="rounded-xl border p-4 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55"
+          [class.border-violet-700]="selectedSubmodule() === submodule.id"
+          [class.bg-violet-50]="selectedSubmodule() === submodule.id"
+          [class.text-violet-950]="selectedSubmodule() === submodule.id"
+          [class.border-zinc-300]="selectedSubmodule() !== submodule.id"
+          [class.bg-white]="selectedSubmodule() !== submodule.id"
+        >
+          <span class="block text-sm font-semibold">{{ submodule.label }}</span>
+          <span class="mt-1 block text-xs" [class.text-violet-800]="selectedSubmodule() === submodule.id" [class.text-zinc-600]="selectedSubmodule() !== submodule.id">
+            {{ submodule.supportSystem === 'CANTILEVER' ? 'Console' : 'Simplement appuyée' }} · section constante · charge uniformément répartie
+          </span>
+          @if (submodule.status !== 'AVAILABLE') {
+            <span class="mt-2 block text-xs font-medium text-zinc-700">{{ submodule.status === 'COMING_SOON' ? 'Bientôt disponible' : 'Indisponible' }}</span>
+          }
+        </button>
+      }
+    </div>
+    @if (submodules().length === 0) {
+      <p class="mt-3 text-sm text-zinc-600">Chargement des types de poutre…</p>
+    }
+    @if (submoduleCalculationMessage(); as message) {
+      <p class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">{{ message }}</p>
+    }
+    @if (selectedSubmodule() === 'BEAM_CANTILEVER_RECTANGULAR') {
+      <p data-testid="cantilever-hypotheses" class="mt-3 text-sm leading-6 text-zinc-700">Poutre rectangulaire en console : encastrée à une extrémité, libre à l’autre, à section constante et soumise à une charge uniformément répartie.</p>
+    } @else {
+      <p data-testid="simply-supported-hypotheses" class="mt-3 text-sm leading-6 text-zinc-700">Poutre rectangulaire simplement appuyée, à section constante et soumise à une charge uniformément répartie.</p>
+    }
+  </fieldset>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" aria-describedby="calculation-mode-help">
     <legend class="text-sm font-medium text-zinc-900">Mode de calcul</legend>
     <div class="mt-2 inline-flex rounded-xl border border-violet-100 bg-violet-50 p-1" role="group">
       <button
@@ -46,8 +88,8 @@
 
     <div class="mt-4 grid gap-4 sm:grid-cols-3">
       <div>
-        <label for="effective-span" class="block text-sm font-medium text-zinc-900">Portée efficace (l_eff)</label>
-        <p class="mt-1 text-xs text-zinc-500">Portée utilisée par le calcul.</p>
+        <label for="effective-span" class="block text-sm font-medium text-zinc-900">{{ selectedSubmodule() === 'BEAM_CANTILEVER_RECTANGULAR' ? 'Longueur efficace de la console (L)' : 'Portée efficace (l_eff)' }}</label>
+        <p class="mt-1 text-xs text-zinc-500">{{ selectedSubmodule() === 'BEAM_CANTILEVER_RECTANGULAR' ? 'Distance efficace entre l’encastrement et l’extrémité libre, utilisée par le futur modèle analytique.' : 'Portée utilisée par le calcul.' }}</p>
         <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
           <input id="effective-span" type="number" inputmode="decimal" min="0" step="0.01" formControlName="effectiveSpan" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="effective-span-error effective-span-unit" />
           <span id="effective-span-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">m</span>

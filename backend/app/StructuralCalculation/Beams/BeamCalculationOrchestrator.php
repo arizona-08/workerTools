@@ -6,6 +6,7 @@ use App\StructuralCalculation\Eurocode\Actions\ReinforcedConcreteUnitWeightRepos
 use App\StructuralCalculation\Eurocode\Cover\CoverCalculationInput;
 use App\StructuralCalculation\Eurocode\Cover\CoverMode;
 use App\StructuralCalculation\Eurocode\Cover\NominalCoverCalculator;
+use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 use App\StructuralCalculation\Eurocode\Profiles\FrenchEurocodeProfileRepository;
 use App\StructuralCalculation\Materials\Concrete\ConcreteClassRepository;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelGradeRepository;
@@ -31,6 +32,10 @@ final readonly class BeamCalculationOrchestrator
         private BeamServiceabilityCombinationCalculator $serviceabilityCombinationCalculator,
         private SimplySupportedBeamBendingMomentCalculator $bendingMomentCalculator,
         private SimplySupportedBeamShearForceCalculator $shearForceCalculator,
+        private CantileverBeamBendingMomentCalculator $cantileverBendingMomentCalculator,
+        private CantileverBeamShearForceCalculator $cantileverShearForceCalculator,
+        private CantileverBeamShearVerificationScope $cantileverShearVerificationScope,
+        private CantileverBeamCrackVerificationScope $cantileverCrackVerificationScope,
         private NominalCoverCalculator $coverCalculator,
         private BeamEffectiveDepthCalculator $effectiveDepthCalculator,
         private BeamFlexuralDesignStrengthsCalculator $designStrengthsCalculator,
@@ -59,17 +64,79 @@ final readonly class BeamCalculationOrchestrator
 
     public function calculate(BeamCalculationSetup $setup): BeamCalculationResponse
     {
+        return match ($setup->configuration->submodule) {
+            BeamSubmodule::BEAM_SIMPLE_RECTANGULAR => $this->calculateSimplySupported($setup),
+            BeamSubmodule::BEAM_CANTILEVER_RECTANGULAR => $this->calculateCantileverAnalysis($setup),
+        };
+    }
+
+    /** Assemble les résultats console disponibles sans transformer les limites de méthode en conformité. */
+    private function calculateCantileverAnalysis(BeamCalculationSetup $setup): BeamCalculationResponse
+    {
         if ($setup->materials === null || $setup->permanentLoads === null || $setup->variableLoad === null) {
             throw new LogicException('INCOMPLETE_BEAM_CALCULATION_SETUP');
         }
         $this->capabilities->validate($setup->materials);
 
         $profile = $this->profiles->get();
+        $selfWeight = $this->selfWeightCalculator->calculate($setup->geometry, $setup->permanentLoads->includeSelfWeight, $this->unitWeights->normalWeightReinforcedConcrete());
+        $actions = $this->characteristicActionsCalculator->calculate($selfWeight, $setup->permanentLoads, $setup->variableLoad);
+        $ultimate = $this->ultimateCombinationCalculator->calculate($actions, $profile);
+        $serviceability = $this->serviceabilityCombinationCalculator->calculate($actions, $profile);
+
+        $moments = $this->cantileverBendingMomentCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
+        $shears = $this->cantileverShearForceCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
+        $flexure = $this->calculateFlexure($setup, $profile, $moments->ultimate);
+        $shearScope = $this->cantileverShearVerificationScope->assess($setup->configuration, $shears->ultimate, $flexure->selectedCandidate->originalCandidate);
         $concrete = $this->concreteClasses->get($setup->materials->concreteClass);
         $steel = $this->steelGrades->get($setup->materials->steelGrade);
-        $flexuralDetailing = BeamFlexuralDetailingAssumptions::supported();
-        $reinforcementDetailing = new BeamReinforcementDetailingAssumptions;
+        $stresses = $this->serviceStressCalculator->calculate($moments, $setup->geometry, $flexure->selectedCandidate->effectiveDepth, $concrete, $steel, $flexure->selectedCandidate->providedArea, $profile);
+        $crackScope = $this->cantileverCrackVerificationScope->assess($flexure->selectedCandidate->originalCandidate, $setup->configuration->tensionFace());
+        $deflection = $this->deflectionCalculator->calculate($setup->configuration, $setup->geometry, $flexure->selectedCandidate, $concrete, $steel, $profile);
 
+        $aggregation = $this->aggregationService->aggregate(
+            $this->aggregationService->flexure($flexure->selectedCandidate),
+            $this->aggregationService->methodNotSupported('SHEAR', 'CANTILEVER_FIXED_END_SCOPE', [$shearScope->limitation], $shearScope->designShearForce->maximumAbsoluteShear),
+            $this->aggregationService->stress($stresses),
+            $this->aggregationService->methodNotSupported('CRACK', 'CANTILEVER_FIXED_END_SCOPE', [$crackScope->limitation]),
+            $this->aggregationService->deflection($deflection),
+        );
+        $governing = $this->governingResolver->resolve($aggregation);
+        $summary = $this->summaryBuilder->build($aggregation, $governing, $moments->ultimate, $flexure->selectedCandidate->effectiveDepth, $flexure->selectedCandidate->requiredArea, $flexure->selectedCandidate->originalCandidate, $setup->configuration->calculationMode, $setup->configuration, $shears->ultimate);
+        $details = $this->detailsBuilder->build(
+            $aggregation,
+            $governing,
+            $summary,
+            [
+                'configuration' => $setup->configuration,
+                'geometry' => $setup->geometry,
+                'materials' => $setup->materials,
+                'concreteClass' => $setup->materials->concreteClass->value,
+                'steelGrade' => $setup->materials->steelGrade->value,
+                'exposureClass' => $setup->materials->exposureClasses[0]->value,
+                'cover' => $flexure->cover,
+                'tensionFace' => $setup->configuration->tensionFace(),
+            ],
+            ['characteristicActions' => $actions, 'ultimate' => $ultimate, 'serviceability' => $serviceability],
+            ['bendingMoments' => $moments, 'shearForces' => $shears, 'criticalSectionLocation' => BeamShearCriticalSectionLocation::FIXED_END],
+            ['designStrengths' => $flexure->designStrengths, 'initialEffectiveDepth' => $flexure->initialEffectiveDepth, 'reducedMoment' => $flexure->reducedMoment, 'neutralAxis' => $flexure->neutralAxis, 'leverArm' => $flexure->leverArm, 'domain' => $flexure->domain],
+            ['targetArea' => $flexure->targetArea, 'generatedCandidates' => $flexure->generatedCandidates, 'geometryCandidates' => $flexure->geometryCandidates, 'selectedCandidate' => $flexure->selectedCandidate],
+            ['scope' => $shearScope],
+            ['stress' => $stresses, 'crack' => $crackScope, 'deflection' => $deflection, 'warnings' => [...$aggregation->warnings]],
+        );
+
+        return new BeamCalculationResponse($summary, $aggregation, $details);
+    }
+
+    /** Le pipeline existant est réservé explicitement au sous-module simplement appuyé. */
+    private function calculateSimplySupported(BeamCalculationSetup $setup): BeamCalculationResponse
+    {
+        if ($setup->materials === null || $setup->permanentLoads === null || $setup->variableLoad === null) {
+            throw new LogicException('INCOMPLETE_BEAM_CALCULATION_SETUP');
+        }
+        $this->capabilities->validate($setup->materials);
+
+        $profile = $this->profiles->get();
         $selfWeight = $this->selfWeightCalculator->calculate($setup->geometry, $setup->permanentLoads->includeSelfWeight, $this->unitWeights->normalWeightReinforcedConcrete());
         $actions = $this->characteristicActionsCalculator->calculate($selfWeight, $setup->permanentLoads, $setup->variableLoad);
         $ultimate = $this->ultimateCombinationCalculator->calculate($actions, $profile);
@@ -77,41 +144,21 @@ final readonly class BeamCalculationOrchestrator
         $moments = $this->bendingMomentCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
         $shears = $this->shearForceCalculator->calculate($setup->configuration, $setup->geometry, $ultimate, $serviceability);
 
-        $cover = $this->coverCalculator->calculate(new CoverCalculationInput(
-            CoverMode::AUTO,
-            $setup->materials->exposureClasses,
-            $setup->materials->concreteClass,
-            50,
-            $flexuralDetailing->transverseReinforcementDiameter,
-        ), $profile);
-        $initialDepth = $this->effectiveDepthCalculator->calculate($setup->configuration->calculationMode, $setup->geometry, $cover, $flexuralDetailing, $setup->longitudinalReinforcement);
-        $strengths = $this->designStrengthsCalculator->calculate($setup->materials, $profile);
-        $reduced = $this->reducedMomentCalculator->calculate($moments->ultimate, $setup->geometry, $initialDepth, $strengths->concrete);
-        $neutral = $this->neutralAxisCalculator->calculate($reduced, $initialDepth, $strengths->concrete);
-        $lever = $this->leverArmCalculator->calculate($initialDepth, $neutral);
-        $required = $this->requiredReinforcementCalculator->calculate($moments->ultimate, $strengths->steel, $lever);
-        $minimum = $this->minimumReinforcementCalculator->calculate($concrete, $steel, $setup->geometry, $initialDepth, $profile->beamLongitudinalReinforcementRequirements);
-        $domain = $this->flexuralDomainCheckCalculator->calculate($initialDepth, $neutral, $strengths->concrete, $strengths->steel, $steel);
-        $target = $this->reinforcementTargetCalculator->calculate($required, $minimum, $domain);
-
-        $candidates = $setup->configuration->calculationMode === BeamCalculationMode::DESIGN
-            ? $this->reinforcementCandidatesGenerator->generate($target)
-            : $this->providedReinforcementCandidate($setup, $target);
-        $geometricallyAdmissible = $this->reinforcementGeometryFilter->filter($candidates, $setup->geometry, $cover, $flexuralDetailing, $reinforcementDetailing, $profile->reinforcementSpacingRequirements);
-        $recalculated = $this->reinforcementCandidateRecalculator->recalculate(
-            $geometricallyAdmissible,
-            $moments->ultimate,
-            $setup->geometry,
-            $cover,
-            $flexuralDetailing,
-            $strengths,
-            $concrete,
-            $steel,
-            $profile,
-            $initialDepth,
-            $required,
-        );
-        $selected = $recalculated->validCandidates[0] ?? throw new LogicException('NO_VALID_LONGITUDINAL_REINFORCEMENT_CANDIDATE');
+        $flexure = $this->calculateFlexure($setup, $profile, $moments->ultimate);
+        $concrete = $this->concreteClasses->get($setup->materials->concreteClass);
+        $steel = $this->steelGrades->get($setup->materials->steelGrade);
+        $cover = $flexure->cover;
+        $initialDepth = $flexure->initialEffectiveDepth;
+        $strengths = $flexure->designStrengths;
+        $reduced = $flexure->reducedMoment;
+        $neutral = $flexure->neutralAxis;
+        $lever = $flexure->leverArm;
+        $required = $flexure->requiredArea;
+        $domain = $flexure->domain;
+        $target = $flexure->targetArea;
+        $candidates = $flexure->generatedCandidates;
+        $geometricallyAdmissible = $flexure->geometryCandidates;
+        $selected = $flexure->selectedCandidate;
 
         $concreteShear = $this->concreteShearCalculator->calculate($shears->ultimate, $setup->configuration, $setup->geometry, $selected->effectiveDepth, $concrete, $strengths->concrete, $selected->providedArea, $profile);
         $shearDesign = $this->shearReinforcementCalculator->calculate($concreteShear, $selected->leverArm, $concrete, $steel, $profile, BeamShearDesignAssumptions::supported());
@@ -131,7 +178,7 @@ final readonly class BeamCalculationOrchestrator
             $this->aggregationService->deflection($deflection),
         );
         $governing = $this->governingResolver->resolve($aggregation);
-        $summary = $this->summaryBuilder->build($aggregation, $governing, $moments->ultimate, $selected->effectiveDepth, $selected->requiredArea, $selected->originalCandidate, $setup->configuration->calculationMode);
+        $summary = $this->summaryBuilder->build($aggregation, $governing, $moments->ultimate, $selected->effectiveDepth, $selected->requiredArea, $selected->originalCandidate, $setup->configuration->calculationMode, $setup->configuration, $shears->ultimate);
         $details = $this->detailsBuilder->build(
             $aggregation,
             $governing,
@@ -168,8 +215,38 @@ final readonly class BeamCalculationOrchestrator
             $target->targetArea,
             $providedArea - $target->targetArea,
             $target->targetArea / $providedArea,
+            $setup->configuration->tensionFace()->reinforcementPosition(),
         );
 
         return new BeamReinforcementCandidatesResult($target->targetArea, [$reinforcement->tensionBarDiameter], $reinforcement->tensionBarCount, $reinforcement->tensionBarCount, BeamReinforcementCandidatesStatus::CANDIDATES_AVAILABLE, [$candidate], 1);
+    }
+
+    /** Réutilisé par les deux sous-modules : le signe de MEd est porté par BeamBendingMoment. */
+    private function calculateFlexure(BeamCalculationSetup $setup, DesignCodeProfile $profile, BeamBendingMoment $ultimateMoment): BeamFlexuralDesignResult
+    {
+        $materials = $setup->materials ?? throw new LogicException('INCOMPLETE_BEAM_CALCULATION_SETUP');
+        $concrete = $this->concreteClasses->get($materials->concreteClass);
+        $steel = $this->steelGrades->get($materials->steelGrade);
+        $detailing = BeamFlexuralDetailingAssumptions::supported();
+        $reinforcementDetailing = new BeamReinforcementDetailingAssumptions;
+        $tensionFace = $setup->configuration->tensionFace();
+        $cover = $this->coverCalculator->calculate(new CoverCalculationInput(CoverMode::AUTO, $materials->exposureClasses, $materials->concreteClass, 50, $detailing->transverseReinforcementDiameter), $profile);
+        $initialDepth = $this->effectiveDepthCalculator->calculate($setup->configuration->calculationMode, $setup->geometry, $cover, $detailing, $setup->longitudinalReinforcement, $tensionFace);
+        $strengths = $this->designStrengthsCalculator->calculate($materials, $profile);
+        $reduced = $this->reducedMomentCalculator->calculate($ultimateMoment, $setup->geometry, $initialDepth, $strengths->concrete);
+        $neutral = $this->neutralAxisCalculator->calculate($reduced, $initialDepth, $strengths->concrete);
+        $lever = $this->leverArmCalculator->calculate($initialDepth, $neutral);
+        $required = $this->requiredReinforcementCalculator->calculate($ultimateMoment, $strengths->steel, $lever);
+        $minimum = $this->minimumReinforcementCalculator->calculate($concrete, $steel, $setup->geometry, $initialDepth, $profile->beamLongitudinalReinforcementRequirements);
+        $domain = $this->flexuralDomainCheckCalculator->calculate($initialDepth, $neutral, $strengths->concrete, $strengths->steel, $steel);
+        $target = $this->reinforcementTargetCalculator->calculate($required, $minimum, $domain);
+        $candidates = $setup->configuration->calculationMode === BeamCalculationMode::DESIGN
+            ? $this->reinforcementCandidatesGenerator->generate($target, $tensionFace->reinforcementPosition())
+            : $this->providedReinforcementCandidate($setup, $target);
+        $geometryCandidates = $this->reinforcementGeometryFilter->filter($candidates, $setup->geometry, $cover, $detailing, $reinforcementDetailing, $profile->reinforcementSpacingRequirements);
+        $recalculated = $this->reinforcementCandidateRecalculator->recalculate($geometryCandidates, $ultimateMoment, $setup->geometry, $cover, $detailing, $strengths, $concrete, $steel, $profile, $initialDepth, $required);
+        $selected = $recalculated->validCandidates[0] ?? throw new LogicException('NO_VALID_LONGITUDINAL_REINFORCEMENT_CANDIDATE');
+
+        return new BeamFlexuralDesignResult($cover, $initialDepth, $strengths, $reduced, $neutral, $lever, $required, $minimum, $domain, $target, $candidates, $geometryCandidates, $recalculated, $selected);
     }
 }

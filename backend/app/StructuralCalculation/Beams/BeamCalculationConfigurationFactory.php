@@ -19,6 +19,7 @@ final class BeamCalculationConfigurationFactory
         string $loadModel,
         string $designCodeProfile,
         string $designSituation,
+        ?string $submodule = null,
     ): BeamCalculationConfiguration {
         $mode = BeamCalculationMode::tryFrom($calculationMode);
         $element = ElementType::tryFrom($elementType);
@@ -28,11 +29,14 @@ final class BeamCalculationConfigurationFactory
         $load = BeamLoadModel::tryFrom($loadModel);
         $profile = DesignCodeProfileIdentifier::tryFrom($designCodeProfile);
         $situation = DesignSituation::tryFrom($designSituation);
+        $beamSubmodule = $submodule === null
+            ? BeamSubmodule::BEAM_SIMPLE_RECTANGULAR
+            : BeamSubmodule::tryFrom($submodule);
 
-        if ($mode === null || $element === null || $material === null || $section === null || $support === null || $load === null || $profile === null || $situation === null) {
+        if ($mode === null || $element === null || $material === null || $section === null || $support === null || $load === null || $profile === null || $situation === null || $beamSubmodule === null) {
             throw new BeamConfigurationException(BeamConfigurationRejectionReason::INVALID_CONFIGURATION_VALUE);
         }
 
-        return new BeamCalculationConfiguration($mode, $element, $material, $section, $support, $load, $profile, $situation);
+        return new BeamCalculationConfiguration($mode, $element, $material, $section, $support, $load, $profile, $situation, $beamSubmodule);
     }
 }

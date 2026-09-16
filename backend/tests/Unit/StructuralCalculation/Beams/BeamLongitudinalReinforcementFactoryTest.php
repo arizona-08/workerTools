@@ -4,6 +4,7 @@ use App\StructuralCalculation\Beams\BeamCalculationMode;
 use App\StructuralCalculation\Beams\BeamLongitudinalReinforcementException;
 use App\StructuralCalculation\Beams\BeamLongitudinalReinforcementFactory;
 use App\StructuralCalculation\Beams\BeamLongitudinalReinforcementRejectionReason;
+use App\StructuralCalculation\Beams\BeamReinforcementPosition;
 
 function beamLongitudinalReinforcementFactory(): BeamLongitudinalReinforcementFactory
 {
@@ -16,8 +17,9 @@ it('derives provided steel area from 4 HA16 without accepting a client area', fu
     expect($reinforcement->tensionBarCount)->toBe(4)
         ->and($reinforcement->tensionBarDiameter)->toBe(16.0)
         ->and($reinforcement->tensionRebarLayers)->toBe(1)
+        ->and($reinforcement->position)->toBe(BeamReinforcementPosition::BOTTOM)
         ->and(abs($reinforcement->providedSteelArea - 804.247719))->toBeLessThan(0.000001)
-        ->and(array_keys(get_object_vars($reinforcement)))->toEqual(['providedSteelArea', 'tensionBarCount', 'tensionBarDiameter', 'tensionRebarLayers']);
+        ->and(array_keys(get_object_vars($reinforcement)))->toEqual(['providedSteelArea', 'tensionBarCount', 'tensionBarDiameter', 'tensionRebarLayers', 'position']);
 });
 
 it('derives provided steel area from 2 HA20', function () {

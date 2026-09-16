@@ -58,6 +58,14 @@ export class Calculator {
   calculateBeam(): void {
     if (this.isCalculating()) return;
 
+    const submoduleMessage = this.beamForm?.submoduleCalculationMessage();
+    if (submoduleMessage !== null && submoduleMessage !== undefined) {
+      this.clearCalculationResult();
+      this.calculationError.set(submoduleMessage);
+
+      return;
+    }
+
     const payload = this.beamForm?.requestPayload();
     if (payload === null || payload === undefined) {
       this.calculationError.set('Complétez les champs obligatoires avant de lancer le calcul.');
@@ -78,6 +86,10 @@ export class Calculator {
         this.isCalculating.set(false);
       },
     });
+  }
+
+  isBeamCalculationAvailable(): boolean {
+    return this.beamForm?.isCurrentSubmoduleCalculable() ?? false;
   }
 
   calculateSlab(): void {

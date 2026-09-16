@@ -22,6 +22,9 @@ final class BeamDeflectionVerificationCalculator
         ReinforcementSteelProperties $steel,
         DesignCodeProfile $profile,
     ): BeamDeflectionVerificationResult {
+        if ($configuration->supportSystem === BeamSupportSystem::CANTILEVER) {
+            return $this->unsupportedForCantilever($configuration, $geometry, $candidate, $concrete);
+        }
         $this->ensureSupportedConfiguration($configuration, $candidate);
         $this->ensurePositiveFinite($geometry->effectiveSpan, BeamDeflectionVerificationRejectionReason::INVALID_EFFECTIVE_SPAN);
         $this->ensurePositiveFinite($geometry->width, BeamDeflectionVerificationRejectionReason::INVALID_TENSION_WIDTH);
@@ -77,6 +80,32 @@ final class BeamDeflectionVerificationCalculator
             $spanDepth->utilization,
             $spanDepth->actualSpanDepthRatio <= $spanDepth->allowableSpanDepthRatio ? BeamDeflectionVerificationStatus::COMPLIANT : BeamDeflectionVerificationStatus::NOT_COMPLIANT,
             ['SIMPLIFIED_METHOD_ONLY', 'NO_EXPLICIT_DEFLECTION_CALCULATED', 'LONG_TERM_EFFECTS_NOT_EXPLICITLY_MODELLED', 'PARTITION_DAMAGE_CHECK_NOT_MODELLED'],
+        );
+    }
+
+    private function unsupportedForCantilever(BeamCalculationConfiguration $configuration, BeamGeometry $geometry, BeamReinforcementCandidateRecalculationResult $candidate, ConcreteProperties $concrete): BeamDeflectionVerificationResult
+    {
+        return new BeamDeflectionVerificationResult(
+            BeamDeflectionMethod::SIMPLIFIED_SPAN_DEPTH,
+            BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED,
+            $geometry->effectiveSpan,
+            $candidate->effectiveDepth->effectiveDepth,
+            null,
+            $concrete->fck,
+            null,
+            null,
+            null,
+            null,
+            null,
+            $configuration->supportSystem,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            BeamDeflectionVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED,
+            ['CANTILEVER_STRUCTURAL_FACTOR_NOT_DEFINED_IN_PROFILE'],
         );
     }
 

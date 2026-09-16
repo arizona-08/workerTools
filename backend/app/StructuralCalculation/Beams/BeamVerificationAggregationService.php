@@ -57,6 +57,12 @@ final readonly class BeamVerificationAggregationService
         return new BeamVerificationComponent('DEFLECTION', BeamVerificationStatus::from($result->status->value), $result->utilization, $result->actualSpanDepthRatio, $result->allowableSpanDepthRatio, $result->method->value, $result->warnings);
     }
 
+    /** Représente une limite explicitement déclarée par un sous-module, sans inventer de ratio. */
+    public function methodNotSupported(string $identifier, string $method, array $warnings = [], ?float $governingValue = null): BeamVerificationComponent
+    {
+        return new BeamVerificationComponent($identifier, BeamVerificationStatus::CALCULATION_METHOD_NOT_SUPPORTED, null, $governingValue, null, $method, $warnings);
+    }
+
     private function missing(string $identifier): BeamVerificationComponent
     {
         return new BeamVerificationComponent($identifier, BeamVerificationStatus::NOT_CHECKED, warnings: ['REQUIRED_VERIFICATION_MISSING']);
