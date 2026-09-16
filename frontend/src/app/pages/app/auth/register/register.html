@@ -1,1 +1,37 @@
-<p>register-page works!</p>
+<section class="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm sm:p-8" aria-labelledby="register-title">
+  <p class="text-sm font-semibold text-violet-700">WorkerTools</p>
+  <h1 id="register-title" class="mt-2 text-2xl font-semibold tracking-tight text-zinc-950">Créer votre compte</h1>
+  <p class="mt-2 text-sm leading-6 text-zinc-600">Enregistrez-vous pour préparer et retrouver vos calculs de structure.</p>
+
+  <form class="mt-7 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div>
+      <label for="name" class="block text-sm font-medium text-zinc-800">Nom</label>
+      <input id="name" type="text" autocomplete="name" formControlName="name" [attr.aria-invalid]="hasFieldError('name')" aria-describedby="name-error" class="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-zinc-950 outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-100" />
+      @if (fieldError('name'); as error) { <p id="name-error" class="mt-1.5 text-sm text-red-700" role="alert">{{ error }}</p> }
+    </div>
+
+    <div>
+      <label for="email" class="block text-sm font-medium text-zinc-800">Adresse email</label>
+      <input id="email" type="email" autocomplete="email" formControlName="email" [attr.aria-invalid]="hasFieldError('email')" aria-describedby="email-error" class="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-zinc-950 outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-100" />
+      @if (fieldError('email'); as error) { <p id="email-error" class="mt-1.5 text-sm text-red-700" role="alert">{{ error }}</p> }
+    </div>
+
+    <div>
+      <label for="password" class="block text-sm font-medium text-zinc-800">Mot de passe</label>
+      <input id="password" type="password" autocomplete="new-password" formControlName="password" [attr.aria-invalid]="hasFieldError('password')" aria-describedby="password-error" class="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-zinc-950 outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-100" />
+      @if (fieldError('password'); as error) { <p id="password-error" class="mt-1.5 text-sm text-red-700" role="alert">{{ error }}</p> }
+    </div>
+
+    <div>
+      <label for="password_confirmation" class="block text-sm font-medium text-zinc-800">Confirmer le mot de passe</label>
+      <input id="password_confirmation" type="password" autocomplete="new-password" formControlName="password_confirmation" [attr.aria-invalid]="hasFieldError('password_confirmation')" aria-describedby="password-confirmation-error" class="mt-1.5 block w-full rounded-lg border border-zinc-300 px-3 py-2.5 text-zinc-950 outline-none focus:border-violet-600 focus:ring-2 focus:ring-violet-100" />
+      @if (fieldError('password_confirmation'); as error) { <p id="password-confirmation-error" class="mt-1.5 text-sm text-red-700" role="alert">{{ error }}</p> }
+    </div>
+
+    @if (globalError(); as error) { <p class="rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">{{ error }}</p> }
+
+    <button type="submit" [disabled]="isSubmitting()" class="w-full rounded-lg bg-violet-700 px-4 py-2.5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700 disabled:cursor-not-allowed disabled:opacity-55">
+      @if (isSubmitting()) { Création du compte… } @else { Créer mon compte }
+    </button>
+  </form>
+</section>
