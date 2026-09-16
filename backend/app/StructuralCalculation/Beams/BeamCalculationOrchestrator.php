@@ -12,7 +12,7 @@ use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelGra
 use LogicException;
 
 /**
- * Point d'entrée du moteur Poutre MVP.
+ * Point d'entrée du moteur Poutre V1.
  *
  * Il compose exclusivement les résultats des étapes précédentes : aucune formule
  * mécanique, règle normative ou décision de conformité n'est définie ici.
@@ -67,7 +67,7 @@ final readonly class BeamCalculationOrchestrator
         $profile = $this->profiles->get();
         $concrete = $this->concreteClasses->get($setup->materials->concreteClass);
         $steel = $this->steelGrades->get($setup->materials->steelGrade);
-        $flexuralDetailing = BeamFlexuralDetailingAssumptions::mvp();
+        $flexuralDetailing = BeamFlexuralDetailingAssumptions::supported();
         $reinforcementDetailing = new BeamReinforcementDetailingAssumptions;
 
         $selfWeight = $this->selfWeightCalculator->calculate($setup->geometry, $setup->permanentLoads->includeSelfWeight, $this->unitWeights->normalWeightReinforcedConcrete());
@@ -114,7 +114,7 @@ final readonly class BeamCalculationOrchestrator
         $selected = $recalculated->validCandidates[0] ?? throw new LogicException('NO_VALID_LONGITUDINAL_REINFORCEMENT_CANDIDATE');
 
         $concreteShear = $this->concreteShearCalculator->calculate($shears->ultimate, $setup->configuration, $setup->geometry, $selected->effectiveDepth, $concrete, $strengths->concrete, $selected->providedArea, $profile);
-        $shearDesign = $this->shearReinforcementCalculator->calculate($concreteShear, $selected->leverArm, $concrete, $steel, $profile, BeamShearDesignAssumptions::mvp());
+        $shearDesign = $this->shearReinforcementCalculator->calculate($concreteShear, $selected->leverArm, $concrete, $steel, $profile, BeamShearDesignAssumptions::supported());
         $maximumShear = $this->maximumShearCalculator->calculate($shearDesign, $concrete, $strengths->concrete, $profile);
         $stirrups = $this->stirrupProposalGenerator->generate($shearDesign, $maximumShear, $selected->effectiveDepth, $cover, $profile);
         $stirrup = $stirrups->recommendedCandidate ?? throw new LogicException('NO_VALID_STIRRUP_CANDIDATE');

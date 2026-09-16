@@ -2,7 +2,7 @@
 
 Ce référentiel décrit les concepts effectivement implémentés dans WorkerTools.
 `USER` désigne une donnée saisie, `DERIVED` une valeur calculée, `PROFILE` une
-valeur du profil normatif, `FIXED_MVP` une hypothèse figée et `CONFIG` une
+valeur du profil normatif, `FIXED_SCOPE` une hypothèse figée et `CONFIG` une
 configuration métier ou technique. Les calculs normatifs relèvent du backend.
 
 ## Contrats transverses
@@ -57,7 +57,7 @@ documentées dans `docs/normative/ec2-03-french-profile.md`.
 | `gammaS` / `γs` | 1,15 | PROFILE | coefficient partiel acier de `fyd`, EC2 2.4.2.4 |
 | `alphaCc` / `αcc` | 1,00 | PROFILE | coefficient de `fcd`, EC2 3.1.6 ; statut A1:2026 encore à confirmer |
 | `gammaGUnfavourable`, `gammaGFavourable`, `gammaQ` | 1,35 / 1,00 / 1,50 | PROFILE | combinaison ELU fondamentale bâtiment |
-| `VariableActionCategory` | `A` supportée ; `B…E` connues | USER | catégorie normative de l'action variable. Le MVP Poutre n'accepte que A ; B à E sont explicitement hors périmètre |
+| `VariableActionCategory` | `A` supportée ; `B…E` connues | USER | catégorie normative de l'action variable. Le V1 Poutre n'accepte que A ; B à E sont explicitement hors périmètre |
 | `psi0`, `psi1`, `psi2` / `ψ0`, `ψ1`, `ψ2` | 0,70 / 0,50 / 0,30 pour A | PROFILE | facteurs dépendant de la catégorie d'action, résolus par le profil ; `ψ0` concerne notamment les variables accompagnatrices de la combinaison caractéristique, `ψ1` la valeur fréquente et `ψ2` la valeur quasi-permanente. Ils ne sont pas des constantes universelles. EN 1990 annexe A1 / EN 1991-1-1 |
 
 ## Expositions
@@ -86,21 +86,21 @@ sont retournées par `CoverCalculationResult` et exprimées en `mm` sauf mention
 | `reinforcementDiameter` / `φ` | nombre `> 0` | USER | diamètre de barre ; donne `cMinBond` |
 | `compactCover` | booléen | USER | atteste les conditions de compacité du tableau 4.3NF ; le moteur ne les déduit pas |
 | `manualNominalCover` / `c_nom` | nombre `> 0` | USER | valeur manuelle, sans conformité normative automatique |
-| `CoverCalculationScope` | 7 booléens | FIXED_MVP | garde-fou de périmètre ; une valeur fausse refuse AUTO |
+| `CoverCalculationScope` | 7 booléens | FIXED_SCOPE | garde-fou de périmètre ; une valeur fausse refuse AUTO |
 | `StructuralClass` | `S1…S6`, initiale `S4` | PROFILE puis DERIVED | classe structurale ; modifiée par durée, résistance et compacité. NA 4.4.1.2(5), tableau 4.3NF |
 | `StructuralClassModifier` | règle et entier | DERIVED | trace `workingLife`, `concreteStrength`, `compactCover` |
 | `cMinDurability` / `c_min,dur` | nombre | DERIVED | exigence par exposition, table du profil selon classe structurale |
-| `cMinBond` / `c_min,b` | `φ` en MVP | DERIVED | exigence d'adhérence pour barre individuelle |
-| `deltaCDurGamma`, `deltaCDurSt`, `deltaCDurAdd` | 0 / 0 / 0 | PROFILE | `Δc_dur,γ`, `Δc_dur,st`, `Δc_dur,add` ; pas d'acier/protection spéciaux MVP |
+| `cMinBond` / `c_min,b` | `φ` en V1 | DERIVED | exigence d'adhérence pour barre individuelle |
+| `deltaCDurGamma`, `deltaCDurSt`, `deltaCDurAdd` | 0 / 0 / 0 | PROFILE | `Δc_dur,γ`, `Δc_dur,st`, `Δc_dur,add` ; pas d'acier/protection spéciaux V1 |
 | `correctedCMinDurability` | nombre | DERIVED | `c_min,dur + Δc_dur,γ - Δc_dur,st - Δc_dur,add` |
 | `minimumAbsoluteCover` | 10 | PROFILE | seuil absolu de la formule `c_min` |
 | `cMin` / `c_min` | nombre | DERIVED | `max(c_min,b, correctedCMinDurability, 10 mm)` |
 | `CoverGoverningCriterion` | `BOND`, `DURABILITY`, `MINIMUM_10_MM` | DERIVED | terme gouvernant ; égalité à 10 mm présentée comme minimum absolu |
-| `defaultDeltaCDev`, `deltaCDev` / `Δc_dev` | 10 | PROFILE | tolérance d'exécution MVP, sans réduction arbitraire |
+| `defaultDeltaCDev`, `deltaCDev` / `Δc_dev` | 10 | PROFILE | tolérance d'exécution V1, sans réduction arbitraire |
 | `cNom` / `c_nom` | nombre | DERIVED ou USER | AUTO : `cMin + deltaCDev` ; MANUAL : valeur imposée |
 | `governingExposureClass`, `exposureResults` | classe nullable, liste | DERIVED | exposition gouvernante et traces détaillées par exposition |
 | `warnings` | liste de textes | DERIVED | notamment l'avertissement du mode manuel |
-| `CoverCalculationRejectionReason` | 7 identifiants | DERIVED | motif de rejet métier : donnée invalide, règle/exposition non supportée, périmètre hors MVP |
+| `CoverCalculationRejectionReason` | 7 identifiants | DERIVED | motif de rejet métier : donnée invalide, règle/exposition non supportée, périmètre hors V1 |
 
 Références détaillées et limites : `docs/normative/ec2-05-cover.md`. XF est
 refusée sans classe XC/XD de référence, XA sans agent agressif caractérisé ;
@@ -116,13 +116,13 @@ d'une valeur métier reconnue mais non supportée.
 
 | Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
 |---|---|---|---|---|
-| `elementType` | `ElementType::BEAM` | FIXED_MVP | élément configuré ; enum partagé avec le module Dalle | — |
-| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_MVP | matériau structurel du MVP ; enum partagé avec le module Dalle, sans béton précontraint, acier, bois ou béton non armé | — |
-| `sectionType` | `RECTANGULAR` supporté ; `T_SECTION`, `L_SECTION`, `VARIABLE`, `CIRCULAR` reconnus mais refusés | FIXED_MVP | type de section. La valeur détermine plus tard les champs de géométrie, sans les créer ici | — |
-| `supportSystem` | `SIMPLY_SUPPORTED` supporté ; `CONTINUOUS`, `CANTILEVER`, `FIXED_ENDED`, `MULTI_SPAN` refusés | FIXED_MVP | système statique ; aucun calcul d'effort n'est effectué | — |
-| `loadModel` | `UNIFORMLY_DISTRIBUTED` supporté ; `POINT_LOAD`, `TRIANGULAR`, `APPLIED_MOMENT` refusés | FIXED_MVP | modèle de chargement qui déterminera ultérieurement les données à saisir | — |
+| `elementType` | `ElementType::BEAM` | FIXED_SCOPE | élément configuré ; enum partagé avec le module Dalle | — |
+| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_SCOPE | matériau structurel du V1 ; enum partagé avec le module Dalle, sans béton précontraint, acier, bois ou béton non armé | — |
+| `sectionType` | `RECTANGULAR` supporté ; `T_SECTION`, `L_SECTION`, `VARIABLE`, `CIRCULAR` reconnus mais refusés | FIXED_SCOPE | type de section. La valeur détermine plus tard les champs de géométrie, sans les créer ici | — |
+| `supportSystem` | `SIMPLY_SUPPORTED` supporté ; `CONTINUOUS`, `CANTILEVER`, `FIXED_ENDED`, `MULTI_SPAN` refusés | FIXED_SCOPE | système statique ; aucun calcul d'effort n'est effectué | — |
+| `loadModel` | `UNIFORMLY_DISTRIBUTED` supporté ; `POINT_LOAD`, `TRIANGULAR`, `APPLIED_MOMENT` refusés | FIXED_SCOPE | modèle de chargement qui déterminera ultérieurement les données à saisir | — |
 | `designCodeProfile` | `NF_EN_1992_1_1_2005_FR` | PROFILE | référence au profil `FrenchEurocodeProfileRepository`, sans duplication de `γ`, `α` ou `ψ` | — |
-| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_MVP | situation persistante/transitoire du MVP ; enum partagé avec le module Dalle, accidentelle et sismique absentes | — |
+| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_SCOPE | situation persistante/transitoire du V1 ; enum partagé avec le module Dalle, accidentelle et sismique absentes | — |
 | `BeamConfigurationRejectionReason` | `INVALID_CONFIGURATION_VALUE` et motifs `UNSUPPORTED_*` | DERIVED | retour métier de validation. Un identifiant libre inconnu est invalide ; une section T connue est explicitement non supportée | — |
 
 Référence de contexte : EN 1990 pour la situation de projet et EN 1992-1-1
@@ -137,14 +137,14 @@ exposition, action, résultat ou formule.
 
 | Nom dans le code | Type / valeurs | Origine | Signification, dépendances et limite | Unité |
 |---|---|---|---|---|
-| `elementType` | `ElementType::SLAB` | FIXED_MVP | élément associé au module Dalle ; `ElementType` est partagé avec Poutre (`BEAM`) | — |
-| `slabType` | `SlabType::SOLID` | FIXED_MVP | dalle pleine ; aucune dalle nervurée, alvéolaire, précontrainte ou mixte n'est représentée | — |
-| `spanningSystem` | `SlabSpanningSystem::ONE_WAY` | FIXED_MVP | fonctionnement dans une direction principale ; aucun comportement bidirectionnel n'est disponible | — |
-| `structuralSystem` | `SlabStructuralSystem::SINGLE_SPAN_SIMPLY_SUPPORTED_ON_OPPOSITE_SIDES` | FIXED_MVP | une travée : bande de calcul simplement appuyée sur deux côtés opposés ; aucune continuité, console ou autre condition d'appui n'est représentée | — |
-| `loadModel` | `SlabLoadModel::VERTICAL_UNIFORMLY_DISTRIBUTED` | FIXED_MVP | charges verticales uniformément réparties ; aucune charge ponctuelle, linéaire localisée ou horizontale n'est représentée | — |
-| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_MVP | béton armé, sans classe de béton ni acier d'armature détaillés avant SLAB-03 | — |
+| `elementType` | `ElementType::SLAB` | FIXED_SCOPE | élément associé au module Dalle ; `ElementType` est partagé avec Poutre (`BEAM`) | — |
+| `slabType` | `SlabType::SOLID` | FIXED_SCOPE | dalle pleine ; aucune dalle nervurée, alvéolaire, précontrainte ou mixte n'est représentée | — |
+| `spanningSystem` | `SlabSpanningSystem::ONE_WAY` | FIXED_SCOPE | fonctionnement dans une direction principale ; aucun comportement bidirectionnel n'est disponible | — |
+| `structuralSystem` | `SlabStructuralSystem::SINGLE_SPAN_SIMPLY_SUPPORTED_ON_OPPOSITE_SIDES` | FIXED_SCOPE | une travée : bande de calcul simplement appuyée sur deux côtés opposés ; aucune continuité, console ou autre condition d'appui n'est représentée | — |
+| `loadModel` | `SlabLoadModel::VERTICAL_UNIFORMLY_DISTRIBUTED` | FIXED_SCOPE | charges verticales uniformément réparties ; aucune charge ponctuelle, linéaire localisée ou horizontale n'est représentée | — |
+| `materialType` | `MaterialType::REINFORCED_CONCRETE` | FIXED_SCOPE | béton armé, sans classe de béton ni acier d'armature détaillés avant SLAB-03 | — |
 | `designCodeProfile` | `DesignCodeProfileIdentifier::NF_EN_1992_1_1_2005_FR` | PROFILE | identifiant du profil français partagé avec Poutre ; aucun coefficient ni règle normative n'est évalué ici | — |
-| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_MVP | situation persistante/transitoire préparée, sans combinaison d'actions | — |
+| `designSituation` | `DesignSituation::PERSISTENT_TRANSIENT` | FIXED_SCOPE | situation persistante/transitoire préparée, sans combinaison d'actions | — |
 | `SlabCalculationConfigurationFactory` / `Validator` | configuration et motifs `INVALID_CONFIGURATION_VALUE`, `UNSUPPORTED_*` | DERIVED | conversion typée et validation backend, indépendante du frontend ; pas de DTO de calcul Dalle à ce stade | — |
 
 Le formulaire affiche comme hypothèses non interactives « Dalle pleine »,
@@ -164,11 +164,11 @@ unitaire. Les conversions sont réalisées une seule fois dans
 |---|---|---|---|---|---|
 | `effectiveSpan` | `L` | nombre fini `> 0` | USER | portée de calcul saisie directement ; aucune portée libre, appui ou dérivation automatique | m / mm |
 | `thickness` | `h` | nombre fini `> 0` | USER | épaisseur totale de la dalle pleine ; ce n'est pas la hauteur utile `d` | cm / mm |
-| `calculationStripWidth` | `b` | `SlabGeometry::CALCULATION_STRIP_WIDTH_MM = 1000` | FIXED_MVP | bande unitaire automatique du modèle unidirectionnel ; elle n'est ni saisie ni envoyée par le client | — / mm |
+| `calculationStripWidth` | `b` | `SlabGeometry::CALCULATION_STRIP_WIDTH_MM = 1000` | FIXED_SCOPE | bande unitaire automatique du modèle unidirectionnel ; elle n'est ni saisie ni envoyée par le client | — / mm |
 | `SlabGeometryPayload` | — | `effectiveSpan`, `thickness`, `unit: 'mm'` | DERIVED | contrat de géométrie sans `width`, `stripWidth` ou autre largeur utilisateur | mm |
 | `SlabGeometryRejectionReason` | — | motifs `MISSING_*`, `INVALID_*` | DERIVED | validation backend : présence, nombre fini et strictement positif | — |
 
-La bande de 1 m est une convention de modélisation du MVP, sans référence
+La bande de 1 m est une convention de modélisation du V1, sans référence
 normative attribuée à ce stade. SLAB-02 ne calcule ni surface, volume, poids
 propre, hauteur utile, ratio `L/h`, moment, effort, armature ou conformité.
 
@@ -177,14 +177,14 @@ propre, hauteur utile, ratio `L/h`, moment, effort, armature ou conformité.
 La dalle réutilise directement `ConcreteStrengthClass`,
 `ReinforcementSteelGrade` et `ExposureClassCode` des référentiels communs ;
 elle ne définit aucun équivalent `Slab*`. `SlabMaterialsFactory` délègue la
-résolution et les capabilities MVP à `BeamMaterialsFactory` et
+résolution et les capabilities V1 à `BeamMaterialsFactory` et
 `BeamCalculationCapabilities`, qui restent la source unique actuelle.
 
 | Nom | Origine | Contexte Dalle |
 |---|---|---|
 | `concreteClass` | USER | identifiant de `ConcreteStrengthClass`, parmi les capabilities communes |
-| `steelGrade` | USER | identifiant de `ReinforcementSteelGrade`, explicitement B500B dans le MVP courant |
-| `exposureClass` | USER | identifiant de `ExposureClassCode`, explicitement XC1 dans le MVP courant |
+| `steelGrade` | USER | identifiant de `ReinforcementSteelGrade`, explicitement B500B dans le V1 courant |
+| `exposureClass` | USER | identifiant de `ExposureClassCode`, explicitement XC1 dans le V1 courant |
 
 Les propriétés `fck`, `fcm`, `fctm`, `Ecm`, `fyd`, les coefficients de profil
 et l'enrobage restent dérivés par le moteur commun ; elles ne sont ni saisies
@@ -230,7 +230,7 @@ ni portée, ni bande de calcul, ni condition d'appui, ni analyse.
 | Nom dans le code | Symbole | Origine | Signification, dépendances et référence | Unité Dalle |
 |---|---|---|---|---|
 | `permanentTotal` | `Gk,total` | DERIVED | total permanent issu de SLAB-04, consommé sans recalcul des contributions | kN/m² |
-| `imposedLoad` | `Qk` | USER | action variable principale issue de SLAB-04 ; catégorie A fixée par le MVP, sans sélecteur utilisateur | kN/m² |
+| `imposedLoad` | `Qk` | USER | action variable principale issue de SLAB-04 ; catégorie A fixée par le V1, sans sélecteur utilisateur | kN/m² |
 | `gammaGUnfavourable`, `gammaGFavourable`, `gammaQ` | `γG,sup`, `γG,inf`, `γQ` | PROFILE | `ActionSafetyFactors` du profil français ; ELU fondamental EN 1990 6.10 | — |
 | `psi0`, `psi1`, `psi2` | `ψ0`, `ψ1`, `ψ2` | PROFILE | `CombinationFactors` du profil selon la catégorie A ; `ψ0` n'est pas utilisé pour l'unique action principale de l'ELS caractéristique | — |
 | `uls.value` | `qEd` | DERIVED | `γG,sup × Gk,total + γQ × Qk`, expression du profil `EN1990_6_10` | kN/m² |
@@ -255,7 +255,7 @@ de bande et ne produit encore aucun moment ni effort tranchant.
 
 | Nom dans le code | Symbole | Origine | Signification et limite | Unité |
 |---|---|---|---|---|
-| `calculationStripWidth` | `b` | FIXED_MVP | bande de `SlabGeometry`, égale à 1000 mm ; non saisie par l'utilisateur | mm |
+| `calculationStripWidth` | `b` | FIXED_SCOPE | bande de `SlabGeometry`, égale à 1000 mm ; non saisie par l'utilisateur | mm |
 | `stripWidthMetres` | `b` | DERIVED | conversion explicite de la bande via `LengthConverter` avant le produit physique | m |
 | `SlabSurfaceLoadCombination.value` | `qEd`, `qSls*` | DERIVED | charge surfacique issue directement de SLAB-05 ; jamais recombinée ici | kN/m² |
 | `SlabStripLinearLoad.lineLoad` | `wEd`, `wSlsCharacteristic`, `wSlsFrequent`, `wSlsQuasiPermanent` | DERIVED | `q × b`, charge linéique de la bande ; aucune analyse d'appui ni sollicitation interne | kN/m |
@@ -286,7 +286,7 @@ d'espacement.
 | Nom dans le code | Symbole | Origine | Signification, dépendances et limite | Unité |
 |---|---|---|---|---|
 | `SlabStripInternalForce.maximumMoment` | `MEd` | DERIVED | moment ELU reçu de SLAB-06, correspondant à la bande de 1 m ; converti explicitement en N·mm par le moteur commun avant les équations de section | kN·m |
-| `SlabGeometry.calculationStripWidth` | `b` | FIXED_MVP | largeur de la section rectangulaire, toujours 1000 mm ; jamais une saisie utilisateur | mm |
+| `SlabGeometry.calculationStripWidth` | `b` | FIXED_SCOPE | largeur de la section rectangulaire, toujours 1000 mm ; jamais une saisie utilisateur | mm |
 | `SlabGeometry.thickness` | `h` | USER | hauteur totale de la dalle, provenant de SLAB-02 | mm |
 | `SlabFlexuralDetailingAssumptions.preliminaryMainBarDiameter` | `φmain` | CONFIG | diamètre provisoire centralisé à 16 mm, partagé avec l'hypothèse initiale Poutre ; utilisé pour l'enrobage et `d`, à réévaluer quand SLAB-08 sélectionnera un diamètre réel | mm |
 | `CoverCalculationResult.cNom` | `cnom` | DERIVED / PROFILE | calcul automatique commun EC2-05 à partir de la classe de béton, de l'exposition, de la durée de vie de 50 ans et de `φmain` ; aucune valeur d'enrobage n'est codée dans SLAB-07 | mm |
@@ -316,7 +316,7 @@ est donc utilisé par le calcul commun d'enrobage, puis par `d`, `μ`, `ξ`, `x`
 
 | Nom dans le code | Symbole | Origine | Signification et limite | Unité |
 |---|---|---|---|---|
-| `ReinforcementBarDiameterCatalog` | `φmain` | CONFIG | catalogue commun MVP : 8, 10, 12, 14, 16, 20, 25, 32 ; ce n'est pas une liste normative exhaustive | mm |
+| `ReinforcementBarDiameterCatalog` | `φmain` | CONFIG | catalogue commun V1 : 8, 10, 12, 14, 16, 20, 25, 32 ; ce n'est pas une liste normative exhaustive | mm |
 | `SlabMainReinforcementProposalConfiguration.candidateSpacings()` | `s` | CONFIG | discrétisation Dalle : 100, 125, 150, 175, 200, 250, 300 ; aucune limite normative d'espacement Dalle n'est prétendue à ce stade | mm |
 | `SlabMainReinforcementProposal.barArea` | `Aφ` | DERIVED | aire géométrique commune : `π × φ² / 4` | mm² |
 | `SlabMainReinforcementProposal.providedAreaPerMeter` | `As,provided` | DERIVED | `Aφ × 1000 / s` pour la bande de référence | mm²/m |
@@ -403,7 +403,7 @@ calculés à cette étape.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité interne / UI |
 |---|---|---|---|---|
-| `variableActionCategory` / `category` | — | `VariableActionCategory` / FIXED_MVP | catégorie d'action variable. Le formulaire représente discrètement A (locaux résidentiels / domestiques) ; B, C, D et E sont connues mais refusées par le MVP Poutre | — |
+| `variableActionCategory` / `category` | — | `VariableActionCategory` / FIXED_SCOPE | catégorie d'action variable. Le formulaire représente discrètement A (locaux résidentiels / domestiques) ; B, C, D et E sont connues mais refusées par le V1 Poutre | — |
 | `characteristicLoad` | `Qk` | nombre fini `>= 0` / USER | action variable caractéristique uniformément répartie, déjà ramenée sur la poutre ; défaut applicatif `CONFIG` : `0` | kN/m |
 | `BeamVariableLoad` | — | objet validé / DERIVED | contient seulement la catégorie et `Qk`, sans `γQ` ni facteur `ψ` | kN/m pour la charge |
 | `BeamVariableLoadPayload` | — | `{ category: 'A', characteristicLoad, unit: 'kN/m' }` / DERIVED | partie `loads.variable` du futur payload Poutre, sans coefficients de sécurité ou de combinaison | kN/m |
@@ -412,7 +412,7 @@ Les futures combinaisons ELU et ELS demanderont `ψ0`, `ψ1` et `ψ2` au profil
 normatif via `DesignCodeProfile::combinationFactorsFor(category)`. BEAM-06 ne
 les applique pas et ne calcule ni `γQ × Qk`, ni effort, ni poids propre. Les
 actions neige, vent, climatiques, thermiques, accidentelles et plusieurs
-actions variables indépendantes sont hors périmètre MVP.
+actions variables indépendantes sont hors périmètre V1.
 
 ## Ferraillage existant Poutre BEAM-07
 
@@ -420,17 +420,17 @@ actions variables indépendantes sont hors périmètre MVP.
 |---|---|---|---|---|
 | `tensionBarCount` | `n` | entier fini `>= 1` / USER | nombre de barres longitudinales tendues de la section vérifiée | — |
 | `tensionBarDiameter` | `φ` | diamètre du catalogue / USER | diamètre nominal de toutes les barres tendues ; prépare `As_prov`, la hauteur utile future, la flexion et la fissuration | mm |
-| `tensionRebarLayers` | — | `1` / FIXED_MVP | un seul lit de barres tendues ; plusieurs lits, diamètres mixtes, armatures comprimées et paquets sont hors périmètre | — |
+| `tensionRebarLayers` | — | `1` / FIXED_SCOPE | un seul lit de barres tendues ; plusieurs lits, diamètres mixtes, armatures comprimées et paquets sont hors périmètre | — |
 | `providedSteelArea` | `As,prov` | nombre dérivé / DERIVED | aire totale d'acier tendu, recalculée côté backend à partir de `n` et `φ` avec `n × π × φ² / 4` ; elle n'est jamais une entrée fiable du client | mm² |
 | `BeamLongitudinalReinforcement` | — | objet validé / DERIVED | ferraillage longitudinal existant uniquement ; aucun étrier, acier comprimé, `As_min`, `As_req`, `d` ou résistance | mm / mm² |
 | `BeamLongitudinalReinforcementPayload` | — | `reinforcement.longitudinal.tension` / DERIVED | présent uniquement en mode `VERIFICATION`, avec `barCount`, `barDiameter`, `diameterUnit: 'mm'` ; `As_prov` est absent du payload | mm |
-| `ReinforcementBarDiameterCatalog` | 8, 10, 12, 14, 16, 20, 25, 32 | CONFIG | catalogue applicatif centralisé de diamètres nominaux passifs proposés par le MVP ; non exhaustif et non normatif | mm |
+| `ReinforcementBarDiameterCatalog` | 8, 10, 12, 14, 16, 20, 25, 32 | CONFIG | catalogue applicatif centralisé de diamètres nominaux passifs proposés par le V1 ; non exhaustif et non normatif | mm |
 
 Le ferraillage est requis en `VERIFICATION` et refusé dans le contrat backend
 `DESIGN`. Exemple géométrique : 4 HA16 donnent `4 × π × 16² / 4 =
 804,2477… mm²`, affiché comme `804 mm²` sans arrondir la valeur moteur.
 
-## Contrat d'entrée Poutre MVP BEAM-08
+## Contrat d'entrée Poutre V1 BEAM-08
 
 `BeamCalculationInputFactory` assemble et valide les sections `configuration`,
 `geometry`, `materials` et `loads`, avec `reinforcement` obligatoire seulement
@@ -449,7 +449,7 @@ les exemples complets DESIGN / VERIFICATION sont documentés dans
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
 | `sectionArea` | `Ac` | nombre dérivé / DERIVED | aire brute de la section rectangulaire pour le poids propre ; dépend de `b` et `h`, convertis de mm en m | m² |
-| `ReinforcedConcreteUnitWeight.value` | `γ_RC` | référence normative centralisée / CONFIG | poids volumique du béton armé de masse volumique normale ; valeur MVP `25`, issue du cadre EN 1991-1-1 ; distinct des classes de béton EC2 | kN/m³ |
+| `ReinforcedConcreteUnitWeight.value` | `γ_RC` | référence normative centralisée / CONFIG | poids volumique du béton armé de masse volumique normale ; valeur V1 `25`, issue du cadre EN 1991-1-1 ; distinct des classes de béton EC2 | kN/m³ |
 | `characteristicLineLoad` | `Gk_self` | nombre dérivé / DERIVED | charge permanente linéaire de poids propre : `Ac × γ_RC` lorsque `includeSelfWeight` est vrai, sinon `0` explicitement | kN/m |
 | `SelfWeightResult` | — | résultat traçable / DERIVED | conserve l'état d'inclusion, `b`, `h`, `Ac`, `γ_RC`, la formule et `Gk_self`, sans total permanent ni combinaison | unités explicites |
 
@@ -465,7 +465,7 @@ les exemples complets DESIGN / VERIFICATION sont documentés dans
 | `BeamPermanentLoads.additionalPermanentLoad` | `Gk_additional` | entrée validée / USER | charge permanente caractéristique additionnelle hors poids propre | kN/m |
 | `CharacteristicPermanentActions.totalPermanentLoad` | `Gk_total` | valeur dérivée / DERIVED | somme exacte `Gk_self + Gk_additional`, destinée aux combinaisons futures | kN/m |
 | `CharacteristicVariableAction.characteristicLoad` | `Qk` | entrée validée / USER | action variable caractéristique uniformément répartie, conservée sans transformation | kN/m |
-| `CharacteristicVariableAction.category` | — | catégorie validée / FIXED_MVP | catégorie A conservée pour l'obtention future de `ψ0`, `ψ1`, `ψ2` auprès du profil | — |
+| `CharacteristicVariableAction.category` | — | catégorie validée / FIXED_SCOPE | catégorie A conservée pour l'obtention future de `ψ0`, `ψ1`, `ψ2` auprès du profil | — |
 | `BeamCharacteristicActionsResult` | — | résultat traçable / DERIVED | sépare actions permanentes (`Gk_self`, `Gk_additional`, `Gk_total`) et action variable (`Qk`, catégorie) | unités explicites |
 
 `CharacteristicActionsCalculator` ne recalcule pas le poids propre et
@@ -476,9 +476,9 @@ moment, ni effort tranchant ; les valeurs restent des actions caractéristiques.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `gammaGUnfavourable` | `γG,sup` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes défavorables ; valeur MVP `1,35` | — |
-| `gammaGFavourable` | `γG,inf` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes favorables ; valeur MVP `1,00`, conservée mais non utilisée pour le cas gravitaire MVP | — |
-| `gammaQ` | `γQ` | coefficient du profil / PROFILE | coefficient partiel de l'action variable principale ; valeur MVP `1,50` | — |
+| `gammaGUnfavourable` | `γG,sup` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes défavorables ; valeur V1 `1,35` | — |
+| `gammaGFavourable` | `γG,inf` | coefficient du profil / PROFILE | coefficient partiel des actions permanentes favorables ; valeur V1 `1,00`, conservée mais non utilisée pour le cas gravitaire V1 | — |
+| `gammaQ` | `γQ` | coefficient du profil / PROFILE | coefficient partiel de l'action variable principale ; valeur V1 `1,50` | — |
 | `FundamentalUltimateCombinationExpression::EN1990_6_10` | EN 1990 6.10 | règle du profil / PROFILE | expression fondamentale retenue par la procédure française `a` ; 6.10a, 6.10b et `ξ` sont hors périmètre | — |
 | `designLineLoad` | `wEd` | valeur dérivée / DERIVED | charge linéaire ELU : `γG,sup × Gk_total + γQ × Qk`, sans `ψ` sur l'unique action variable principale | kN/m |
 | `BeamUltimateCombinationResult` | — | résultat traçable / DERIVED | conserve valeurs caractéristiques, facteurs, contributions, expression et `wEd` sans moment ni effort | kN/m |
@@ -501,7 +501,7 @@ ELS futurs ; aucune combinaison ELS, aucun `MEd` ni `VEd` ne sont créés ici.
 Les actions ELS restent non majorées : le terme permanent a un facteur de 1,0
 dans les expressions EN 1990 et l'action variable principale vaut `Qk` dans
 6.14. Aucun coefficient `γG` ou `γQ` ELU, aucun moment, effort tranchant,
-contrôle de fissuration, de flèche ou de contraintes n'est produit. Le MVP ne
+contrôle de fissuration, de flèche ou de contraintes n'est produit. Le V1 ne
 couvre qu'une action variable principale : les variables accompagnatrices et
 l'emploi de `ψ0` restent hors périmètre.
 
@@ -510,8 +510,8 @@ l'emploi de `ψ0` restent hors périmètre.
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
 | `BeamGeometry.effectiveSpan` | `l_eff` | entrée validée / USER | portée efficace interne convertie de `mm` vers `m` avant l'analyse ; aucune autre portée n'est utilisée | mm puis m |
-| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_MOMENT_COEFFICIENT` | `1/8` | modèle mécanique / FIXED_MVP | coefficient analytique du maximum en travée pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
-| `maximumMomentPosition` | `x = l_eff / 2` | valeur dérivée / DERIVED | position du moment maximal au milieu de travée dans le modèle MVP | m |
+| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_MOMENT_COEFFICIENT` | `1/8` | modèle mécanique / FIXED_SCOPE | coefficient analytique du maximum en travée pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
+| `maximumMomentPosition` | `x = l_eff / 2` | valeur dérivée / DERIVED | position du moment maximal au milieu de travée dans le modèle V1 | m |
 | `MEd` / `ultimate.maximumMoment` | `MEd` | valeur dérivée / DERIVED | moment maximal ELU : `wEd × l_eff² / 8` | kN·m |
 | `MCharacteristic` / `characteristic.maximumMoment` | `M_ELS,car` | valeur dérivée / DERIVED | moment maximal ELS caractéristique : `wSlsCharacteristic × l_eff² / 8` | kN·m |
 | `MFrequent` / `frequent.maximumMoment` | `M_ELS,freq` | valeur dérivée / DERIVED | moment maximal ELS fréquent : `wSlsFrequent × l_eff² / 8` | kN·m |
@@ -521,7 +521,7 @@ l'emploi de `ψ0` restent hors périmètre.
 
 `SimplySupportedBeamBendingMomentCalculator` ne s'applique qu'à
 `SIMPLY_SUPPORTED` et `UNIFORMLY_DISTRIBUTED`; toute autre configuration est
-refusée. La convention MVP retient un moment positif en travée pour les charges
+refusée. La convention V1 retient un moment positif en travée pour les charges
 gravitaire actuelles : `MEd` est donc une valeur positive de dimensionnement.
 Il n'existe ici ni `VEd`, ni hauteur utile `d`, ni armature, ni résistance de
 section `MRd`, ni vérification ELU ou ELS.
@@ -530,7 +530,7 @@ section `MRd`, ni vérification ELU ou ELS.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_SHEAR_COEFFICIENT` | `1/2` | modèle mécanique / FIXED_MVP | coefficient analytique du cisaillement maximal aux appuis pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
+| `SIMPLY_SUPPORTED_UNIFORMLY_DISTRIBUTED_MAX_SHEAR_COEFFICIENT` | `1/2` | modèle mécanique / FIXED_SCOPE | coefficient analytique du cisaillement maximal aux appuis pour une poutre simplement appuyée sous charge uniformément répartie ; ce n'est pas une valeur Eurocode | — |
 | `VEd` / `ultimate.maximumAbsoluteShear` | `VEd` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELU : `wEd × l_eff / 2` | kN |
 | `VCharacteristic` / `characteristic.maximumAbsoluteShear` | `V_ELS,car` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELS caractéristique : `wSlsCharacteristic × l_eff / 2` | kN |
 | `VFrequent` / `frequent.maximumAbsoluteShear` | `V_ELS,freq` | valeur dérivée / DERIVED | effort tranchant maximal absolu ELS fréquent : `wSlsFrequent × l_eff / 2` | kN |
@@ -541,7 +541,7 @@ section `MRd`, ni vérification ELU ou ELS.
 
 `SimplySupportedBeamShearForceCalculator` applique le même domaine mécanique
 que le calcul du moment : `SIMPLY_SUPPORTED` et `UNIFORMLY_DISTRIBUTED` sont
-obligatoires. Pour les charges gravitaires MVP, l'effort est positif à l'appui
+obligatoires. Pour les charges gravitaires V1, l'effort est positif à l'appui
 gauche et négatif à l'appui droit ; `VEd` est la valeur maximale absolue,
 toujours positive. Aucun diagramme détaillé, aucune résistance `VRd,c`,
 `VRd,s` ou `VRd,max`, aucun étrier, hauteur utile ou contrôle de cisaillement
@@ -553,15 +553,15 @@ EC2 n'est produit.
 |---|---|---|---|---|
 | `overallDepth` / `BeamGeometry.height` | `h` | entrée validée / USER | hauteur totale de section, positive, utilisée directement en mm | mm |
 | `CoverCalculationResult.cNom` / `nominalCover` | `c_nom` | résultat EC2-05 / DERIVED ou USER en manuel | enrobage nominal calculé ou imposé par le moteur EC2-05 ; la profondeur utile ne le recalcule jamais | mm |
-| `BeamFlexuralDetailingAssumptions.transverseReinforcementDiameter` | `φ_st` | hypothèse de detailing / CONFIG | diamètre de l'étrier externe présumé. Valeur MVP `8 mm`, configurable ; ce n'est pas une prescription Eurocode et il sera remplacé plus tard par le ferraillage transversal réel | mm |
-| `BeamFlexuralDetailingAssumptions.designTensionBarDiameter` | `φ_long,design` | hypothèse de detailing / CONFIG | diamètre longitudinal supposé pour le premier calcul en mode DESIGN. Valeur MVP `16 mm`, configurable ; ce n'est pas le ferraillage final | mm |
+| `BeamFlexuralDetailingAssumptions.transverseReinforcementDiameter` | `φ_st` | hypothèse de detailing / CONFIG | diamètre de l'étrier externe présumé. Valeur V1 `8 mm`, configurable ; ce n'est pas une prescription Eurocode et il sera remplacé plus tard par le ferraillage transversal réel | mm |
+| `BeamFlexuralDetailingAssumptions.designTensionBarDiameter` | `φ_long,design` | hypothèse de detailing / CONFIG | diamètre longitudinal supposé pour le premier calcul en mode DESIGN. Valeur V1 `16 mm`, configurable ; ce n'est pas le ferraillage final | mm |
 | `BeamLongitudinalReinforcement.tensionBarDiameter` | `φ_long` | entrée validée / USER | diamètre réellement fourni en mode VERIFICATION ; un unique lit est requis | mm |
 | `LongitudinalBarDiameterSource` | — | DERIVED | `CONFIG` en DESIGN, `USER` en VERIFICATION ; trace la provenance du diamètre utilisé | — |
 | `tensionSteelCentroidOffset` | `a_s` | valeur dérivée / DERIVED | distance entre la face tendue et le centre du lit tendu : `c_nom + φ_st + φ_long / 2` | mm |
 | `effectiveDepth` | `d` | valeur dérivée / DERIVED | distance entre la fibre comprimée supérieure et le centre du lit tendu : `h - c_nom - φ_st - φ_long / 2` | mm |
 | `BeamEffectiveDepthResult` | — | résultat traçable / DERIVED | conserve mode, `h`, `c_nom`, diamètres, source, `a_s`, `d` et formule, sans calcul de résistance | mm |
 
-Sous le moment positif de travée MVP, la compression est en face supérieure et
+Sous le moment positif de travée V1, la compression est en face supérieure et
 la traction en face inférieure : `d` est donc mesuré depuis la face supérieure.
 Le calculateur exige `h > 0`, `c_nom ≥ 0`, des diamètres positifs et `d > 0`.
 Il est limité à un seul lit de barres longitudinales tendues. DESIGN utilise
@@ -574,11 +574,11 @@ réel validé par BEAM-07. Aucune itération après choix des barres, aucun `As`
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
 | `ConcreteProperties.fck` | `fck` | propriété de référentiel / DERIVED | résistance caractéristique du béton de la classe choisie ; C30/37 vaut `30` | MPa (`N/mm²`) |
-| `MaterialSafetyFactors.alphaCc` | `αcc` | profil normatif / PROFILE | coefficient du profil français, valeur MVP `1,00`, utilisé exclusivement via `ConcreteDesignStrengthCalculator` | — |
-| `MaterialSafetyFactors.gammaC` | `γc` | profil normatif / PROFILE | coefficient partiel béton du profil français, valeur MVP `1,50` | — |
+| `MaterialSafetyFactors.alphaCc` | `αcc` | profil normatif / PROFILE | coefficient du profil français, valeur V1 `1,00`, utilisé exclusivement via `ConcreteDesignStrengthCalculator` | — |
+| `MaterialSafetyFactors.gammaC` | `γc` | profil normatif / PROFILE | coefficient partiel béton du profil français, valeur V1 `1,50` | — |
 | `BeamFlexuralConcreteDesignStrength.fcd` | `fcd` | valeur dérivée / DERIVED | résistance de calcul `αcc × fck / γc`, calculée par `ConcreteDesignStrengthCalculator` | MPa (`N/mm²`) |
 | `ReinforcementSteelProperties.fyk` | `fyk` | propriété de référentiel / DERIVED | limite caractéristique de la nuance choisie ; B500B vaut `500` | MPa (`N/mm²`) |
-| `MaterialSafetyFactors.gammaS` | `γs` | profil normatif / PROFILE | coefficient partiel acier du profil français, valeur MVP `1,15` | — |
+| `MaterialSafetyFactors.gammaS` | `γs` | profil normatif / PROFILE | coefficient partiel acier du profil français, valeur V1 `1,15` | — |
 | `BeamFlexuralSteelDesignStrength.fyd` | `fyd` | valeur dérivée / DERIVED | résistance de calcul `fyk / γs`, calculée par `ReinforcementSteelDesignStrengthCalculator` | MPa (`N/mm²`) |
 | `BeamFlexuralDesignStrengthsResult` | — | résultat traçable / DERIVED | réunit matériaux résolus, facteurs du profil et résistances de calcul, sans donnée de géométrie, charge ou moment | MPa |
 
@@ -670,7 +670,7 @@ fournie, ni résistance `MRd` ou statut de conformité.
 |---|---|---|---|---|
 | `ConcreteProperties.fctm` | `fctm` | référentiel matériau / DERIVED | résistance moyenne en traction de la classe béton ; C30/37 vaut `2,9` | MPa (`N/mm²`) |
 | `ReinforcementSteelProperties.fyk` | `fyk` | référentiel matériau / DERIVED | limite caractéristique de l'acier ; B500B vaut `500`. `fyd` n'est pas utilisé par cette règle | MPa (`N/mm²`) |
-| `tensionZoneMeanWidth` | `bt` | géométrie dérivée / DERIVED | largeur moyenne de la zone tendue ; pour la seule section rectangulaire MVP en moment positif, `bt = b`, sans généralisation aux sections T/L | mm |
+| `tensionZoneMeanWidth` | `bt` | géométrie dérivée / DERIVED | largeur moyenne de la zone tendue ; pour la seule section rectangulaire V1 en moment positif, `bt = b`, sans généralisation aux sections T/L | mm |
 | `effectiveDepth` | `d` | résultat BEAM-FLEX-01 / DERIVED | profondeur utile reprise sans recalcul ; `h` ne la remplace jamais | mm |
 | `BeamLongitudinalReinforcementRequirements.minimumReinforcementStrengthCoefficient` | `0,26` | profil normatif / PROFILE | coefficient du terme `fctm/fyk`, défini par EN 1992-1-1 §9.2.1.1(1) et fourni par le profil français | sans dimension |
 | `BeamLongitudinalReinforcementRequirements.minimumReinforcementRatio` | `0,0013` | profil normatif / PROFILE | coefficient du minimum absolu, défini par EN 1992-1-1 §9.2.1.1(1) et fourni par le profil français | sans dimension |
@@ -723,8 +723,8 @@ géométrique, `MRd` ou conformité. Aucune marge ni aucun arrondi n'est appliqu
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamReinforcementProposalConfiguration.minimumTensionBarCount` | `n_min` | configuration / CONFIG | nombre minimal de barres tendues proposé par le MVP : `2`; choix de detailing, non règle Eurocode générique | — |
-| `BeamReinforcementProposalConfiguration.maximumTensionBarCount` | `n_max` | configuration / CONFIG | nombre maximal de barres tendues proposé par le MVP : `8`; le générateur ne l'augmente jamais | — |
+| `BeamReinforcementProposalConfiguration.minimumTensionBarCount` | `n_min` | configuration / CONFIG | nombre minimal de barres tendues proposé par le V1 : `2`; choix de detailing, non règle Eurocode générique | — |
+| `BeamReinforcementProposalConfiguration.maximumTensionBarCount` | `n_max` | configuration / CONFIG | nombre maximal de barres tendues proposé par le V1 : `8`; le générateur ne l'augmente jamais | — |
 | `barCount` | `n` | valeur énumérée / DERIVED | nombre de barres homogènes d'un candidat, entre `n_min` et `n_max` | — |
 | `barDiameter` | `φ` | catalogue / CONFIG | diamètre provenant exclusivement de `ReinforcementBarDiameterCatalog` | mm |
 | `barArea` | `Aφ` | valeur dérivée / DERIVED | aire d'une barre, réutilisant `BeamLongitudinalReinforcement` : `π × φ² / 4` | mm² |
@@ -743,7 +743,7 @@ enrobage, collision ou plusieurs lits n'est appliquée avant BEAM-REBAR-03.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamReinforcementDetailingAssumptions.maximumAggregateSize` | `d_g` | hypothèse de detailing / CONFIG | dimension nominale maximale des granulats du MVP : `20`; ce n'est pas une propriété de résistance du béton | mm |
+| `BeamReinforcementDetailingAssumptions.maximumAggregateSize` | `d_g` | hypothèse de detailing / CONFIG | dimension nominale maximale des granulats du V1 : `20`; ce n'est pas une propriété de résistance du béton | mm |
 | `ReinforcementSpacingRequirements.barDiameterFactor` | `k1` | profil normatif / PROFILE | facteur du terme lié au diamètre, valeur française recommandée `1,0` | sans dimension |
 | `ReinforcementSpacingRequirements.aggregateSizeAllowance` | `k2` | profil normatif / PROFILE | majoration liée aux granulats, valeur française recommandée `5` | mm |
 | `ReinforcementSpacingRequirements.absoluteMinimumClearSpacing` | — | profil normatif / PROFILE | minimum absolu de l'expression EC2 §8.2(2), valeur `20` | mm |
@@ -785,15 +785,15 @@ Il ne calcule ni `MRd`, ni conformité structurelle globale, ni candidat final.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `webWidth` | `bw` | géométrie / USER | largeur d'âme. Pour la seule section rectangulaire MVP, `bw = BeamGeometry.width = b`; ne pas généraliser aux sections T ou L | mm |
+| `webWidth` | `bw` | géométrie / USER | largeur d'âme. Pour la seule section rectangulaire V1, `bw = BeamGeometry.width = b`; ne pas généraliser aux sections T ou L | mm |
 | `longitudinalReinforcementArea` | `Asl` | candidat ou ferraillage fourni / DERIVED | aire des armatures longitudinales tendues réellement évaluées et considérées ancrées au droit de la section; n'est jamais remplacée automatiquement par `As_req` ou `As_target` | mm² |
 | `longitudinalReinforcementRatioRaw` | `ρl,raw` | valeur dérivée / DERIVED | `Asl / (bw × d)` avant application de la limite §6.2.2 | sans dimension |
 | `longitudinalReinforcementRatioUsed` | `ρl` | valeur dérivée / DERIVED | `min(ρl,raw, 0,02)` utilisé dans l'expression principale ; le résultat conserve l'indicateur de plafond | sans dimension |
 | `sizeEffectFactorRaw` | `k_raw` | valeur dérivée / DERIVED | `1 + sqrt(200 / d)` avec `d` en mm | sans dimension |
 | `sizeEffectFactor` | `k` | valeur dérivée / DERIVED | `min(k_raw, 2,0)` ; le résultat conserve l'indicateur de plafond | sans dimension |
-| `normalForce` | `NEd` | hypothèse MVP / FIXED_MVP | effort normal de calcul. Le MVP impose `0 kN` et refuse tout autre cas, sans supprimer la donnée du résultat | kN |
+| `normalForce` | `NEd` | hypothèse V1 / FIXED_SCOPE | effort normal de calcul. Le V1 impose `0 kN` et refuse tout autre cas, sans supprimer la donnée du résultat | kN |
 | `concreteArea` | `Ac` | valeur dérivée / DERIVED | aire de béton rectangulaire `b × h`, employée conceptuellement pour `σcp`; ce n'est pas `bw × d` | mm² |
-| `meanCompressiveStress` | `σcp` | valeur dérivée / DERIVED | `NEd / Ac`, avec conversion N/mm². Vaut explicitement `0 MPa` dans le MVP | MPa |
+| `meanCompressiveStress` | `σcp` | valeur dérivée / DERIVED | `NEd / Ac`, avec conversion N/mm². Vaut explicitement `0 MPa` dans le V1 | MPa |
 | `BeamConcreteShearResistanceRequirements.concreteShearResistanceCoefficient` | `CRd,c` | paramètre national / PROFILE | coefficient français retenu pour §6.2.2 : `0,12` (`0,18 / γc` avec `γc = 1,50`) | sans dimension |
 | `BeamConcreteShearResistanceRequirements.compressionStressCoefficient` | `k1` cisaillement | paramètre national / PROFILE | coefficient de `σcp`, valeur recommandée `0,15`; distinct de `k1` d'espacement EC2 §8.2 | sans dimension |
 | `minimumShearStress` | `vmin` | règle de profil / PROFILE | `0,035 × k^(3/2) × sqrt(fck)`, avec `fck` en MPa | MPa |
@@ -807,7 +807,7 @@ Il ne calcule ni `MRd`, ni conformité structurelle globale, ni candidat final.
 BEAM-SHEAR-01 utilise le `VEd` déjà calculé par BEAM-CALC-06 et le `d` du
 ferraillage réellement évalué. En DESIGN, `Asl` est donc l'`As_prov` du
 candidat transmis; en VERIFICATION, c'est l'aire réellement saisie. L'ancrage
-des armatures au droit de la section n'est pas encore modélisé : le MVP le
+des armatures au droit de la section n'est pas encore modélisé : le V1 le
 suppose satisfait. Aucun `Asw/s`, `VRd,s`, `VRd,max`, étrier ou conclusion de
 conformité globale n'est produit.
 
@@ -815,14 +815,14 @@ conformité globale n'est produit.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamShearDesignAssumptions.designCotTheta` | `cot θ_design` | stratégie de dimensionnement / CONFIG | valeur MVP `2,5`, injectée et distincte des bornes normatives du profil; ne constitue pas une constante EC2 universelle | sans dimension |
-| `minimumCotTheta`, `maximumCotTheta` | `cot θ` | paramètres normatifs / PROFILE | domaine autorisé par le profil MVP : `[1,0 ; 2,5]` | sans dimension |
+| `BeamShearDesignAssumptions.designCotTheta` | `cot θ_design` | stratégie de dimensionnement / CONFIG | valeur V1 `2,5`, injectée et distincte des bornes normatives du profil; ne constitue pas une constante EC2 universelle | sans dimension |
+| `minimumCotTheta`, `maximumCotTheta` | `cot θ` | paramètres normatifs / PROFILE | domaine autorisé par le profil V1 : `[1,0 ; 2,5]` | sans dimension |
 | `θ` | `θ` | paramètre du modèle / DERIVED | angle de la bielle comprimée par rapport à l'axe longitudinal; le moteur conserve `cot θ` et ne convertit pas cet angle en degrés | — |
 | `stirrupSteelCharacteristicStrength` | `fyk` | matériau / DERIVED | limite caractéristique B500B, également utilisée par le minimum transversal | MPa |
-| `stirrupSteelDesignStrength` | `fywd` | matériau et profil / DERIVED | résistance de calcul dérivée par `ReinforcementSteelDesignStrengthCalculator`, soit `fyk / γs`; le MVP utilise le même B500B pour barres longitudinales et étriers | MPa |
+| `stirrupSteelDesignStrength` | `fywd` | matériau et profil / DERIVED | résistance de calcul dérivée par `ReinforcementSteelDesignStrengthCalculator`, soit `fyk / γs`; le V1 utilise le même B500B pour barres longitudinales et étriers | MPa |
 | `minimumShearReinforcementRatio` | `ρw,min` | règle normative / DERIVED | `0,08 × sqrt(fck) / fyk` pour étriers verticaux; `fyk`, non `fywd`, est imposé ici | sans dimension |
 | `requiredShearReinforcementPerLength` | `Asw/s_req` | valeur dérivée / DERIVED | `VEd / (z × fywd × cot θ)` seulement si BEAM-SHEAR-01 requiert une armature de calcul; vaut explicitement `0` sinon | mm²/mm |
-| `minimumShearReinforcementPerLength` | `Asw/s_min` | règle normative / DERIVED | `ρw,min × bw`, minimum applicable au MVP de poutre standard sans exemption modélisée | mm²/mm |
+| `minimumShearReinforcementPerLength` | `Asw/s_min` | règle normative / DERIVED | `ρw,min × bw`, minimum applicable au V1 de poutre standard sans exemption modélisée | mm²/mm |
 | `targetShearReinforcementPerLength` | `Asw/s_target` | valeur dérivée / DERIVED | maximum de `Asw/s_req` et `Asw/s_min`, avec critère gouvernant explicite | mm²/mm |
 | `targetShearResistance` | `VRd,s_target` | valeur dérivée / DERIVED | résistance théorique liée à la quantité cible : `(Asw/s_target) × z × fywd × cot θ`, convertie en kN | kN |
 | `BeamShearReinforcementGoverningRequirement` | — | enum / DERIVED | `SHEAR_DEMAND`, `MINIMUM_TRANSVERSE_REINFORCEMENT` ou `EQUAL_REQUIREMENTS` | — |
@@ -839,7 +839,7 @@ périmètre jusqu'à BEAM-SHEAR-03.
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
 | `concreteShearStrengthReductionFactor` | `ν1` | règle de profil / PROFILE | réduction de résistance du béton fissuré : `0,6 × (1 - fck / 250)` | sans dimension |
-| `alphaCw` | `αcw` | règle de profil / PROFILE | coefficient d'état de contrainte de la membrure comprimée; le MVP non précontraint avec `NEd = 0` utilise explicitement `1,0` | sans dimension |
+| `alphaCw` | `αcw` | règle de profil / PROFILE | coefficient d'état de contrainte de la membrure comprimée; le V1 non précontraint avec `NEd = 0` utilise explicitement `1,0` | sans dimension |
 | `tanTheta` | `tan θ` | valeur dérivée / DERIVED | `1 / cot θ`, calculé sans conversion en degrés | sans dimension |
 | `maximumShearResistance` | `VRd,max` | règle normative / DERIVED | résistance limitée par l'écrasement des bielles : `αcw × bw × z × ν1 × fcd / (cot θ + tan θ)` puis conversion N → kN | kN |
 | `utilizationMaximumShear` | `VEd / VRd,max` | valeur dérivée / DERIVED | taux sans dimension du seul contrôle de bielles comprimées | sans dimension |
@@ -856,8 +856,8 @@ résistance globale minimale.
 
 | Nom | Symbole | Type / origine | Rôle et limite | Unité |
 |---|---|---|---|---|
-| `BeamStirrupProposalConfiguration.diameters` | `φ_st` | catalogue / CONFIG | diamètres applicatifs MVP `[6, 8, 10, 12]`; ce n'est pas une liste normative exhaustive | mm |
-| `stirrupLegs` | `n_legs` | configuration / CONFIG | nombre fixe de branches efficaces MVP : `2`; aucune disposition 3/4 branches ou cadres multiples | — |
+| `BeamStirrupProposalConfiguration.diameters` | `φ_st` | catalogue / CONFIG | diamètres applicatifs V1 `[6, 8, 10, 12]`; ce n'est pas une liste normative exhaustive | mm |
+| `stirrupLegs` | `n_legs` | configuration / CONFIG | nombre fixe de branches efficaces V1 : `2`; aucune disposition 3/4 branches ou cadres multiples | — |
 | `spacings` | `s` | catalogue / CONFIG | pas discrets supportés `[100, 125, 150, 175, 200, 225, 250, 300, 350, 400]`, sans préférence normative | mm |
 | `providedArea` | `Asw` | valeur dérivée / DERIVED | aire de l'étrier : `n_legs × π × φ_st² / 4` | mm² |
 | `providedAreaPerLength` | `Asw/s_prov` | valeur dérivée / DERIVED | `Asw / s`, comparé sans arrondi à la cible BEAM-SHEAR-02 | mm²/mm |
@@ -904,8 +904,8 @@ fissuration ou de flèche n'est produit par cette étape.
 | `effectiveTensionHeight` | `hc,eff` | valeur dérivée / DERIVED | `min(2,5(h-d), (h-x_sls)/3, h/2)`, avec `x_sls` réutilisé de BEAM-SLS-01. | mm |
 | `effectiveTensionArea` | `Ac,eff` | valeur dérivée / DERIVED | aire efficace tendue de la section rectangulaire : `b × hc,eff`, jamais `b × h`. | mm² |
 | `effectiveReinforcementRatio` | `ρp,eff` | valeur dérivée / DERIVED | `As_prov / Ac,eff`, utilisant l'armature réellement fournie, non `As_req` ni `As_target`. | sans dimension |
-| `effectiveConcreteTensileStrength` | `fct,eff` | hypothèse MVP / DERIVED | `fctm` du référentiel béton. Cette équivalence ne couvre pas les fissures précoces. | MPa |
-| `kt` | `kt` | paramètre national / PROFILE | `0,6` court terme ; `0,4` long terme. La combinaison quasi-permanente MVP dérive explicitement `LONG_TERM`, donc `0,4`. | sans dimension |
+| `effectiveConcreteTensileStrength` | `fct,eff` | hypothèse V1 / DERIVED | `fctm` du référentiel béton. Cette équivalence ne couvre pas les fissures précoces. | MPa |
+| `kt` | `kt` | paramètre national / PROFILE | `0,6` court terme ; `0,4` long terme. La combinaison quasi-permanente V1 dérive explicitement `LONG_TERM`, donc `0,4`. | sans dimension |
 | `maximumCrackSpacing` | `sr,max` | valeur dérivée / DERIVED | si `s_bar ≤ 5(c + φ/2)` : `k3c + k1k2k4φ/ρp,eff`; sinon `1,3(h-x_sls)`. | mm |
 | `strainDifference` | `εsm - εcm` | valeur dérivée / DERIVED | maximum de l'expression EC2 §7.3.4 et de `0,6σs/Es`, avec critère gouvernant conservé. | sans dimension |
 | `crackWidth` | `wk` | valeur dérivée / DERIVED | largeur caractéristique : `sr,max × (εsm - εcm)`, sans arrondi intermédiaire. | mm |
@@ -926,7 +926,7 @@ coefficients homonymes du cisaillement et de l'espacement.
 | `actualSpanDepthRatio` | `l_eff / d` | valeur dérivée / DERIVED | rapport réel de portée efficace sur hauteur utile réelle du candidat. Ce n'est pas une flèche. | sans dimension |
 | `reinforcementRatio` | `ρ` | valeur dérivée / DERIVED | `As_req / (b × d)`, avec `As_req` recalculé pour le candidat réel. `As_prov` ne doit jamais le remplacer. | sans dimension |
 | `referenceReinforcementRatio` | `ρ0` | valeur dérivée / DERIVED | `sqrt(fck) × 10^-3`, avec `fck` en MPa. | sans dimension |
-| `compressionReinforcementRatio` | `ρ'` | hypothèse MVP / FIXED_MVP | vaut explicitement `0` : seules les sections simplement armées sont supportées. | sans dimension |
+| `compressionReinforcementRatio` | `ρ'` | hypothèse V1 / FIXED_SCOPE | vaut explicitement `0` : seules les sections simplement armées sont supportées. | sans dimension |
 | `structuralFactor` | `K` | paramètre national / PROFILE | facteur lié au système statique ; seul `SIMPLY_SUPPORTED → 1,0` est supporté. | sans dimension |
 | `baseAllowableSpanDepthRatio` | `(l/d)_0` | valeur dérivée / DERIVED | rapport limite EC2 §7.4.2, obtenu par 7.16a si `ρ ≤ ρ0` ou 7.16b si `ρ > ρ0`. `K` est inclus. | sans dimension |
 | `steelStressCorrectionFactor` | — | valeur dérivée / DERIVED | correction simplifiée : `(500 / fyk) × (As_prov / As_req)`. Le `500 MPa` est centralisé dans le profil. | sans dimension |
@@ -1060,7 +1060,7 @@ présentée explicitement sans produire de résultat local.
 `BeamCalculationCapabilities` est la source backend des options exposées par
 `GET /api/beam/material-catalog` et de leur validation lors du calcul. Les
 classes béton du référentiel passent la chaîne Poutre actuelle ; `B500B` est la
-seule nuance du référentiel MVP. Bien que le référentiel d'exposition contienne
+seule nuance du référentiel V1. Bien que le référentiel d'exposition contienne
 de nombreuses classes, `XC1` est la seule exposition proposée : le profil
 français actuel ne fournit une limite de fissuration BEAM-SLS-02 que pour elle.
 Une exposition connue telle que `XC4` est donc refusée avec
@@ -1092,7 +1092,7 @@ un résultat local de proposition, sans conclusion de conformité globale.
 
 La règle d'espacement appliquée est la règle générale de l'EN 1992-1-1:2004,
 §9.3.1.1(3). Les zones localisées de moment maximal ou de charge concentrée,
-où une limite plus stricte est prévue, ne sont pas modélisées : le MVP ne porte
+où une limite plus stricte est prévue, ne sont pas modélisées : le V1 ne porte
 pas de position de charge ni de zonage de dalle. Cette limite doit être levée
 avant d'étendre le calcul à ces cas. La confirmation exhaustive de l'incidence
 de l'amendement national français 2026 reste à effectuer à partir de son texte

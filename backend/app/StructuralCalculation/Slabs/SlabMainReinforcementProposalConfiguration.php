@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Slabs;
 
-/** Discrétisation applicative MVP des espacements de recherche, sans valeur normative. */
+/** Discrétisation applicative V1 des espacements de recherche, sans valeur normative. */
 final class SlabMainReinforcementProposalConfiguration
 {
     /** @var list<float> */

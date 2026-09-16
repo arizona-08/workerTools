@@ -134,7 +134,7 @@ it('chains the beam input through MEd fyd z into the required reinforcement area
             exposureClasses: $setup->materials->exposureClasses,
             concreteClass: $setup->materials->concreteClass,
             designWorkingLifeYears: 50,
-            reinforcementDiameter: BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter,
+            reinforcementDiameter: BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter,
         ),
         $profile,
     );
@@ -142,7 +142,7 @@ it('chains the beam input through MEd fyd z into the required reinforcement area
         $setup->configuration->calculationMode,
         $setup->geometry,
         $cover,
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
     );
     $strengths = app(BeamFlexuralDesignStrengthsCalculator::class)->calculate($setup->materials, $profile);
     $reducedMoment = app(BeamReducedMomentCalculator::class)->calculate($bending->ultimate, $setup->geometry, $depth, $strengths->concrete);

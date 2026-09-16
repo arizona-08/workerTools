@@ -23,7 +23,7 @@ describe('SlabForm', () => {
 
   afterEach(() => http.verify());
 
-  it('presents the fixed MVP configuration, geometry and surface-load inputs', () => {
+  it('presents the fixed V1 configuration, geometry and surface-load inputs', () => {
     expect(component.configuration).toEqual({
       elementType: 'SLAB',
       slabType: 'SOLID',

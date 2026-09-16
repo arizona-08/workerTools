@@ -3,7 +3,7 @@
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
 /**
- * Coefficients d'actions pour la combinaison fondamentale ELU du MVP.
+ * Coefficients d'actions pour la combinaison fondamentale ELU du V1.
  */
 final readonly class ActionSafetyFactors
 {

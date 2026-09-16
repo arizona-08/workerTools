@@ -4,7 +4,7 @@
 
 La profondeur utile `d` est la distance entre la fibre comprimée extrême du
 béton et le centre de gravité des armatures longitudinales tendues. Dans le
-cas MVP de moment positif en travée, la face supérieure est comprimée et la
+cas V1 de moment positif en travée, la face supérieure est comprimée et la
 face inférieure est tendue : `d` est mesuré depuis la face supérieure.
 
 Pour un seul lit de barres longitudinales de diamètre identique, placé à
@@ -18,9 +18,9 @@ Toutes ces longueurs restent en millimètres. L'étrier est inclus car
 l'enrobage nominal atteint l'armature extérieure, qui est l'étrier dans cette
 configuration.
 
-## Hypothèses configurables MVP
+## Hypothèses configurables V1
 
-`BeamFlexuralDetailingAssumptions::mvp()` centralise les hypothèses de
+`BeamFlexuralDetailingAssumptions::supported()` centralise les hypothèses de
 detailing suivantes :
 
 - `φ_st = 8 mm`, diamètre d'étrier préliminaire ;
@@ -47,7 +47,7 @@ réutilise exclusivement son `cNom`; il ne recalcule aucune règle d'enrobage.
 Dans le test d'intégration, EC2-05 est appelé avec le diamètre de l'étrier,
 armature extérieure au regard du couvert de béton.
 
-EC2-05 accepte actuellement un seul `reinforcementDiameter` et son calcul MVP
+EC2-05 accepte actuellement un seul `reinforcementDiameter` et son calcul V1
 de `c_min,b` l'assimile au diamètre d'une barre passive individuelle. Cela ne
 modélise pas encore explicitement le choix du diamètre gouvernant lorsque
 étrier et barres longitudinales ont des exigences d'adhérence différentes. La

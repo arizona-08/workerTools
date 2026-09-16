@@ -1,4 +1,4 @@
-/** Contrat UI du seul cas Dalle actuellement préparé par le MVP. */
+/** Contrat UI du seul cas Dalle actuellement préparé par le V1. */
 export interface SlabCalculationConfigurationView {
   elementType: 'SLAB';
   slabType: 'SOLID';
@@ -10,8 +10,8 @@ export interface SlabCalculationConfigurationView {
   designSituation: 'PERSISTENT_TRANSIENT';
 }
 
-/** Valeurs FIXED_MVP : elles seront étendues explicitement par les prochains tickets Dalle. */
-export const MVP_SLAB_CALCULATION_CONFIGURATION: SlabCalculationConfigurationView = {
+/** Valeurs FIXED_SCOPE : elles seront étendues explicitement par les prochains tickets Dalle. */
+export const SUPPORTED_SLAB_CALCULATION_CONFIGURATION: SlabCalculationConfigurationView = {
   elementType: 'SLAB',
   slabType: 'SOLID',
   spanningSystem: 'ONE_WAY',

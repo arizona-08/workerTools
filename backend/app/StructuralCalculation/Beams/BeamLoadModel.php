@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Modèles conceptuellement reconnus ; seul UNIFORMLY_DISTRIBUTED appartient au MVP. */
+/** Modèles conceptuellement reconnus ; seul UNIFORMLY_DISTRIBUTED appartient au V1. */
 enum BeamLoadModel: string
 {
     case UNIFORMLY_DISTRIBUTED = 'UNIFORMLY_DISTRIBUTED';

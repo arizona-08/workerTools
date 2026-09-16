@@ -31,7 +31,7 @@ function automaticCoverInput(array $overrides = []): CoverCalculationInput
     );
 }
 
-it('calculates an independently checked nominal cover for the standard MVP case', function () {
+it('calculates an independently checked nominal cover for the standard V1 case', function () {
     $result = calculateNominalCover(automaticCoverInput());
 
     // Reference: S4 + XC4 -> c_min,dur 30 mm; max(16, 30, 10) + 10 = 40 mm.
@@ -128,7 +128,7 @@ it('rejects invalid automatic input and unsupported configurations', function (C
     'invalid working life' => [automaticCoverInput(['designWorkingLifeYears' => 0]), CoverCalculationRejectionReason::INVALID_DESIGN_WORKING_LIFE],
     'unsupported working life rule' => [automaticCoverInput(['designWorkingLifeYears' => 75]), CoverCalculationRejectionReason::STRUCTURAL_CLASS_RULE_NOT_SUPPORTED],
     'freeze thaw without reference class' => [automaticCoverInput(['exposureClasses' => [ExposureClassCode::XF1]]), CoverCalculationRejectionReason::UNSUPPORTED_EXPOSURE_CLASS],
-    'out of MVP scope' => [automaticCoverInput(['scope' => new CoverCalculationScope(passiveReinforcement: false)]), CoverCalculationRejectionReason::UNSUPPORTED_CONFIGURATION],
+    'out of V1 scope' => [automaticCoverInput(['scope' => new CoverCalculationScope(passiveReinforcement: false)]), CoverCalculationRejectionReason::UNSUPPORTED_CONFIGURATION],
 ]);
 
 it('rejects a non-positive manually imposed nominal cover', function () {

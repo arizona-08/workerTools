@@ -43,13 +43,13 @@ function slabFlexureAnalysis(): SlabStripAnalysis
         slabFlexureSurfaceCombination(SlabSurfaceLoadCombinationType::SERVICEABILITY_QUASI_PERMANENT, 8.6),
     );
 
-    return app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $combinations);
+    return app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $combinations);
 }
 
 function slabFlexureInput(ConcreteStrengthClass $concrete = ConcreteStrengthClass::C30_37, float $thickness = 200): SlabCalculationInput
 {
     return new SlabCalculationInput(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, $thickness),
         new SlabMaterials($concrete, ReinforcementSteelGrade::B500B, ExposureClassCode::XC1),
         new SlabSurfaceLoads(0, 0, 0, 0),
@@ -105,7 +105,7 @@ it('uses the selected common concrete properties instead of a C30/37 constant', 
 it('keeps the EC2 minimum reinforcement as the design target when flexural demand is zero', function () {
     $zero = slabFlexureSurfaceCombination(SlabSurfaceLoadCombinationType::ULTIMATE, 0);
     $combinations = new SlabActionCombinations($zero, $zero, $zero, $zero);
-    $analysis = app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $combinations);
+    $analysis = app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $combinations);
 
     $result = app(SlabUlsFlexureCalculator::class)->calculate(slabFlexureInput(), $analysis);
 
@@ -117,7 +117,7 @@ it('keeps the EC2 minimum reinforcement as the design target when flexural deman
 it('explicitly refuses a flexural demand outside the singly reinforced calculation domain', function () {
     $high = slabFlexureSurfaceCombination(SlabSurfaceLoadCombinationType::ULTIMATE, 300);
     $combinations = new SlabActionCombinations($high, $high, $high, $high);
-    $analysis = app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $combinations);
+    $analysis = app(SlabStripAnalysisCalculator::class)->calculate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $combinations);
 
     app(SlabUlsFlexureCalculator::class)->calculate(slabFlexureInput(), $analysis);
 })->throws(SlabUlsFlexureException::class, SlabUlsFlexureRejectionReason::CALCULATION_METHOD_NOT_SUPPORTED->value);

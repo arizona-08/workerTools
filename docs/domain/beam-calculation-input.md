@@ -1,4 +1,4 @@
-# Contrat d'entrée Poutre MVP
+# Contrat d'entrée Poutre V1
 
 `BeamCalculationInputFactory` valide et assemble les entrées sans lancer de
 calcul structurel. Les longueurs sont en `mm` et les charges linéaires en

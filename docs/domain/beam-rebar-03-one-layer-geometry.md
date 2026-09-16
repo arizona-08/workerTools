@@ -2,7 +2,7 @@
 
 ## Largeur entre étriers
 
-Pour la section rectangulaire MVP, la largeur libre entre les faces intérieures
+Pour la section rectangulaire V1, la largeur libre entre les faces intérieures
 des branches verticales d'étrier est :
 
 `b_available = b - 2 × (c_nom + φ_st)`
@@ -18,7 +18,7 @@ Suivant EN 1992-1-1 §8.2(2), le filtre utilise l'espacement **libre** :
 `a_min = max(k1 × φ, d_g + k2, 20 mm)`
 
 Le profil français retient les valeurs recommandées `k1 = 1,0` et `k2 = 5 mm`.
-`d_g = 20 mm` est une hypothèse `CONFIG` du MVP, portée par
+`d_g = 20 mm` est une hypothèse `CONFIG` du V1, portée par
 `BeamReinforcementDetailingAssumptions`; elle n'est pas une propriété de la
 classe de béton ni une valeur universelle de l'Eurocode.
 

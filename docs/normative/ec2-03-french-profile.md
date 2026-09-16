@@ -1,4 +1,4 @@
-# EC2-03 — Profil français du MVP
+# EC2-03 — Profil français du V1
 
 ## Version ciblée
 
@@ -39,17 +39,17 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | `k2` fissuration (flexion) | 0,50 | valeur recommandée EC2 §7.3.4, distribution des déformations ; distinct du `k2` d'espacement §8.2 |
 | `k3` fissuration | 3,40 | valeur recommandée EC2 §7.3.4 pour `sr,max` |
 | `k4` fissuration | 0,425 | valeur recommandée EC2 §7.3.4 pour `sr,max` |
-| `kt` court / long terme | 0,60 / 0,40 | valeurs recommandées EC2 §7.3.4 ; la combinaison quasi-permanente MVP est associée à `kt = 0,40` |
-| `wmax` XC1 | 0,40 mm | seule limite de fissuration explicitement validée dans le profil MVP pour BEAM-SLS-02 ; aucune valeur par défaut pour les autres expositions |
+| `kt` court / long terme | 0,60 / 0,40 | valeurs recommandées EC2 §7.3.4 ; la combinaison quasi-permanente V1 est associée à `kt = 0,40` |
+| `wmax` XC1 | 0,40 mm | seule limite de fissuration explicitement validée dans le profil V1 pour BEAM-SLS-02 ; aucune valeur par défaut pour les autres expositions |
 | constante base `l/d` | 11,0 | EC2 §7.4.2, équations 7.16a/b |
 | coefficients 7.16a | 1,5 / 3,2 | EC2 §7.4.2, équation 7.16a |
-| coefficient compression 7.16b | 1/12 | EC2 §7.4.2, conservé dans le profil ; `ρ' = 0` dans le MVP simplement armé |
+| coefficient compression 7.16b | 1/12 | EC2 §7.4.2, conservé dans le profil ; `ρ' = 0` dans le V1 simplement armé |
 | facteur de référence `ρ0` | 0,001 | `ρ0 = sqrt(fck) × 10^-3`, EC2 §7.4.2 |
 | référence correction acier | 500 MPa | coefficient de l'expression simplifiée `500/fyk × As_prov/As_req` |
 | `K` simplement appuyé | 1,00 | seul facteur structural supporté pour BEAM-SLS-03 |
 | coefficient `As_min` lié à `fctm/fyk` | 0,26 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
 | ratio minimal `As_min` | 0,0013 | valeur recommandée de §9.2.1.1(1), retenue par l'Annexe Nationale française 2016 |
-| `CRd,c` cisaillement | 0,12 | `0,18 / γc` avec `γc = 1,50`, valeur recommandée §6.2.2 retenue pour le MVP faute de divergence française accessible |
+| `CRd,c` cisaillement | 0,12 | `0,18 / γc` avec `γc = 1,50`, valeur recommandée §6.2.2 retenue pour le V1 faute de divergence française accessible |
 | `k1` cisaillement | 0,15 | valeur recommandée de §6.2.2, distincte du `k1` d'espacement §8.2 |
 | coefficient de `vmin` | 0,035 | règle §6.2.2 : `vmin = 0,035 × k^(3/2) × sqrt(fck)` |
 | profondeur de référence `k` | 200 mm | règle §6.2.2 : `k = min(1 + sqrt(200/d), 2,0)` |
@@ -59,7 +59,7 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 | coefficient `ρw,min` | 0,08 | règle §9.2.2 : `ρw,min = 0,08 sqrt(fck) / fyk` |
 | coefficient de `ν1` | 0,60 | règle §6.2.3 : `ν1 = 0,6 × (1 - fck / 250)` |
 | référence de `ν1` | 250 MPa | même règle §6.2.3 |
-| `αcw` non précontraint, `NEd = 0` | 1,00 | règle de profil MVP pour §6.2.3 |
+| `αcw` non précontraint, `NEd = 0` | 1,00 | règle de profil V1 pour §6.2.3 |
 | coefficient `s_l,max` | 0,75 | §9.2.2, étriers verticaux : `s_l,max = 0,75d` |
 | coefficient `s_t,max` | 0,75 | §9.2.2 : `s_t,max = min(0,75d, 600 mm)` |
 | plafond absolu `s_t,max` | 600 mm | §9.2.2 |
@@ -72,11 +72,11 @@ amendement ou un extrait officiel de cette clause n'est pas disponible.
 
 ## Expression ELU fondamentale retenue
 
-Le profil français MVP retient explicitement la procédure française `a` :
+Le profil français V1 retient explicitement la procédure française `a` :
 l'expression fondamentale **EN 1990 6.10** pour les situations
 persistantes/transitoires de bâtiment.
 
-Dans le cas MVP — action permanente gravitaire défavorable et une seule action
+Dans le cas V1 — action permanente gravitaire défavorable et une seule action
 variable principale A — la formule est :
 
 ```text
@@ -86,7 +86,7 @@ wEd = γG,sup × Gk_total + γQ × Qk
 avec `γG,sup = 1,35`, `γG,inf = 1,00` conservé pour un futur cas favorable,
 et `γQ = 1,50`. Aucun coefficient `ψ` ne s'applique à l'action variable
 principale. Les expressions 6.10a / 6.10b, le facteur `ξ` et les actions
-variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
+variables accompagnatrices ne sont pas implémentés dans ce profil V1.
 
 ## Références normatives
 
@@ -157,6 +157,6 @@ variables accompagnatrices ne sont pas implémentés dans ce profil MVP.
   moins égale à 20 % de l'armature principale, et espacement général limité à
   `min(3,5h, 450 mm)`. Les zones de moment maximal ou de charge concentrée,
   auxquelles §9.3.1.1(3) applique `min(3h, 400 mm)`, ne sont pas représentées
-  dans le MVP et ne sont donc pas appliquées. L'incidence éventuelle de
+  dans le V1 et ne sont donc pas appliquées. L'incidence éventuelle de
   NF EN 1992-1-1/NA/A1:2026 sur ces dispositions doit être validée sur le texte
   normatif français exploitable avant extension du périmètre.

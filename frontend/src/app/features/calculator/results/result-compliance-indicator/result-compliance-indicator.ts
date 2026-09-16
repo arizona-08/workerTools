@@ -44,7 +44,7 @@ export class ResultComplianceIndicator {
       case 'NOT_APPLICABLE':
         return { label: 'Non applicable', description: 'Cette vérification ne s’applique pas à la configuration.' };
       case 'CALCULATION_METHOD_NOT_SUPPORTED':
-        return { label: 'Méthode non prise en charge', description: 'La méthode nécessaire n’est pas disponible dans ce MVP.' };
+        return { label: 'Méthode non prise en charge', description: 'La méthode nécessaire n’est pas encore prise en charge par WorkerTools.' };
     }
   });
 

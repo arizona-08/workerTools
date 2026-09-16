@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Analyse du cisaillement du modèle statique Poutre MVP, sans résistance de section. */
+/** Analyse du cisaillement du modèle statique Poutre V1, sans résistance de section. */
 final readonly class BeamShearForceResult
 {
     public const EFFECTIVE_SPAN_UNIT = 'm';

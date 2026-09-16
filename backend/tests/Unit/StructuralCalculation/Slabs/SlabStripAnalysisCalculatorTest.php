@@ -49,7 +49,7 @@ function slabAnalysisReferenceCombinations(): SlabActionCombinations
 
 it('calculates the reference linear loads and internal forces for the one-metre simply supported strip', function () {
     $result = slabStripAnalysisCalculator()->calculate(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         slabAnalysisReferenceCombinations(),
     );
@@ -80,8 +80,8 @@ it('calculates the reference linear loads and internal forces for the one-metre 
 it('consumes SLAB-05 combinations without depending on material selections', function () {
     $combinations = slabAnalysisReferenceCombinations();
 
-    $first = slabStripAnalysisCalculator()->calculate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $combinations);
-    $second = slabStripAnalysisCalculator()->calculate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $combinations);
+    $first = slabStripAnalysisCalculator()->calculate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $combinations);
+    $second = slabStripAnalysisCalculator()->calculate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $combinations);
 
     expect($first->internalForces->uls->maximumMoment)->toBe($second->internalForces->uls->maximumMoment)
         ->and($first->internalForces->uls->maximumShear)->toBe($second->internalForces->uls->maximumShear)
@@ -90,7 +90,7 @@ it('consumes SLAB-05 combinations without depending on material selections', fun
 
 it('rejects an invalid effective span before static analysis', function () {
     slabStripAnalysisCalculator()->calculate(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(0, 200),
         slabAnalysisReferenceCombinations(),
     );

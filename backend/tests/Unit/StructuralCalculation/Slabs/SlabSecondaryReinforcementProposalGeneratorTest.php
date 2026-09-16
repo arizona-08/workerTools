@@ -43,7 +43,7 @@ function slabSecondaryCombination(SlabSurfaceLoadCombinationType $type, float $v
 function slabSecondaryMainProposal()
 {
     $input = new SlabCalculationInput(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         new SlabMaterials(ConcreteStrengthClass::C30_37, ReinforcementSteelGrade::B500B, ExposureClassCode::XC1),
         new SlabSurfaceLoads(0, 0, 0, 0),
@@ -90,7 +90,7 @@ function slabSecondaryMainProposalWithProvidedArea(float $providedArea): SlabMai
 
 it('uses 20 percent of the provided main steel and selects a valid secondary proposal', function () {
     $main = slabSecondaryMainProposal();
-    $result = app(SlabSecondaryReinforcementProposalGenerator::class)->generate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 200), $main);
+    $result = app(SlabSecondaryReinforcementProposalGenerator::class)->generate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 200), $main);
 
     expect($main->proposal)->not->toBeNull()
         ->and(abs($main->proposal->providedAreaPerMeter - 615.7521601035994))->toBeLessThan(0.000000001)
@@ -106,14 +106,14 @@ it('uses 20 percent of the provided main steel and selects a valid secondary pro
 });
 
 it('uses the slab thickness for the secondary maximum spacing', function () {
-    $result = app(SlabSecondaryReinforcementProposalGenerator::class)->generate(SlabCalculationConfiguration::mvp(), new SlabGeometry(5000, 100), slabSecondaryMainProposal());
+    $result = app(SlabSecondaryReinforcementProposalGenerator::class)->generate(SlabCalculationConfiguration::supported(), new SlabGeometry(5000, 100), slabSecondaryMainProposal());
 
     expect($result->maximumAllowedSpacing)->toBe(350.0);
 });
 
 it('derives the minimum from the provided main reinforcement rather than the flexural demand', function () {
     $result = app(SlabSecondaryReinforcementProposalGenerator::class)->generate(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         slabSecondaryMainProposalWithProvidedArea(500),
     );
@@ -130,7 +130,7 @@ it('rejects a candidate when its spacing exceeds the profile maximum', function 
         app(ReinforcementBarAreaCalculator::class),
     );
     $result = $generator->generate(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 100),
         slabSecondaryMainProposalWithProvidedArea(500),
     );
@@ -148,7 +148,7 @@ it('does not fall back when all candidates have insufficient steel', function ()
         app(ReinforcementBarAreaCalculator::class),
     );
     $result = $generator->generate(
-        SlabCalculationConfiguration::mvp(),
+        SlabCalculationConfiguration::supported(),
         new SlabGeometry(5000, 200),
         slabSecondaryMainProposalWithProvidedArea(100000),
     );

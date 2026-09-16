@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Eurocode\Cover;
 
-/** Limites explicites du calcul automatique d'enrobage MVP. */
+/** Limites explicites du calcul automatique d'enrobage V1. */
 final readonly class CoverCalculationScope
 {
     public function __construct(

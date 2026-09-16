@@ -25,7 +25,7 @@ function slabReferenceCombinations()
         new SlabSurfaceLoads(1.5, 1.0, 0.5, 2.0),
     );
 
-    return app(SlabActionCombinationsCalculator::class)->calculate(SlabCalculationConfiguration::mvp(), $actions);
+    return app(SlabActionCombinationsCalculator::class)->calculate(SlabCalculationConfiguration::supported(), $actions);
 }
 
 it('converts all SLAB-05 surface combinations to the fixed one-metre strip', function () {

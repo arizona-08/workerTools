@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Systèmes conceptuellement reconnus ; seul SIMPLY_SUPPORTED appartient au MVP. */
+/** Systèmes conceptuellement reconnus ; seul SIMPLY_SUPPORTED appartient au V1. */
 enum BeamSupportSystem: string
 {
     case SIMPLY_SUPPORTED = 'SIMPLY_SUPPORTED';

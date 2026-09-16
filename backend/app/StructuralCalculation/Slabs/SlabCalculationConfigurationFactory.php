@@ -7,7 +7,7 @@ use App\StructuralCalculation\ElementType;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 use App\StructuralCalculation\MaterialType;
 
-/** Traduit des identifiants externes sans présumer qu'ils appartiennent au MVP. */
+/** Traduit des identifiants externes sans présumer qu'ils appartiennent au V1. */
 final class SlabCalculationConfigurationFactory
 {
     public function fromValues(

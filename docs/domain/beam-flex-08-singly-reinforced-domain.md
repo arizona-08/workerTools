@@ -21,7 +21,7 @@ résultat BEAM-FLEX-02. `εcu3` est fourni par
 `ConcreteUltimateStrainParametersCalculator`, selon EN 1992-1-1:2004 /
 NF EN 1992-1-1:2005 §3.1.7 : `3,5 ‰` (`0,0035`) jusqu'à `fck = 50 MPa`, puis
 `[2,6 + 35 × ((90 - fck) / 100)^4] ‰` pour `50 < fck ≤ 90 MPa`. Au-delà de
-`90 MPa`, ce modèle MVP est refusé sans extrapolation.
+`90 MPa`, ce modèle V1 est refusé sans extrapolation.
 
 La présentation JRC du modèle bilinéaire reprend cette expression de `εcu3`
 pour EN 1992-1-1 §3.1.7 ; elle est utilisée ici comme source publique de

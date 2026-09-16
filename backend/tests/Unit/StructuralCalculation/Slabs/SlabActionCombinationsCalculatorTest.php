@@ -33,7 +33,7 @@ function slabReferenceCharacteristicActions()
 }
 
 it('combines SLAB-04 characteristic surface actions with French profile factors', function () {
-    $result = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::mvp(), slabReferenceCharacteristicActions());
+    $result = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::supported(), slabReferenceCharacteristicActions());
 
     expect($result->uls->value)->toBe(13.8)
         ->and($result->slsCharacteristic->value)->toBe(10.0)
@@ -54,8 +54,8 @@ it('combines SLAB-04 characteristic surface actions with French profile factors'
 it('keeps combinations independent from span and calculation strip width', function () {
     $loads = new SlabSurfaceLoads(1.5, 1.0, 0.5, 2.0);
     $calculator = app(SlabCharacteristicActionsCalculator::class);
-    $first = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::mvp(), $calculator->calculate(new SlabGeometry(3000, 200), $loads));
-    $second = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::mvp(), $calculator->calculate(new SlabGeometry(9000, 200), $loads));
+    $first = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::supported(), $calculator->calculate(new SlabGeometry(3000, 200), $loads));
+    $second = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::supported(), $calculator->calculate(new SlabGeometry(9000, 200), $loads));
 
     expect($first->uls->value)->toBe($second->uls->value)
         ->and($first->slsCharacteristic->value)->toBe($second->slsCharacteristic->value)
@@ -67,7 +67,7 @@ it('keeps combinations independent from span and calculation strip width', funct
 
 it('keeps zero Gk or Qk mathematically explicit', function (float $gkTotal, float $qk, array $expected) {
     $actions = new SlabCharacteristicActions(200, 0.2, new ReinforcedConcreteUnitWeight(25), $gkTotal, 0, 0, 0, $gkTotal, $qk);
-    $result = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::mvp(), $actions);
+    $result = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::supported(), $actions);
 
     expect($result->uls->value)->toBe($expected['uls'])
         ->and($result->slsCharacteristic->value)->toBe($expected['characteristic'])
@@ -84,7 +84,7 @@ it('uses the exact same common combination engine as the Beam adapters', functio
         new CharacteristicPermanentActions(new SelfWeightResult(true, 300, 600, 0.18, new ReinforcedConcreteUnitWeight(25), 5), 3, 8),
         new CharacteristicVariableAction(VariableActionCategory::A_DOMESTIC_RESIDENTIAL_AREAS, 2),
     );
-    $slab = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::mvp(), new SlabCharacteristicActions(200, 0.2, new ReinforcedConcreteUnitWeight(25), 5, 1.5, 1, 0.5, 8, 2));
+    $slab = slabActionCombinationsCalculator()->calculate(SlabCalculationConfiguration::supported(), new SlabCharacteristicActions(200, 0.2, new ReinforcedConcreteUnitWeight(25), 5, 1.5, 1, 0.5, 8, 2));
     $beamUltimate = app(BeamUltimateCombinationCalculator::class)->calculate($beamActions, $profile);
     $beamServiceability = app(BeamServiceabilityCombinationCalculator::class)->calculate($beamActions, $profile);
 

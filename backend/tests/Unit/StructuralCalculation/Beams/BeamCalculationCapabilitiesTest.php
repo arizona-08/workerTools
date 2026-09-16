@@ -2,7 +2,7 @@
 
 use App\StructuralCalculation\Beams\BeamCalculationCapabilities;
 
-it('exposes only materials that the complete beam MVP can process', function () {
+it('exposes only materials that the complete beam V1 can process', function () {
     $capabilities = app(BeamCalculationCapabilities::class);
 
     expect($capabilities->supportedConcreteClasses())->toBe(['C20/25', 'C25/30', 'C30/37'])

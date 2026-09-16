@@ -115,7 +115,7 @@ it('rejects invalid complete-input cases with their domain errors', function (Cl
     'negative Qk' => [function (array &$payload): void {
         $payload['loads']['variable']['characteristicLoad'] = -1;
     }, BeamVariableLoadException::class, BeamVariableLoadRejectionReason::INVALID_CHARACTERISTIC_VARIABLE_LOAD->value],
-    'category B outside MVP' => [function (array &$payload): void {
+    'category B outside V1' => [function (array &$payload): void {
         $payload['loads']['variable']['category'] = 'B';
     }, BeamVariableLoadException::class, BeamVariableLoadRejectionReason::UNSUPPORTED_VARIABLE_ACTION_CATEGORY->value],
     'invalid variable load unit' => [function (array &$payload): void {

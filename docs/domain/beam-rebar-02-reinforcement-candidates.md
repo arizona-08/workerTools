@@ -3,7 +3,7 @@
 ## Génération d'aires discrètes
 
 BEAM-REBAR-02 transforme l'aire continue `As_target` en une liste de candidats
-homogènes `n × φ`, en utilisant exclusivement le catalogue MVP centralisé
+homogènes `n × φ`, en utilisant exclusivement le catalogue V1 centralisé
 `ReinforcementBarDiameterCatalog` : `8`, `10`, `12`, `14`, `16`, `20`, `25`
 et `32 mm`.
 
@@ -21,7 +21,7 @@ une preuve de constructibilité ou d'optimalité de chantier.
 
 ## Configuration et limites
 
-`BeamReinforcementProposalConfiguration` fixe pour le MVP `2 ≤ n ≤ 8`.
+`BeamReinforcementProposalConfiguration` fixe pour le V1 `2 ≤ n ≤ 8`.
 Ces bornes sont des choix `CONFIG` du générateur : elles ne constituent pas une
 règle Eurocode. Même pour `As_target = 0`, le générateur propose au minimum
 deux barres et ne crée jamais un candidat à zéro barre.

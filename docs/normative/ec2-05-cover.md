@@ -1,4 +1,4 @@
-# EC2-05 — Enrobage nominal MVP
+# EC2-05 — Enrobage nominal V1
 
 ## Références et version du profil
 
@@ -28,14 +28,14 @@ une unité interne et de restitution unique : millimètre (`mm`).
 
 Les paramètres du profil, centralisés dans `CoverRequirements`, sont :
 
-| Paramètre | Valeur MVP | Provenance / limite |
+| Paramètre | Valeur V1 | Provenance / limite |
 |---|---:|---|
 | Classe structurale initiale | S4 | NA 2016, 4.4.1.2(5), ouvrage courant et béton conforme NF EN 206/CN / annexe E |
 | `c_min,dur` | tableau 4.4N | dépend de la classe structurale et de l’exposition |
 | `Δc_dur,γ` | 0 mm | valeur recommandée retenue par le profil |
 | `Δc_dur,st` | 0 mm | NA 2016, 4.4.1.2(7) ; acier ordinaire uniquement |
-| `Δc_dur,add` | 0 mm | pas de protection additionnelle MVP |
-| `Δc_dev` | 10 mm | scénario d’exécution MVP ; aucun abattement arbitraire |
+| `Δc_dur,add` | 0 mm | pas de protection additionnelle V1 |
+| `Δc_dev` | 10 mm | scénario d’exécution V1 ; aucun abattement arbitraire |
 
 ## Classe structurale et expositions multiples
 
@@ -64,7 +64,7 @@ Pour C25/30, 50 ans, XC4, barre individuelle de diamètre 16 mm :
 - précontrainte, paquets, acier inoxydable, protection ajoutée, traitement de
   surface ou vérification au feu ;
 - XF : une exposition XC/XD de référence est nécessaire pour l’enrobage
-  français et n’est pas fournie par ce MVP ;
+  français et n’est pas fournie par ce V1 ;
 - XA : l’agent agressif doit être caractérisé ;
 - durée autre que 25, 50 ou 100 ans ;
 - classe structurale hors S1 à S6, données manquantes ou valeurs invalides.

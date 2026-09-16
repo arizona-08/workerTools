@@ -21,7 +21,7 @@ final readonly class BeamCalculationConfiguration
         public DesignSituation $designSituation,
     ) {}
 
-    public static function mvp(): self
+    public static function supported(): self
     {
         return new self(
             calculationMode: BeamCalculationMode::DESIGN,

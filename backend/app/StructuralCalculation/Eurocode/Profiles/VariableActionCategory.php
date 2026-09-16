@@ -5,7 +5,7 @@ namespace App\StructuralCalculation\Eurocode\Profiles;
 /**
  * Catégories d'actions variables d'EN 1991-1-1.
  *
- * Le MVP Poutre ne couvre que la catégorie A. B à E sont connues afin que le
+ * Le V1 Poutre ne couvre que la catégorie A. B à E sont connues afin que le
  * module puisse les refuser explicitement tant que le profil ne les couvre pas.
  */
 enum VariableActionCategory: string

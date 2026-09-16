@@ -3,7 +3,7 @@
 namespace App\StructuralCalculation\Materials\ReinforcementSteel;
 
 /**
- * Diamètres nominaux d'armatures passives proposés par le MVP.
+ * Diamètres nominaux d'armatures passives proposés par le V1.
  * Configuration applicative, non une liste normative exhaustive.
  */
 final class ReinforcementBarDiameterCatalog

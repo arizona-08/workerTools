@@ -7,7 +7,7 @@ use App\StructuralCalculation\ElementType;
 use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfileIdentifier;
 use App\StructuralCalculation\MaterialType;
 
-/** Configuration du périmètre Dalle MVP, sans donnée de calcul. */
+/** Configuration du périmètre Dalle V1, sans donnée de calcul. */
 final readonly class SlabCalculationConfiguration
 {
     public function __construct(
@@ -21,7 +21,7 @@ final readonly class SlabCalculationConfiguration
         public DesignSituation $designSituation,
     ) {}
 
-    public static function mvp(): self
+    public static function supported(): self
     {
         return new self(
             elementType: ElementType::SLAB,

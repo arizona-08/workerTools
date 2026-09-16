@@ -3,7 +3,7 @@
 namespace App\StructuralCalculation\Materials\ReinforcementSteel;
 
 /**
- * Référentiel des propriétés intrinsèques des armatures passives du MVP.
+ * Référentiel des propriétés intrinsèques des armatures passives du V1.
  *
  * B500B reprend la classe B de l'annexe C de NF EN 1992-1-1:2005. Es est la
  * valeur de référence de 200 GPa admise par 3.2.7(2), stockée en MPa. Aucun

@@ -133,7 +133,7 @@ it('chains the real beam input through neutral axis into the lever arm', functio
             exposureClasses: $setup->materials->exposureClasses,
             concreteClass: $setup->materials->concreteClass,
             designWorkingLifeYears: 50,
-            reinforcementDiameter: BeamFlexuralDetailingAssumptions::mvp()->transverseReinforcementDiameter,
+            reinforcementDiameter: BeamFlexuralDetailingAssumptions::supported()->transverseReinforcementDiameter,
         ),
         $profile,
     );
@@ -141,7 +141,7 @@ it('chains the real beam input through neutral axis into the lever arm', functio
         $setup->configuration->calculationMode,
         $setup->geometry,
         $cover,
-        BeamFlexuralDetailingAssumptions::mvp(),
+        BeamFlexuralDetailingAssumptions::supported(),
     );
     $strengths = app(BeamFlexuralDesignStrengthsCalculator::class)->calculate($setup->materials, $profile);
     $reducedMoment = app(BeamReducedMomentCalculator::class)->calculate($bending->ultimate, $setup->geometry, $depth, $strengths->concrete);

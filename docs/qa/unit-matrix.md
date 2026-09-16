@@ -7,7 +7,7 @@ La conversion UI → backend est réalisée une seule fois dans Angular : Poutre
 | Portée `L` | Poutre, Dalle | m / mm | mm, puis m pour statique | m dans les substitutions, mm dans détails | `6,5 m → 6500 mm → 6,5 m` |
 | Largeur `b`, hauteur `h` | Poutre | cm / mm | mm | mm | `30 cm → 300 mm`, `60 cm → 600 mm` |
 | Épaisseur `h` | Dalle | cm / mm | mm | mm | `20 cm → 200 mm` |
-| Bande | Dalle | — | 1000 mm puis 1 m | mm / m | hypothèse fixe MVP |
+| Bande | Dalle | — | 1000 mm puis 1 m | mm / m | hypothèse fixe V1 |
 | Poids volumique `γRC` | commun | — | kN/m³ | kN/m³ | 25 kN/m³ |
 | Charges | Poutre | kN/m | kN/m | kN/m | aucune conversion N/mm dans la statique |
 | Charges surfaciques `q` | Dalle | kN/m² | kN/m² | kN/m² | poids propre inclus |

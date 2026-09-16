@@ -2,7 +2,7 @@
 
 ## Définition
 
-Pour la section rectangulaire et le moment positif du MVP, WorkerTools calcule
+Pour la section rectangulaire et le moment positif du V1, WorkerTools calcule
 le paramètre interne adimensionnel :
 
 `μEd = MEd_Nmm / (b × d² × fcd)`

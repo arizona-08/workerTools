@@ -17,7 +17,7 @@ résistance de calcul `fyd`. La combinaison fréquente est conservée dans la
 chaîne des actions, mais BEAM-SLS-01 retourne explicitement
 `NOT_APPLICABLE` : aucune limite de contrainte supplémentaire n'est inventée.
 
-## Modèle mécanique MVP
+## Modèle mécanique V1
 
 La vérification est menée en flexion simple avec `NEd = 0`, sur une section
 fissurée élastique instantanée (`CRACKED_ELASTIC`) : béton tendu négligé,

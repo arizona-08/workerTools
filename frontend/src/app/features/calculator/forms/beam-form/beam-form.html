@@ -133,7 +133,7 @@
     </div>
     <div class="mt-5 max-w-xs" [formGroup]="variableLoadForm">
       <p class="text-sm font-medium text-zinc-900">Catégorie A — locaux résidentiels / domestiques</p>
-      <p class="mt-1 text-sm text-zinc-600">La catégorie est définie par le cas MVP ; ses coefficients de combinaison proviendront du profil normatif.</p>
+      <p class="mt-1 text-sm text-zinc-600">La catégorie est définie par la configuration actuellement prise en charge ; ses coefficients de combinaison proviennent du profil normatif.</p>
       <label for="characteristic-variable-load" class="mt-4 block text-sm font-medium text-zinc-900">Charge d’exploitation (Qk)</label>
       <p class="mt-1 text-xs text-zinc-500">Saisissez la charge caractéristique ramenée sur la poutre.</p>
       <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
@@ -149,7 +149,7 @@
   @if (calculationMode() === 'VERIFICATION') {
     <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="longitudinalReinforcementForm">
       <legend class="text-base font-semibold text-zinc-900">Ferraillage existant</legend>
-      <p class="mt-1 text-sm text-zinc-600">Armatures tendues : un seul lit de barres de même diamètre dans le MVP.</p>
+      <p class="mt-1 text-sm text-zinc-600">Armatures tendues : un seul lit de barres de même diamètre est pris en charge pour cette configuration.</p>
       <div class="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <label for="tension-bar-count" class="block text-sm font-medium text-zinc-900">Nombre de barres</label>

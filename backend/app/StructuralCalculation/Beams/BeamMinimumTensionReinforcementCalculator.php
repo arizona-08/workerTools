@@ -6,7 +6,7 @@ use App\StructuralCalculation\Eurocode\Beams\BeamLongitudinalReinforcementRequir
 use App\StructuralCalculation\Materials\Concrete\ConcreteProperties;
 use App\StructuralCalculation\Materials\ReinforcementSteel\ReinforcementSteelProperties;
 
-/** Calcule As_min d'une section rectangulaire MVP suivant EC2 §9.2.1.1(1). */
+/** Calcule As_min d'une section rectangulaire V1 suivant EC2 §9.2.1.1(1). */
 final class BeamMinimumTensionReinforcementCalculator
 {
     public function calculate(
@@ -23,7 +23,7 @@ final class BeamMinimumTensionReinforcementCalculator
         $this->ensurePositiveFinite($requirements->minimumReinforcementStrengthCoefficient, BeamMinimumTensionReinforcementRejectionReason::INVALID_STRENGTH_COEFFICIENT);
         $this->ensurePositiveFinite($requirements->minimumReinforcementRatio, BeamMinimumTensionReinforcementRejectionReason::INVALID_MINIMUM_REINFORCEMENT_RATIO);
 
-        // Pour la seule section rectangulaire MVP en flexion positive, bt = b.
+        // Pour la seule section rectangulaire V1 en flexion positive, bt = b.
         $tensionZoneArea = $geometry->width * $effectiveDepth->effectiveDepth;
         $this->ensurePositiveFinite($tensionZoneArea, BeamMinimumTensionReinforcementRejectionReason::INVALID_TENSION_ZONE_AREA);
 

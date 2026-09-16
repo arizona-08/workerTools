@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Géométrie d'une poutre rectangulaire MVP ; les trois longueurs sont en mm. */
+/** Géométrie d'une poutre rectangulaire V1 ; les trois longueurs sont en mm. */
 final readonly class BeamGeometry
 {
     public function __construct(

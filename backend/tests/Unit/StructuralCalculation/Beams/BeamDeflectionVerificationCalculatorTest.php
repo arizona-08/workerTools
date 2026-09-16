@@ -63,7 +63,7 @@ function deflectionCandidate(float $requiredArea = 413.46, float $providedArea =
 
 function deflectionConfiguration(BeamSupportSystem $supportSystem = BeamSupportSystem::SIMPLY_SUPPORTED): BeamCalculationConfiguration
 {
-    $reference = BeamCalculationConfiguration::mvp();
+    $reference = BeamCalculationConfiguration::supported();
 
     return new BeamCalculationConfiguration($reference->calculationMode, $reference->elementType, $reference->materialType, $reference->sectionType, $supportSystem, $reference->loadModel, $reference->designCodeProfile, $reference->designSituation);
 }

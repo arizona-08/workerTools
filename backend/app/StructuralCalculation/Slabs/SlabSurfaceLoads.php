@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Slabs;
 
-/** Charges caractéristiques surfaciques saisies pour la dalle MVP, en kN/m². */
+/** Charges caractéristiques surfaciques saisies pour la dalle V1, en kN/m². */
 final readonly class SlabSurfaceLoads
 {
     public const UNIT = 'kN/m²';

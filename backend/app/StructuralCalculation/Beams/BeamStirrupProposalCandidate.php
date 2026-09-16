@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Beams;
 
-/** Candidat discret d'étrier et trace de toutes ses contraintes MVP. */
+/** Candidat discret d'étrier et trace de toutes ses contraintes V1. */
 final readonly class BeamStirrupProposalCandidate
 {
     /** @param list<BeamStirrupProposalRejectionReason> $rejectionReasons */

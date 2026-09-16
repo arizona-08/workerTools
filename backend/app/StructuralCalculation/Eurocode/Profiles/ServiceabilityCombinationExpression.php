@@ -2,7 +2,7 @@
 
 namespace App\StructuralCalculation\Eurocode\Profiles;
 
-/** Expressions ELS EN 1990 couvertes par le MVP Poutre. */
+/** Expressions ELS EN 1990 couvertes par le V1 Poutre. */
 enum ServiceabilityCombinationExpression: string
 {
     case EN1990_6_14 = 'EN1990_6_14';

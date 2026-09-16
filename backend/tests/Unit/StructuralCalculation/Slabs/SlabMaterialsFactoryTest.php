@@ -7,7 +7,7 @@ use App\StructuralCalculation\Slabs\SlabMaterialsException;
 use App\StructuralCalculation\Slabs\SlabMaterialsFactory;
 use App\StructuralCalculation\Slabs\SlabMaterialsRejectionReason;
 
-it('reuses the common concrete steel and exposure types supported by the MVP', function () {
+it('reuses the common concrete steel and exposure types supported by the V1', function () {
     $materials = app(SlabMaterialsFactory::class)->fromValues('C30/37', 'B500B', 'XC1');
 
     expect($materials->concreteClass)->toBe(ConcreteStrengthClass::C30_37)

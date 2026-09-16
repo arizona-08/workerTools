@@ -15,7 +15,7 @@ Ac,eff = b × hc,eff
 ρp,eff = As_prov / Ac,eff
 ```
 
-Dans le MVP, `fct,eff = fctm` du matériau à 28 jours. Cette hypothèse ne
+Dans le V1, `fct,eff = fctm` du matériau à 28 jours. Cette hypothèse ne
 modélise pas la fissuration au jeune âge.
 
 ## Géométrie réelle du lit
@@ -48,7 +48,7 @@ coefficients centralisés dans le profil sont `k1=0,8` (HA), `k2=0,5`
 
 La combinaison quasi-permanente est associée à `LONG_TERM`, donc `kt=0,4`.
 La voie courte durée (`kt=0,6`) reste un paramètre testable du profil, sans
-être exposée au formulaire MVP.
+être exposée au formulaire V1.
 
 ## Limites et réserves
 

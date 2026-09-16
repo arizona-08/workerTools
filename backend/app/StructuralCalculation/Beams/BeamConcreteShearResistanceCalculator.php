@@ -7,7 +7,7 @@ use App\StructuralCalculation\Eurocode\Profiles\DesignCodeProfile;
 use App\StructuralCalculation\Materials\Concrete\ConcreteProperties;
 use App\StructuralCalculation\Units\ForceConverter;
 
-/** Calcule VRd,c d'une poutre rectangulaire MVP, sans dimensionner les étriers. */
+/** Calcule VRd,c d'une poutre rectangulaire V1, sans dimensionner les étriers. */
 final readonly class BeamConcreteShearResistanceCalculator
 {
     public function __construct(private ForceConverter $forceConverter) {}

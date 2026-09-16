@@ -12,9 +12,9 @@ use App\StructuralCalculation\Eurocode\ReinforcementSteel\ReinforcementSpacingRe
 use App\StructuralCalculation\Eurocode\Slabs\SlabReinforcementRequirements;
 
 /**
- * Profil MVP : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
+ * Profil V1 : NF EN 1992-1-1:2005 et Annexes Nationales françaises associées.
  *
- * La procédure française MVP retient EN 1990 6.10 pour l'ELU fondamental
+ * La procédure française V1 retient EN 1990 6.10 pour l'ELU fondamental
  * persistant/transitoire bâtiment. Les variantes 6.10a/6.10b et ξ sont hors
  * périmètre, ainsi que les autres situations et catégories d'actions.
  */
@@ -107,7 +107,7 @@ final class FrenchEurocodeProfileRepository
             materialSafetyFactors: new MaterialSafetyFactors(...self::MATERIAL_SAFETY_FACTORS),
             actionSafetyFactors: new ActionSafetyFactors(...self::ACTION_SAFETY_FACTORS),
             fundamentalUltimateCombinationExpression: FundamentalUltimateCombinationExpression::EN1990_6_10,
-            coverRequirements: CoverRequirements::frenchMvp(),
+            coverRequirements: CoverRequirements::frenchSupported(),
             beamLongitudinalReinforcementRequirements: new BeamLongitudinalReinforcementRequirements(
                 ...self::BEAM_LONGITUDINAL_REINFORCEMENT_REQUIREMENTS,
             ),
@@ -120,7 +120,7 @@ final class FrenchEurocodeProfileRepository
             reinforcementSpacingRequirements: new ReinforcementSpacingRequirements(
                 ...self::REINFORCEMENT_SPACING_REQUIREMENTS,
             ),
-            slabReinforcementRequirements: SlabReinforcementRequirements::frenchMvp(),
+            slabReinforcementRequirements: SlabReinforcementRequirements::frenchSupported(),
             combinationFactorsByActionCategory: array_map(
                 fn (array $factors): CombinationFactors => new CombinationFactors(...$factors),
                 self::COMBINATION_FACTORS_BY_ACTION_CATEGORY,

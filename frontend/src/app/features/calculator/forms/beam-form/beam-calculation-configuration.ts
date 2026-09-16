@@ -12,7 +12,7 @@ export interface BeamCalculationConfigurationView {
   designSituation: 'PERSISTENT_TRANSIENT';
 }
 
-export const MVP_BEAM_CALCULATION_CONFIGURATION: BeamCalculationConfigurationView = {
+export const SUPPORTED_BEAM_CALCULATION_CONFIGURATION: BeamCalculationConfigurationView = {
   calculationMode: 'DESIGN',
   elementType: 'BEAM',
   materialType: 'REINFORCED_CONCRETE',

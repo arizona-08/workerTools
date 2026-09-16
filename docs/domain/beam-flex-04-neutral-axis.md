@@ -12,7 +12,7 @@ EN 1992-1-1:2004 / NF EN 1992-1-1:2005 §3.1.7, le composant normatif
 | `50 < fck ≤ 90 MPa` | `0,8 - (fck - 50) / 400` | `1,0 - (fck - 50) / 200` |
 
 Les résistances supérieures à `90 MPa` sont refusées : aucune extrapolation
-du modèle MVP n'est faite. Le bloc a une profondeur `λx` et une contrainte
+du modèle V1 n'est faite. Le bloc a une profondeur `λx` et une contrainte
 uniforme `ηfcd`.
 
 ## Résolution de l'axe neutre
@@ -29,7 +29,7 @@ avec `ξ = x / d`. La résolution retenue est la petite racine :
 
 Cette racine correspond à la branche physique usuelle faiblement sollicitée
 d'une section simplement armée. La seconde racine ne représente pas la branche
-utilisée par le MVP.
+utilisée par le V1.
 
 Le terme `1 - 2μEd / η` doit être supérieur ou égal à zéro. Cette condition
 est seulement une condition mathématique d'existence de la racine : elle ne
