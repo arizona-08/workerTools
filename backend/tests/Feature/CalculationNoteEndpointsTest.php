@@ -20,7 +20,13 @@ function calculationNoteSlabPayload(): array
     ];
 }
 
-it('generates a downloadable PDF note from beam inputs', function () {
+it('allows a guest to calculate a slab', function () {
+    $this->postJson('/api/slab/calculations', calculationNoteSlabPayload())
+        ->assertOk()
+        ->assertJsonPath('summary.status', 'COMPLIANT');
+});
+
+it('allows a guest to generate a downloadable PDF note from beam inputs', function () {
     $response = $this->postJson('/api/beam/calculations/pdf', calculationNoteBeamPayload());
 
     $response->assertOk()
@@ -30,7 +36,7 @@ it('generates a downloadable PDF note from beam inputs', function () {
     expect($response->getContent())->toStartWith('%PDF');
 });
 
-it('generates a downloadable PDF note from slab inputs', function () {
+it('allows a guest to generate a downloadable PDF note from slab inputs', function () {
     $response = $this->postJson('/api/slab/calculations/pdf', calculationNoteSlabPayload());
 
     $response->assertOk()

@@ -21,7 +21,13 @@ Route::post('/slab/calculations', SlabCalculationController::class);
 Route::post('/slab/calculations/pdf', SlabCalculationNoteController::class);
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+
+    return response()->json([
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+    ]);
 })->middleware('auth:sanctum');
 
-require_once __DIR__.'/auth.php';
+require __DIR__.'/auth.php';

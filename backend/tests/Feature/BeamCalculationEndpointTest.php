@@ -23,7 +23,7 @@ function beamCalculationPayload(string $mode = 'DESIGN'): array
     ];
 }
 
-it('orchestrates the complete design calculation and exposes its existing result projections', function () {
+it('allows a guest to orchestrate the complete design calculation and exposes its existing result projections', function () {
     $response = $this->postJson('/api/beam/calculations', beamCalculationPayload());
 
     $response->assertOk()

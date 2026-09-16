@@ -10,4 +10,24 @@
       }
     </ul>
   </nav>
+
+  @if (authentication.currentUser(); as user) {
+    <section class="flex min-w-0 items-center gap-3" aria-label="Compte utilisateur">
+      <div class="min-w-0 text-right text-sm text-zinc-700">
+        <p class="truncate font-medium text-zinc-900" [title]="user.name">{{ user.name }}</p>
+        <p class="truncate text-xs text-zinc-500" [title]="user.email">{{ user.email }}</p>
+      </div>
+      <button type="button" [disabled]="isLoggingOut()" (click)="logout()" class="rounded-lg border border-zinc-300 px-3 py-2 font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-55">
+        @if (isLoggingOut()) { Déconnexion… } @else { Se déconnecter }
+      </button>
+    </section>
+  } @else {
+    <div class="flex items-center gap-2 text-sm font-medium">
+      <a routerLink="/auth/login" class="rounded-lg px-3 py-2 text-zinc-700 hover:bg-zinc-100">Se connecter</a>
+      <a routerLink="/auth/register" class="rounded-lg bg-violet-700 px-3 py-2 text-white hover:bg-violet-800">Créer un compte</a>
+    </div>
+  }
 </header>
+@if (logoutError(); as error) {
+  <p class="mx-4 mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">{{ error }}</p>
+}

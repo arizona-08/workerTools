@@ -10,7 +10,7 @@ describe('MainAppLayout', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MainAppLayout],
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MainAppLayout);
@@ -22,3 +22,5 @@ describe('MainAppLayout', () => {
     expect(component).toBeTruthy();
   });
 });
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
