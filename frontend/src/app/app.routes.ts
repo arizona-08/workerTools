@@ -1,16 +1,9 @@
 import { Routes } from '@angular/router';
-import { PublicLayout } from './layouts/public-layout/public-layout';
 import { MainAppLayout } from './layouts/main-app-layout/main-app-layout';
 import { Dashboard } from './pages/app/dashboard/dashboard';
 import { Calculator } from './pages/app/calculator/calculator';
 
 export const routes: Routes = [
-  // Pages Seo
-  {
-    path: '',
-    component: PublicLayout,
-  },
-
   // L'authentification est prête mais volontairement indisponible dans le V1 public.
   // Les composants et services sont conservés pour sa réactivation ultérieure.
   {
@@ -57,5 +50,16 @@ export const routes: Routes = [
     ]
   },
 
-  
+  // Entrée publique principale : le calculateur est directement disponible à la racine.
+  {
+    path: '',
+    pathMatch: 'full',
+    component: MainAppLayout,
+    children: [
+      {
+        path: '',
+        component: Calculator,
+      },
+    ],
+  },
 ];
