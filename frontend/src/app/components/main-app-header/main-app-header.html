@@ -1,13 +1,33 @@
-<header class="px-4 py-6 relative flex items-center justify-center bg-white rounded-lg">
-  <div class="absolute left-0 ml-4">
-    <a routerLink="/app" class="text-2xl font-semibold">WorkerTools<span class="text-orange-500">.</span></a>
+<header class="flex flex-col gap-4 rounded-lg bg-white px-4 py-6 sm:relative sm:flex-row sm:items-center sm:justify-center">
+  <div class="">
+    <a routerLink="/app" class="text-2xl font-semibold">WorkerTools<span class="text-violet-700">.</span></a>
   </div>
 
-  <nav>
-    <ul class="flex items-center justify-between gap-5">
+  <!-- <nav class="w-full overflow-x-auto sm:w-auto">
+    <ul class="flex w-max min-w-full items-center justify-between gap-5 sm:min-w-0">
       @for (link of links(); track $index) {
         <li class="px-3 py-2 font-medium text-zinc-600 hover:bg-gray-100 rounded-lg transition-all duration-150"><a [routerLink]="link.path">{{ link.label }}</a></li>
       }
     </ul>
-  </nav>
+  </nav> -->
+
+  <!-- @if (authentication.currentUser(); as user) {
+    <section class="flex min-w-0 items-center gap-3" aria-label="Compte utilisateur">
+      <div class="min-w-0 text-right text-sm text-zinc-700">
+        <p class="truncate font-medium text-zinc-900" [title]="user.name">{{ user.name }}</p>
+        <p class="truncate text-xs text-zinc-500" [title]="user.email">{{ user.email }}</p>
+      </div>
+      <button type="button" [disabled]="isLoggingOut()" (click)="logout()" class="rounded-lg border border-zinc-300 px-3 py-2 font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-55">
+        @if (isLoggingOut()) { Déconnexion… } @else { Se déconnecter }
+      </button>
+    </section>
+  } @else {
+    <div class="flex items-center gap-2 text-sm font-medium">
+      <a routerLink="/auth/login" class="rounded-lg px-3 py-2 text-zinc-700 hover:bg-zinc-100">Se connecter</a>
+      <a routerLink="/auth/register" class="rounded-lg bg-violet-700 px-3 py-2 text-white hover:bg-violet-800">Créer un compte</a>
+    </div>
+  } -->
 </header>
+@if (logoutError(); as error) {
+  <p class="mx-4 mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">{{ error }}</p>
+}

@@ -1,0 +1,49 @@
+<section
+  class="compliance-indicator"
+  [class]="'compliance-indicator compliance-indicator--' + status().toLowerCase()"
+  [attr.aria-label]="accessibilityLabel()"
+  aria-live="polite"
+>
+  <p class="compliance-indicator__eyebrow">Taux d’utilisation gouvernant</p>
+
+  <div class="compliance-indicator__donut" aria-hidden="true">
+    <svg viewBox="0 0 120 120" focusable="false">
+      <circle class="compliance-indicator__track" cx="60" cy="60" r="52" pathLength="100" />
+      <circle
+        class="compliance-indicator__progress"
+        cx="60"
+        cy="60"
+        r="52"
+        pathLength="100"
+        [attr.stroke-dasharray]="visualProgress() * 100 + ' 100'"
+      />
+    </svg>
+    <span class="compliance-indicator__percentage">
+      @if (displayedPercentage() !== null) {
+        {{ displayedPercentage() }}<small>%</small>
+      } @else {
+        —
+      }
+    </span>
+  </div>
+
+  <p class="compliance-indicator__status">
+    <span class="compliance-indicator__status-icon" aria-hidden="true">
+      @switch (status()) {
+        @case ('COMPLIANT') { <svg lucideCircleCheck></svg> }
+        @case ('NOT_COMPLIANT') { <svg lucideCircleX></svg> }
+        @case ('NOT_CHECKED') { <svg lucideTriangleAlert></svg> }
+        @case ('NOT_APPLICABLE') { <svg lucideCircleMinus></svg> }
+        @case ('CALCULATION_METHOD_NOT_SUPPORTED') { <svg lucideCircleHelp></svg> }
+      }
+    </span>
+    {{ presentation().label }}
+  </p>
+  <p class="compliance-indicator__description">{{ presentation().description }}</p>
+  @if (governingVerificationLabel(); as governingVerification) {
+    <p class="compliance-indicator__governing">
+      Vérification gouvernante :
+      <strong>{{ governingVerification }}</strong>
+    </p>
+  }
+</section>

@@ -1,0 +1,9 @@
+<?php
+
+namespace App\StructuralCalculation\Eurocode\Concrete;
+
+enum ConcreteRectangularStressBlockRejectionReason: string
+{
+    case INVALID_CHARACTERISTIC_CONCRETE_STRENGTH = 'INVALID_CHARACTERISTIC_CONCRETE_STRENGTH';
+    case UNSUPPORTED_CHARACTERISTIC_CONCRETE_STRENGTH = 'UNSUPPORTED_CHARACTERISTIC_CONCRETE_STRENGTH';
+}

@@ -1,0 +1,138 @@
+<section aria-labelledby="slab-form-title">
+  <p class="text-sm font-medium text-violet-700">Configuration du calcul</p>
+  <h2 id="slab-form-title" class="mt-1 text-lg font-semibold text-zinc-950">Dalle en béton armé</h2>
+  <p class="mt-2 text-sm leading-6 text-zinc-600">WorkerTools prend en charge une dalle pleine unidirectionnelle avec ses dimensions, matériaux et actions caractéristiques.</p>
+
+  <dl class="mt-6 grid gap-3 sm:grid-cols-3" aria-label="Hypothèses fixes du module Dalle">
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Type de dalle</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Dalle pleine</dd>
+    </div>
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Fonctionnement</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Unidirectionnelle</dd>
+    </div>
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Matériau</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Béton armé</dd>
+    </div>
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Système statique</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Une travée</dd>
+    </div>
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Appuis</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Bande simplement appuyée sur deux côtés opposés</dd>
+    </div>
+    <div class="rounded-lg border border-violet-100 bg-violet-50 p-4">
+      <dt class="text-xs font-medium uppercase tracking-wide text-violet-700">Charges</dt>
+      <dd class="mt-1 text-sm font-semibold text-zinc-950">Verticales uniformément réparties</dd>
+    </div>
+  </dl>
+  <p class="mt-5 text-sm text-zinc-600">Ces hypothèses sont fixes pour cette configuration et ne sont pas encore des options de saisie.</p>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="geometryForm">
+    <legend class="text-base font-semibold text-zinc-900">Géométrie</legend>
+    <p class="mt-1 text-sm text-zinc-600">Saisissez directement les dimensions utilisées par le futur moteur de calcul.</p>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="slab-effective-span" class="block text-sm font-medium text-zinc-900">Portée (L)</label>
+        <p class="mt-1 text-xs text-zinc-500">Portée de calcul saisie directement.</p>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-effective-span" type="number" inputmode="decimal" min="0" step="0.01" formControlName="effectiveSpan" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-effective-span-error slab-effective-span-unit" />
+          <span id="slab-effective-span-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">m</span>
+        </div>
+        @if (geometryForm.controls.effectiveSpan.touched && geometryForm.controls.effectiveSpan.invalid) {
+          <p id="slab-effective-span-error" class="mt-1 text-sm text-red-700" role="alert">
+            @if (geometryForm.controls.effectiveSpan.hasError('required')) { La portée est requise. } @else { La portée doit être supérieure à 0. }
+          </p>
+        }
+      </div>
+      <div>
+        <label for="slab-thickness" class="block text-sm font-medium text-zinc-900">Épaisseur (h)</label>
+        <p class="mt-1 text-xs text-zinc-500">Épaisseur totale de la dalle pleine.</p>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-thickness" type="number" inputmode="decimal" min="0" step="0.1" formControlName="thickness" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-thickness-error slab-thickness-unit" />
+          <span id="slab-thickness-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">cm</span>
+        </div>
+        @if (geometryForm.controls.thickness.touched && geometryForm.controls.thickness.invalid) {
+          <p id="slab-thickness-error" class="mt-1 text-sm text-red-700" role="alert">
+            @if (geometryForm.controls.thickness.hasError('required')) { L’épaisseur est requise. } @else { L’épaisseur doit être supérieure à 0. }
+          </p>
+        }
+      </div>
+    </div>
+  </fieldset>
+
+  <p class="mt-5 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-950">
+    <span class="font-medium">Bande de calcul automatique :</span> 1 m. Cette hypothèse de calcul ne peut pas être modifiée.
+  </p>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="materialsForm">
+    <legend class="text-base font-semibold text-zinc-900">Matériaux et durabilité</legend>
+    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="slab-concrete-class" class="block text-sm font-medium text-zinc-900">Classe de béton</label>
+        <select id="slab-concrete-class" formControlName="concreteClass" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (concreteClass of materialCatalog.catalog()?.concreteClasses ?? []; track concreteClass) { <option [value]="concreteClass">{{ concreteClass }}</option> }
+        </select>
+      </div>
+      <div>
+        <label for="slab-steel-grade" class="block text-sm font-medium text-zinc-900">Acier d’armature</label>
+        <select id="slab-steel-grade" formControlName="steelGrade" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (steelGrade of materialCatalog.catalog()?.steelGrades ?? []; track steelGrade) { <option [value]="steelGrade">{{ steelGrade }}</option> }
+        </select>
+      </div>
+      <div>
+        <label for="slab-exposure-class" class="block text-sm font-medium text-zinc-900">Classe d’exposition</label>
+        <select id="slab-exposure-class" formControlName="exposureClass" class="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-100">
+          @for (exposureClass of materialCatalog.catalog()?.exposureClasses ?? []; track exposureClass.code) { <option [value]="exposureClass.code">{{ exposureClass.code }} — {{ exposureClass.label }}</option> }
+        </select>
+      </div>
+    </div>
+    <p class="mt-3 text-sm text-zinc-600">Les options proposées sont les matériaux actuellement pris en charge par WorkerTools.</p>
+  </fieldset>
+
+  <fieldset class="mt-6 border-t border-zinc-200 pt-5" [formGroup]="surfaceLoadsForm">
+    <legend class="text-base font-semibold text-zinc-900">Charges surfaciques</legend>
+    <p class="mt-1 text-sm text-zinc-600">Les charges caractéristiques sont saisies en kN/m². Les combinaisons seront traitées ultérieurement.</p>
+    <div class="mt-4 rounded-lg border border-violet-100 bg-violet-50 px-4 py-3 text-sm text-violet-950">
+      <p class="font-medium">Poids propre</p>
+      <p class="mt-1 text-violet-900">Calculé automatiquement à partir de l’épaisseur de la dalle.</p>
+    </div>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="slab-finishes" class="block text-sm font-medium text-zinc-900">Revêtement</label>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-finishes" type="number" inputmode="decimal" min="0" step="0.1" formControlName="finishes" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-finishes-error slab-finishes-unit" />
+          <span id="slab-finishes-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m²</span>
+        </div>
+        @if (surfaceLoadsForm.controls.finishes.touched && surfaceLoadsForm.controls.finishes.invalid) { <p id="slab-finishes-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p> }
+      </div>
+      <div>
+        <label for="slab-partitions" class="block text-sm font-medium text-zinc-900">Cloisons</label>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-partitions" type="number" inputmode="decimal" min="0" step="0.1" formControlName="partitions" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-partitions-error slab-partitions-unit" />
+          <span id="slab-partitions-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m²</span>
+        </div>
+        @if (surfaceLoadsForm.controls.partitions.touched && surfaceLoadsForm.controls.partitions.invalid) { <p id="slab-partitions-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p> }
+      </div>
+      <div>
+        <label for="slab-other-permanent" class="block text-sm font-medium text-zinc-900">Autres permanentes</label>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-other-permanent" type="number" inputmode="decimal" min="0" step="0.1" formControlName="otherPermanent" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-other-permanent-error slab-other-permanent-unit" />
+          <span id="slab-other-permanent-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m²</span>
+        </div>
+        @if (surfaceLoadsForm.controls.otherPermanent.touched && surfaceLoadsForm.controls.otherPermanent.invalid) { <p id="slab-other-permanent-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p> }
+      </div>
+      <div>
+        <label for="slab-imposed-load" class="block text-sm font-medium text-zinc-900">Charge d’exploitation (Qk)</label>
+        <div class="mt-2 flex rounded-lg border border-zinc-300 bg-white focus-within:border-violet-700 focus-within:ring-2 focus-within:ring-violet-100">
+          <input id="slab-imposed-load" type="number" inputmode="decimal" min="0" step="0.1" formControlName="imposedLoad" class="min-w-0 flex-1 rounded-l-lg px-3 py-2 text-sm text-zinc-900 outline-none" aria-describedby="slab-imposed-load-error slab-imposed-load-unit" />
+          <span id="slab-imposed-load-unit" class="flex items-center border-l border-zinc-200 px-3 text-sm text-zinc-600">kN/m²</span>
+        </div>
+        @if (surfaceLoadsForm.controls.imposedLoad.touched && surfaceLoadsForm.controls.imposedLoad.invalid) { <p id="slab-imposed-load-error" class="mt-1 text-sm text-red-700" role="alert">La charge doit être un nombre supérieur ou égal à 0.</p> }
+      </div>
+    </div>
+  </fieldset>
+</section>

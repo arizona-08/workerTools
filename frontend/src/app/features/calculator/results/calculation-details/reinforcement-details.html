@@ -1,0 +1,52 @@
+<section class="reinforcement-details" aria-label="Détail des propositions d’armatures">
+  <dl class="reinforcement-details__summary">
+    <div><dt>Armatures cibles</dt><dd>{{ formatNumber(targetArea()) }} <span>mm²</span></dd></div>
+    <div><dt>Candidats générés</dt><dd>{{ candidateCount() }}</dd></div>
+    <div><dt>Acceptés géométriquement</dt><dd>{{ acceptedCandidates().length }}</dd></div>
+    <div><dt>Rejetés géométriquement</dt><dd>{{ rejectedCandidates().length }}</dd></div>
+  </dl>
+
+  @if (selectedCandidate(); as selected) {
+    <section class="reinforcement-details__selected" aria-label="Ferraillage retenu">
+      <p>{{ sourceLabel(selectedSource()) }}</p>
+      <strong>{{ candidateLabel(selected) }}</strong>
+      <span>As fournie : {{ formatNumber(selected.providedArea) }} mm² · Taux d’utilisation : {{ formatRatio(selected.utilizationRatio) }}</span>
+    </section>
+  }
+
+  @if (generatedCandidates().length > 0) {
+    <details class="reinforcement-details__group">
+      <summary>Propositions générées ({{ generatedCandidates().length }})</summary>
+      <div class="reinforcement-details__table-wrapper">
+        <table>
+          <thead><tr><th>Proposition</th><th>As fournie</th><th>As cible</th><th>Marge</th><th>Utilisation</th></tr></thead>
+          <tbody>@for (candidate of generatedCandidates(); track $index) { <tr><td>{{ candidateLabel(candidate) }}</td><td>{{ formatNumber(candidate.providedArea) }} mm²</td><td>{{ formatNumber(candidate.targetArea) }} mm²</td><td>{{ formatNumber(candidate.excessArea) }} mm²</td><td>{{ formatRatio(candidate.utilizationRatio) }}</td></tr> }</tbody>
+        </table>
+      </div>
+    </details>
+  }
+
+  @if (acceptedCandidates().length > 0) {
+    <details class="reinforcement-details__group">
+      <summary>Contrôles géométriques acceptés ({{ acceptedCandidates().length }})</summary>
+      <div class="reinforcement-details__table-wrapper">
+        <table>
+          <thead><tr><th>Proposition</th><th>Largeur requise</th><th>Largeur restante</th><th>Espacement minimal</th></tr></thead>
+          <tbody>@for (check of acceptedCandidates(); track $index) { <tr><td>{{ candidateLabel(check.candidate) }}</td><td>{{ formatNumber(check.requiredWidth) }} mm</td><td>{{ formatNumber(check.remainingWidth) }} mm</td><td>{{ formatNumber(check.minimumClearSpacing) }} mm</td></tr> }</tbody>
+        </table>
+      </div>
+    </details>
+  }
+
+  @if (rejectedCandidates().length > 0) {
+    <details class="reinforcement-details__group reinforcement-details__group--rejected">
+      <summary>Contrôles géométriques rejetés ({{ rejectedCandidates().length }})</summary>
+      <div class="reinforcement-details__table-wrapper">
+        <table>
+          <thead><tr><th>Proposition</th><th>Largeur requise</th><th>Largeur restante</th><th>Motif du rejet</th></tr></thead>
+          <tbody>@for (check of rejectedCandidates(); track $index) { <tr><td>{{ candidateLabel(check.candidate) }}</td><td>{{ formatNumber(check.requiredWidth) }} mm</td><td>{{ formatNumber(check.remainingWidth) }} mm</td><td>{{ rejectionLabel(check.rejectionReason) }}</td></tr> }</tbody>
+        </table>
+      </div>
+    </details>
+  }
+</section>

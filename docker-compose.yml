@@ -1,25 +1,25 @@
 services:
-  frontend:
-    container_name: frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "4200:4200"
-    env_file:
-      - ./frontend/.env
-    networks:
-      - workertools-network
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   ports:
+  #     - "4200:4200"
+  #   env_file:
+  #     - ./frontend/.env
+  #   networks:
+  #     - workertools-network
 
   nginx:
     container_name: nginx
     image: nginx:latest
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/var/www/html:ro
     ports:
       - "8000:80"
     depends_on:
-      - frontend
       - backend
     networks:
       - workertools-network
@@ -29,8 +29,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    ports:
-      - 9000
+    expose:
+      - "9000"
     env_file:
       - ./backend/.env
     volumes:

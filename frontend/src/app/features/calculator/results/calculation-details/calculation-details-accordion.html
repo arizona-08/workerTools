@@ -1,0 +1,62 @@
+<section class="calculation-details" aria-labelledby="calculation-details-title">
+  <div class="calculation-details__header">
+    <div>
+      <p class="calculation-details__eyebrow">Résultat détaillé</p>
+      <h2 id="calculation-details-title">Détails du calcul</h2>
+    </div>
+  </div>
+
+  @if (details().warnings.length > 0) {
+    <aside class="calculation-details__warnings" aria-label="Informations et limites du calcul">
+      <svg lucideInfo aria-hidden="true"></svg>
+      <div>
+        <p>Informations et limites du calcul</p>
+        <ul>
+          @for (warning of details().warnings; track warning) { <li>{{ warningLabel(warning) }}</li> }
+        </ul>
+      </div>
+    </aside>
+  }
+
+  <div class="calculation-details__items">
+    <app-result-accordion-item title="1. Hypothèses et paramètres" contentId="beam-details-assumptions" [initiallyExpanded]="true">
+      <app-detail-value-list [values]="details().assumptions" />
+    </app-result-accordion-item>
+
+    <app-result-accordion-item title="2. Calcul des sollicitations" contentId="beam-details-actions">
+      <h4>Combinaisons</h4>
+      <app-detail-value-list [values]="details().combinations" />
+      <h4>Sollicitations</h4>
+      <app-detail-value-list [values]="details().internalForces" />
+      @if (actionsFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="actionsFormulaSteps()" /> }
+    </app-result-accordion-item>
+
+    <app-result-accordion-item title="3. Flexion" contentId="beam-details-flexure">
+      <app-detail-value-list [values]="details().flexure" />
+      @if (flexureFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="flexureFormulaSteps()" /> }
+    </app-result-accordion-item>
+
+    <app-result-accordion-item title="4. Armatures" contentId="beam-details-reinforcement">
+      <app-reinforcement-details [details]="details().reinforcement" />
+      @if (reinforcementFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="reinforcementFormulaSteps()" /> }
+    </app-result-accordion-item>
+
+    <app-result-accordion-item title="5. Cisaillement" contentId="beam-details-shear">
+      <app-detail-value-list [values]="details().shear" />
+      @if (shearFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="shearFormulaSteps()" /> }
+    </app-result-accordion-item>
+
+    <app-result-accordion-item title="6. ELS" contentId="beam-details-serviceability">
+      <h4>Contraintes</h4>
+      <app-detail-value-list [values]="stress()" />
+      <h4>Fissuration</h4>
+      <app-detail-value-list [values]="crack()" />
+      <h4>Déformation</h4>
+      @if (usesSimplifiedSpanDepthMethod()) {
+        <p class="calculation-details__method-note">Méthode simplifiée par contrôle du rapport portée / hauteur utile. Aucune flèche en millimètres n’est calculée.</p>
+      }
+      <app-detail-value-list [values]="deflection()" />
+      @if (serviceabilityFormulaSteps().length > 0) { <h4>Détail des calculs</h4><app-calculation-formula-list [steps]="serviceabilityFormulaSteps()" /> }
+    </app-result-accordion-item>
+  </div>
+</section>

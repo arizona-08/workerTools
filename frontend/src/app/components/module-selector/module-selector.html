@@ -1,23 +1,16 @@
-<div class="relative select-none">
-  <!-- moduleSelector -->
-  <div class="flex items-center gap-2 px-2 py-1 bg-white rounded border border-gray-100 shadow-xs cursor-pointer" (click)="toggleModuleList()">
-    {{ selectedModule() }} <svg lucideChevronDown></svg>
-  </div>
-
-  @if(isModuleListOpen()) {
-    <div class="absolute right-0 mt-4 shadow-sm">
-      <ul class="bg-white w-48 rounded-md p-1">
-        
-        @for (moduleType of allModules; track $index) {
-          <li
-            class="p-1 hover:bg-gray-100 rounded cursor-pointer"
-            (click)="handleChangeModule(moduleType)"
-          >
-            {{ moduleType }}
-          </li>
-        }
-        
-      </ul>
-    </div>
+<div class="inline-flex rounded-xl border border-violet-100 bg-violet-50 p-1" role="group" aria-label="Module de calcul">
+  @for (module of modules(); track module.id) {
+    <button
+      type="button"
+      class="rounded-lg px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-700"
+      [class.bg-white]="selectedModule() === module.id"
+      [class.text-violet-800]="selectedModule() === module.id"
+      [class.shadow-sm]="selectedModule() === module.id"
+      [class.text-zinc-600]="selectedModule() !== module.id"
+      [attr.aria-pressed]="selectedModule() === module.id"
+      (click)="select(module.id)"
+    >
+      {{ module.label }}
+    </button>
   }
 </div>

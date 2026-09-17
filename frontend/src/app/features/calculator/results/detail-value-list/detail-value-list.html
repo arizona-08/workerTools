@@ -1,0 +1,21 @@
+<dl class="detail-value-list">
+  @for (row of rows(); track row.label) {
+    <div class="detail-value-list__row">
+      <dt>{{ row.label }}</dt>
+      @if (row.children; as children) {
+        <dd class="detail-value-list__collection">
+          <details>
+            <summary>Afficher les {{ children.length }} valeurs</summary>
+            <dl>
+              @for (child of children; track child.label) {
+                <div><dt>{{ child.label }}</dt><dd>{{ child.value }}@if (child.unit) { <span>{{ child.unit }}</span> }</dd></div>
+              }
+            </dl>
+          </details>
+        </dd>
+      } @else {
+        <dd>{{ row.value }}@if (row.unit) { <span>{{ row.unit }}</span> }</dd>
+      }
+    </div>
+  }
+</dl>

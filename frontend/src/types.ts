@@ -3,4 +3,10 @@ export type LinkType = {
   path: string;
 }
 
-export type ModuleSelectorFieldType = "Poutre" | "Dalle"
+export type ModuleSelectorFieldType = 'Poutre' | 'Dalle';
+
+export interface CalculatorModule {
+  id: ModuleSelectorFieldType;
+  label: string;
+  description: string;
+}

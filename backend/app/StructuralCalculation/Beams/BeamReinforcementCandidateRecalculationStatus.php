@@ -1,0 +1,10 @@
+<?php
+
+namespace App\StructuralCalculation\Beams;
+
+enum BeamReinforcementCandidateRecalculationStatus: string
+{
+    case VALID_AFTER_RECALCULATION = 'VALID_AFTER_RECALCULATION';
+    case INSUFFICIENT_AFTER_RECALCULATION = 'INSUFFICIENT_AFTER_RECALCULATION';
+    case INVALID_SINGLY_REINFORCED_DOMAIN = 'INVALID_SINGLY_REINFORCED_DOMAIN';
+}
