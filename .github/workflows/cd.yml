@@ -1,13 +1,9 @@
 name: CD - Production
 
 on:
-  workflow_run:
-    workflows:
-      - Tests
+  push:
     branches:
       - main
-    types:
-      - completed
 
 permissions:
   contents: read
@@ -26,24 +22,15 @@ jobs:
     name: Deploy production
     runs-on: ubuntu-latest
 
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push'
-
     steps:
-
-      - name: Checkout validated commit
+      - name: Checkout commit
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Compute image tag
         id: image-tag
         shell: bash
         run: |
-          SHORT_SHA="${{ github.event.workflow_run.head_sha }}"
-          SHORT_SHA="${SHORT_SHA:0:12}"
-
+          SHORT_SHA="${GITHUB_SHA:0:12}"
           IMAGE_TAG="sha-${SHORT_SHA}"
 
           echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
@@ -61,10 +48,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ---------------------------------------------------------
-      # Frontend
-      # ---------------------------------------------------------
-
       - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
@@ -77,10 +60,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ---------------------------------------------------------
-      # Backend
-      # ---------------------------------------------------------
-
       - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
@@ -92,10 +71,6 @@ jobs:
             ${{ env.BACKEND_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # ---------------------------------------------------------
-      # SSH
-      # ---------------------------------------------------------
 
       - name: Configure SSH
         shell: bash
@@ -119,10 +94,6 @@ jobs:
 
           chmod 600 ~/.ssh/known_hosts
 
-      # ---------------------------------------------------------
-      # Préparation VPS
-      # ---------------------------------------------------------
-
       - name: Prepare deployment directory
         shell: bash
         env:
@@ -137,10 +108,6 @@ jobs:
             -p "${SSH_PORT:-22}" \
             "$SSH_USER@$SSH_HOST" \
             "mkdir -p /opt/workertools/nginx"
-
-      # ---------------------------------------------------------
-      # SCP des fichiers nécessaires au déploiement
-      # ---------------------------------------------------------
 
       - name: Upload Docker Compose file
         shell: bash
@@ -172,20 +139,14 @@ jobs:
             nginx/nginx.conf \
             "$SSH_USER@$SSH_HOST:/opt/workertools/nginx/nginx.conf"
 
-      # ---------------------------------------------------------
-      # Déploiement Docker
-      # ---------------------------------------------------------
-
       - name: Deploy application
         shell: bash
         env:
           SSH_HOST: ${{ secrets.PROD_HOST }}
           SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
           SSH_USER: ${{ secrets.PROD_USER }}
-
           GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
           set -euo pipefail
@@ -199,22 +160,16 @@ jobs:
 
               cd /opt/workertools
 
-              echo "Logging into GHCR..."
-
               echo "$GHCR_TOKEN" | docker login ghcr.io \
                 --username "$GHCR_USERNAME" \
                 --password-stdin
 
               export IMAGE_TAG="$IMAGE_TAG"
 
-              echo "Pulling Docker images..."
-
               docker compose \
                 --env-file .env.production \
                 -f docker-compose.prod.yml \
                 pull
-
-              echo "Starting containers..."
 
               docker compose \
                 --env-file .env.production \
@@ -222,10 +177,7 @@ jobs:
                 up -d \
                 --remove-orphans
 
-              echo "Waiting for containers..."
               sleep 10
-
-              echo "Running Laravel migrations..."
 
               docker compose \
                 --env-file .env.production \
@@ -233,15 +185,11 @@ jobs:
                 exec -T backend \
                 php artisan migrate --force
 
-              echo "Clearing Laravel caches..."
-
               docker compose \
                 --env-file .env.production \
                 -f docker-compose.prod.yml \
                 exec -T backend \
                 php artisan optimize:clear
-
-              echo "Optimizing Laravel..."
 
               docker compose \
                 --env-file .env.production \
@@ -249,16 +197,10 @@ jobs:
                 exec -T backend \
                 php artisan optimize
 
-              echo "Container status:"
-
               docker compose \
                 --env-file .env.production \
                 -f docker-compose.prod.yml \
                 ps
 
-              echo "Cleaning dangling images..."
-
               docker image prune -f
-
-              echo "Deployment completed."
           REMOTE
