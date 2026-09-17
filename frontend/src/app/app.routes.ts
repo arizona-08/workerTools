@@ -12,19 +12,19 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: '/app/dashboard',
+        redirectTo: '/',
       },
       {
         path: 'login',
-        redirectTo: '/app/dashboard',
+        redirectTo: '/',
       },
       {
         path: 'register',
-        redirectTo: '/app/dashboard',
+        redirectTo: '/',
       },
       {
         path: '**',
-        redirectTo: '/app/dashboard',
+        redirectTo: '/',
       },
     ],
   },
@@ -37,12 +37,12 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        redirectTo: 'dashboard',
+        redirectTo: '/',
       },
-      {
-        path: 'dashboard',
-        component: Dashboard
-      },
+      // {
+      //   path: 'dashboard',
+      //   component: Dashboard
+      // },
       {
         path: 'calculator',
         component: Calculator
@@ -57,6 +57,7 @@ export const routes: Routes = [
     component: MainAppLayout,
     children: [
       {
+        title: 'Calculateur',
         path: '',
         component: Calculator,
       },
