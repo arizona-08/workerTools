@@ -6,6 +6,10 @@ on:
       - dev
       - main
 
+  push:
+    branches:
+      - main
+
 permissions:
   contents: read
 
@@ -13,6 +17,7 @@ jobs:
   backend-tests:
     name: Backend tests
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: backend
@@ -49,6 +54,7 @@ jobs:
   frontend-tests:
     name: Frontend tests
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: frontend
@@ -68,3 +74,6 @@ jobs:
 
       - name: Run frontend tests
         run: npm test -- --watch=false
+
+      - name: Verify production build
+        run: npm run build

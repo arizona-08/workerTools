@@ -1,0 +1,77 @@
+name: CD - Production
+
+on:
+  workflow_run:
+    workflows:
+      - Tests
+    types:
+      - completed
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  FRONTEND_IMAGE: ghcr.io/arizona-08/workertools-frontend
+  BACKEND_IMAGE: ghcr.io/arizona-08/workertools-backend
+
+jobs:
+  deploy:
+    name: Build and deploy production
+
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'push'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set image tag
+        id: image
+        shell: bash
+        run: |
+          SHORT_SHA="$(echo '${{ github.event.workflow_run.head_sha }}' | cut -c1-12)"
+          echo "sha=sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.staging
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.image.outputs.sha }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile.staging
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ steps.image.outputs.sha }}
+            ${{ env.BACKEND_IMAGE }}:latest
+
+      # SSH / scp / docker compose deploy ici
