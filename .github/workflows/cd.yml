@@ -43,6 +43,7 @@ jobs:
         run: |
           SHORT_SHA="$(echo '${{ github.event.workflow_run.head_sha }}' | cut -c1-12)"
           echo "sha=sha-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "Image tag: sha-${SHORT_SHA}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -63,6 +64,8 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:${{ steps.image.outputs.sha }}
             ${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
       - name: Build and push backend image
         uses: docker/build-push-action@v6
@@ -73,5 +76,153 @@ jobs:
           tags: |
             ${{ env.BACKEND_IMAGE }}:${{ steps.image.outputs.sha }}
             ${{ env.BACKEND_IMAGE }}:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
-      # SSH / scp / docker compose deploy ici
+      # --------------------------------------------------
+      # SSH
+      # --------------------------------------------------
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan \
+            -p "${SSH_PORT:-22}" \
+            -H "$SSH_HOST" \
+            >> ~/.ssh/known_hosts
+
+      - name: Prepare remote deployment directory
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+        run: |
+          ssh \
+            -p "${SSH_PORT:-22}" \
+            "$SSH_USER@$SSH_HOST" \
+            "mkdir -p /opt/workertools/nginx"
+
+      # --------------------------------------------------
+      # SCP
+      # --------------------------------------------------
+
+      - name: Upload docker compose file
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+        run: |
+          scp \
+            -P "${SSH_PORT:-22}" \
+            docker-compose.prod.yml \
+            "$SSH_USER@$SSH_HOST:/opt/workertools/docker-compose.prod.yml"
+
+      - name: Upload nginx configuration
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+        run: |
+          scp \
+            -P "${SSH_PORT:-22}" \
+            nginx/nginx.conf \
+            "$SSH_USER@$SSH_HOST:/opt/workertools/nginx/nginx.conf"
+
+      # --------------------------------------------------
+      # DOCKER COMPOSE DEPLOY
+      # --------------------------------------------------
+
+      - name: Deploy production
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
+          IMAGE_TAG: ${{ steps.image.outputs.sha }}
+        run: |
+          ssh \
+            -p "${SSH_PORT:-22}" \
+            "$SSH_USER@$SSH_HOST" \
+            "GHCR_USERNAME='$GHCR_USERNAME' \
+             GHCR_TOKEN='$GHCR_TOKEN' \
+             IMAGE_TAG='$IMAGE_TAG' \
+             bash -s" <<'REMOTE_SCRIPT'
+
+          set -euo pipefail
+
+          cd /opt/workertools
+
+          echo "Login to GHCR..."
+          echo "$GHCR_TOKEN" \
+            | docker login ghcr.io \
+              --username "$GHCR_USERNAME" \
+              --password-stdin
+
+          export IMAGE_TAG="$IMAGE_TAG"
+
+          echo "Pulling images..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            pull
+
+          echo "Starting application..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            up -d \
+            --remove-orphans
+
+          echo "Waiting for containers..."
+          sleep 10
+
+          echo "Running Laravel migrations..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            exec -T backend \
+            php artisan migrate --force
+
+          echo "Clearing stale Laravel caches..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            exec -T backend \
+            php artisan optimize:clear
+
+          echo "Optimizing Laravel..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            exec -T backend \
+            php artisan optimize
+
+          echo "Displaying container status..."
+          docker compose \
+            --env-file .env \
+            -f docker-compose.prod.yml \
+            ps
+
+          echo "Removing unused Docker images..."
+          docker image prune -f
+
+          echo "Deployment completed."
+
+          REMOTE_SCRIPT
